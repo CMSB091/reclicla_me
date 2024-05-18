@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class myInicio extends StatelessWidget{
+  const myInicio({super.key});
+
   @override
   Widget build(Object context) {
     return  Scaffold(
