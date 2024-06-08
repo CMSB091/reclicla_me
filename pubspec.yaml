@@ -58,6 +58,7 @@ dev_dependencies:
 flutter:
   assets:
     - assets/
+
         
 
   # The following line ensures that the Material Icons font is
@@ -82,6 +83,13 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
+
+  fonts:
+    - family: JosefinsSans
+      fonts:
+        - asset: assets/fonts/JosefinSans-Bold.ttf
+          weight: 200
+        - asset: assetsfonts/JosefinSans-Italic.ttf
   # fonts:
   #   - family: Schyler
   #     fonts:
