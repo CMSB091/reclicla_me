@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "447853699292",
+    "firebase_url": "https://tcc-recicla-default-rtdb.firebaseio.com",
+    "project_id": "tcc-recicla",
+    "storage_bucket": "tcc-recicla.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:447853699292:android:3a7b696cbba4fe77795419",
+        "android_client_info": {
+          "package_name": "com.example.recila_me"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdGOLrQIN3Kfuy7nYsijdLvBgdVl7zqNs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
