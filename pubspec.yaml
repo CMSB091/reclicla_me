@@ -87,9 +87,8 @@ flutter:
   fonts:
     - family: JosefinsSans
       fonts:
-        - asset: assets/fonts/JosefinSans-Bold.ttf
-          weight: 200
-        - asset: assetsfonts/JosefinSans-Italic.ttf
+        - asset: fonts/JosefinSans-Bold.ttf
+        - asset: fonts/JosefinSans-Italic.ttf
   # fonts:
   #   - family: Schyler
   #     fonts:
