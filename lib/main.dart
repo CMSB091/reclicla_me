@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
-import 'package:recila_me/login.dart';
+import 'package:recila_me/pagina_inicio.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
         hintColor: Colors.green.shade300,
         fontFamily: 'Roboto',
       ),
-      home: LoginApp(),
+      home: ReciclaMeApp(),
     );
   }
 }

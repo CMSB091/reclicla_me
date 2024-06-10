@@ -70,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.5,
-                child: Image.asset('assets/playstore.png'),
+                child: Image.asset('assets/images/playstore.png'),
               ),
               const SizedBox(height: 20.0),
               Form(

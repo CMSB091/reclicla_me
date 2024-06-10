@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:recila_me/inicio.dart'; 
 import 'firestore_service.dart';
 
 class LoginApp extends StatelessWidget {
@@ -60,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
           color: Colors.black,
           fontSize: 18,
         ),
-        title: const Text('LOGIN'),
+        title: const Text('Iniciar Sesión'),
       ),
       body: Center(
         child: SingleChildScrollView(
