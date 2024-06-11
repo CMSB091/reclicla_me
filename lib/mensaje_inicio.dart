@@ -1,0 +1,169 @@
+import 'package:flutter/material.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'package:recila_me/login.dart';
+
+void main() {
+  runApp(const mensajeInicio());
+}
+
+class mensajeInicio extends StatelessWidget {
+  const mensajeInicio({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'ReciclaMe',
+      theme: ThemeData(
+        primarySwatch: Colors.green,
+      ),
+      home: const SplashScreen(),
+    );
+  }
+}
+
+class RecyclingTip {
+  final String message;
+
+  RecyclingTip({required this.message});
+
+  factory RecyclingTip.fromJson(Map<String, dynamic> json) {
+    return RecyclingTip(
+      message: json['message'],
+    );
+  }
+}
+
+class SplashScreen extends StatefulWidget {
+  const SplashScreen({Key? key}) : super(key: key);
+
+  @override
+  _SplashScreenState createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  late BuildContext _context;
+  List<RecyclingTip> _tips = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTips();
+  }
+
+  Future<void> _loadTips() async {
+    try {
+      final String data = await DefaultAssetBundle.of(context).loadString('assets/recycling_tips.json');
+      final jsonData = json.decode(data);
+      _tips = List<RecyclingTip>.from(jsonData.map((x) => RecyclingTip.fromJson(x)));
+    } catch (e) {
+      print("Error al cargar los consejos de reciclaje: $e");
+    } finally {
+      _context = context;
+      _showWelcomeDialog();
+    }
+  }
+
+  void _showWelcomeDialog() {
+    RecyclingTip random;
+    if (_tips.isNotEmpty) {
+      random = _tips[DateTime.now().microsecondsSinceEpoch % _tips.length];
+    } else {
+      random = RecyclingTip(message: "No se pudo cargar el consejo de reciclaje. Inténtalo de nuevo más tarde.");
+    }
+
+    showDialog(
+      context: _context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Center(
+          child: Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/branches_border.png'),
+                      fit: BoxFit.fill,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.brown,
+                      width: 5,
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Image.asset(
+                              'assets/images/light_bulb.png',
+                              width: 60,
+                              height: 60,
+                            ),
+                            const SizedBox(width: 10),
+                            const Text(
+                              '¡Bienvenido!',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                backgroundColor: Colors.transparent,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          random.message,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            backgroundColor: Colors.transparent,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _navigateToHome();
+                          },
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    Timer(const Duration(seconds: 10), () {
+      if (Navigator.of(_context).canPop()) {
+        Navigator.of(_context).pop();
+        _navigateToHome();
+      }
+    });
+  }
+
+  void _navigateToHome() {
+    Navigator.of(_context).pushReplacement(
+      MaterialPageRoute(builder: (context) => LoginApp()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFccffcc),
+    );
+  }
+}

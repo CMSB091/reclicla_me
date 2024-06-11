@@ -53,22 +53,26 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
-flutter:
-  # The following line ensures that the Material Icons font is
-  # included with your application, so that you can use the icons in
-  # the material Icons class.
-  uses-material-design: true
+uses-material-design: true
 
+flutter:
   assets:
     - assets/images/playstore.png
     - assets/images/reciclaje2.gif
     - assets/images/reciclaje1.gif
+    - assets/images/light_bulb.png
+    - assets/images/paper_texture.png
+    - assets/images/branches_border.png
+    - assets/recycling_tips.json
 
   fonts:
     - family: Artwork
       fonts:
         - asset: assets/fonts/FrederickatheGreat-Regular.ttf
-
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+ 
 
   # To add assets to your application, add an assets section, like this:
   # assets:
@@ -87,7 +91,6 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
 
-  
   # fonts:
   #   - family: Schyler
   #     fonts:

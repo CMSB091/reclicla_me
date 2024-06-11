@@ -134,7 +134,7 @@ class MyInicio extends StatelessWidget {
           color: Colors.black,
           fontSize: 18,
         ),
-        title: const Text('INICIO'),
+        title: const Text('Inciar Sesión'),
       ),
     );
   }

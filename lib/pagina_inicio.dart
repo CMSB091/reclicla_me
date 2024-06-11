@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:recila_me/login.dart';
+import 'package:recila_me/mensaje_inicio.dart';
 
 void main() {
   runApp(const ReciclaMeApp());
@@ -43,8 +43,8 @@ class _SplashScreenState extends State<SplashScreen> {
         if (_progress >= 1) {
           timer.cancel();
           // Navegar a la siguiente pantalla cuando la carga está completa
-          Navigator.of(context).pushReplacement(MaterialPageRoute(
-              builder: (context) => LoginApp()));
+          Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => mensajeInicio()));
         } else {
           _progress += 0.02;
         }
@@ -54,33 +54,39 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: Color(0xFFccffcc), // Fondo verde muy claro
       body: Center(
         child: SizedBox(
-          width: 200, // Ancho de la imagen
+          width: screenWidth * 0.8, // Ajusta el ancho según el ancho de la pantalla
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Image.asset(
                 'assets/images/reciclaje1.gif',
-                width: 200, // Ajusta el ancho según lo necesites
-                height: 200, // Ajusta la altura según lo necesites
+                width: screenWidth * 0.5, // Ajusta el ancho según el ancho de la pantalla
+                height: screenHeight * 0.3, // Ajusta la altura según el alto de la pantalla
               ),
               const SizedBox(height: 20),
-              const Text(
-                'ReciclaMe',
-                style: TextStyle(
-                  fontFamily: 'Artwork', // Asegúrate de tener la fuente añadida
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: const Text(
+                  'ReciclaMe',
+                  style: TextStyle(
+                    fontFamily: 'Artwork', // Asegúrate de tener la fuente añadida
+                    fontSize: 40,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
                 ),
               ),
               SizedBox(height: 20),
               if (_progress > 0)
                 Container(
-                  width: 200, // Mismo ancho que la imagen y el título
+                  width: screenWidth * 0.6, // Ajusta el ancho según el ancho de la pantalla
                   height: 20, // Altura de la barra de progreso
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
@@ -90,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen> {
                     children: [
                       // Fondo de la barra de progreso
                       Container(
-                        width: _progress * 200, // Ancho de llenado de la barra de progreso
+                        width: _progress * (screenWidth * 0.6), // Ancho de llenado de la barra de progreso
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(10),
                           color: Colors.green, // Color de llenado de la barra de progreso

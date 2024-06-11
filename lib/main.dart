@@ -21,9 +21,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primaryColor: Colors.green.shade200,
         hintColor: Colors.green.shade300,
-        fontFamily: 'Roboto',
       ),
-      home: ReciclaMeApp(),
+      home: const ReciclaMeApp(),
     );
   }
 }
