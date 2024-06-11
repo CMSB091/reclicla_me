@@ -5,21 +5,31 @@ class FirestoreService {
 
   Future<bool> authenticateUser(String correo, String contrasena) async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-                    .collection('usuario')
-                    .where('correo', isEqualTo: correo)
-                    .where('contrasena', isEqualTo: contrasena) 
-                    .get();
+      QuerySnapshot querySnapshot = await _db
+          .collection('usuario')
+          .where('correo', isEqualTo: correo)
+          .where('contrasena', isEqualTo: contrasena)
+          .get();
 
-                if (querySnapshot.docs.isEmpty) {
-                  return false;
-                } else {
-                  final userDoc = querySnapshot.docs.first;
-                  final userData = userDoc.data() as Map<String, dynamic>;
-                  return true;
-                  }
+      if (querySnapshot.docs.isEmpty) {
+        return false;
+      } else {
+        return true;
+      }
     } catch (e) {
-        print('Error autenticando usuario: $e');
+      return false;
+    }
+  }
+
+  // Método para crear un nuevo usuario
+  Future<bool> createUser(String correo, String contrasena) async {
+    try {
+      await _db.collection('usuario').add({
+        'correo': correo,
+        'contrasena': contrasena,
+      });
+      return true;
+    } catch (e) {
       return false;
     }
   }

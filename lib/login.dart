@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:recila_me/inicio.dart';
+import 'register_page.dart';
 import 'firestore_service.dart';
+import 'inicio.dart';
 
 class LoginApp extends StatelessWidget {
   @override
@@ -40,9 +41,8 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (context) => MyInicio()),
         );
       } else {
-        // Mostrar mensaje de error si la autenticación falla
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Usuario o contraseña incorrectos')),
+          const SnackBar(content: Text('Usuario o contraseña incorrectos')),
         );
       }
     }
@@ -108,6 +108,17 @@ class _LoginPageState extends State<LoginPage> {
                     ElevatedButton(
                       onPressed: _login,
                       child: const Text('Iniciar Sesión'),
+                    ),
+                    const SizedBox(height: 20.0),
+                    // Botón para navegar a la página de registro
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => RegisterPage()),
+                        );
+                      },
+                      child: const Text('Registrar cuenta'),
                     ),
                   ],
                 ),

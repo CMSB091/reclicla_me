@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Recila Me',
+      title: 'Recicla Me',
       theme: ThemeData(
         primaryColor: Colors.green.shade200,
         hintColor: Colors.green.shade300,
