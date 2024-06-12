@@ -16,7 +16,7 @@ class ReciclaMeApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.green,
       ),
-      home: SplashScreen(),
+      home: const SplashScreen(),
     );
   }
 }
@@ -30,21 +30,23 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   double _progress = 0;
+  late BuildContext _context;
 
   @override
   void initState() {
     super.initState();
-    Timer(Duration(seconds: 2), _startLoading);
+    _context = context;
+    Timer(const Duration(seconds: 2), _startLoading);
   }
 
   void _startLoading() {
-    Timer.periodic(Duration(milliseconds: 50), (Timer timer) {
+    Timer.periodic(const Duration(milliseconds: 50), (Timer timer) {
       setState(() {
         if (_progress >= 1) {
           timer.cancel();
           // Navegar a la siguiente pantalla cuando la carga está completa
-          Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => mensajeInicio()));
+          Navigator.of(_context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const mensajeInicio()));
         } else {
           _progress += 0.02;
         }
@@ -58,7 +60,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final double screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
-      backgroundColor: Color(0xFFccffcc), // Fondo verde muy claro
+      backgroundColor: const Color(0xFFccffcc), // Fondo verde muy claro
       body: Center(
         child: SizedBox(
           width: screenWidth * 0.8, // Ajusta el ancho según el ancho de la pantalla
@@ -71,9 +73,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 height: screenHeight * 0.3, // Ajusta la altura según el alto de la pantalla
               ),
               const SizedBox(height: 20),
-              FittedBox(
+              const FittedBox(
                 fit: BoxFit.scaleDown,
-                child: const Text(
+                child: Text(
                   'ReciclaMe',
                   style: TextStyle(
                     fontFamily: 'Artwork', // Asegúrate de tener la fuente añadida
@@ -83,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               if (_progress > 0)
                 Container(
                   width: screenWidth * 0.6, // Ajusta el ancho según el ancho de la pantalla

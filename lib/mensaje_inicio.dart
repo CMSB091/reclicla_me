@@ -86,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    image: DecorationImage(
+                    image: const DecorationImage(
                       image: AssetImage('assets/images/branches_border.png'),
                       fit: BoxFit.fill,
                     ),
@@ -145,13 +145,6 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       },
     );
-
-    Timer(const Duration(seconds: 10), () {
-      if (Navigator.of(_context).canPop()) {
-        Navigator.of(_context).pop();
-        _navigateToHome();
-      }
-    });
   }
 
   void _navigateToHome() {
@@ -162,8 +155,8 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFccffcc),
+    return const Scaffold(
+      backgroundColor: Color(0xFFccffcc),
     );
   }
 }
