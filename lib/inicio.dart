@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'firestore_service.dart';
 
 class LoginApp extends StatelessWidget {
+  const LoginApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -10,12 +12,14 @@ class LoginApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginPage(),
+      home: const LoginPage(),
     );
   }
 }
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -36,12 +40,12 @@ class _LoginPageState extends State<LoginPage> {
       if (authenticated) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MyInicio()),
+          MaterialPageRoute(builder: (context) => const MyInicio()),
         );
       } else {
         // Mostrar mensaje de error si la autenticación falla
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Usuario o contraseña incorrectos')),
+          const SnackBar(content: Text('Usuario o contraseña incorrectos')),
         );
       }
     }
@@ -120,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
 }
 
 class MyInicio extends StatelessWidget {
-  const MyInicio({Key? key}) : super(key: key);
+  const MyInicio({super.key});
 
   @override
   Widget build(BuildContext context) {

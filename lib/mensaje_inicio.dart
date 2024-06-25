@@ -8,7 +8,7 @@ void main() {
 }
 
 class mensajeInicio extends StatelessWidget {
-  const mensajeInicio({Key? key}) : super(key: key);
+  const mensajeInicio({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,7 @@ class RecyclingTip {
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -149,7 +149,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateToHome() {
     Navigator.of(_context).pushReplacement(
-      MaterialPageRoute(builder: (context) => LoginApp()),
+      MaterialPageRoute(builder: (context) => const LoginApp()),
     );
   }
 

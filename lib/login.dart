@@ -5,6 +5,8 @@ import 'firestore_service.dart';
 import 'inicio.dart';
 
 class LoginApp extends StatelessWidget {
+  const LoginApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -12,12 +14,14 @@ class LoginApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: LoginPage(),
+      home: const LoginPage(),
     );
   }
 }
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -38,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
       if (authenticated) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => MyInicio()),
+          MaterialPageRoute(builder: (context) => const MyInicio()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -115,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (context) => RegisterPage()),
+                          MaterialPageRoute(builder: (context) => const RegisterPage()),
                         );
                       },
                       child: const Text('Registrar cuenta'),

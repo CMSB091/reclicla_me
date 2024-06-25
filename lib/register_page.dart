@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'firestore_service.dart';
 
 class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
