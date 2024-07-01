@@ -20,10 +20,21 @@ tasks.register("clean", Delete) {
 buildscript {
     repositories {
         google()  // Asegúrate de tener este repositorio para las dependencias de Google
-        jcenter() // También puedes necesitar jcenter o mavenCentral según tus otras dependencias
+        mavenCentral() // También puedes necesitar jcenter o mavenCentral según tus otras dependencias
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:xxx'  // Versión específica de Gradle Android Plugin
-        classpath 'com.google.gms:google-services:latest_version'  // Dependencia de google-services
+        classpath 'com.android.tools.build:gradle:7.4.2'  // Versión específica de Gradle Android Plugin
+        classpath 'com.google.gms:google-services:4.4.2'  // Dependencia de google-services
     }
 }
+
+dependencies {
+    implementation 'com.android.support:support-annotations:28.0.0'
+    implementation 'androidx.annotation:annotation:1.8.0'
+    implementation 'com.google.android.gms:play-services:12.0.1'
+    implementation 'androidx.annotation:annotation:1.8.0'
+    implementation 'com.google.android.gms:play-services-wearable:18.2.0'
+    implementation 'com.google.android.gms:play-services-plus:17.0.0'
+    implementation 'com.google.android.gms:play-services-auth:21.2.0'
+}
+// Archivo build.gradle a nivel de proyecto (raíz)

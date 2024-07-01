@@ -39,7 +39,19 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Registrar'),
+        title: const Text('Registrar Usuario',
+        style: TextStyle(
+          fontFamily: 'Artwork',
+          fontSize: 30
+        ),
+        ),
+        leading: IconButton(
+          icon: Image.asset('assets/images/exitDoor.png'),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        backgroundColor: Colors.green.shade200, // Establece el color de fondo aquí
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -48,6 +60,12 @@ class _RegisterPageState extends State<RegisterPage> {
             key: _formKey,
             child: Column(
               children: [
+                // Añadir la imagen aquí
+                Image.asset(
+                  'assets/images/agregarUsuario.png', // Reemplaza con la ruta de tu imagen
+                  height: 150.0, // Ajusta la altura según sea necesario
+                ),
+                const SizedBox(height: 20.0),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,

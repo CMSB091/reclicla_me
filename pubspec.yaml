@@ -63,7 +63,10 @@ flutter:
     - assets/images/light_bulb.png
     - assets/images/paper_texture.png
     - assets/images/branches_border.png
+    - assets/images/agregarUsuario.png
+    - assets/images/exitDoor.png
     - assets/recycling_tips.json
+    
 
   fonts:
     - family: Artwork
