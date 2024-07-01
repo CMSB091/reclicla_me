@@ -40,6 +40,8 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (authenticated) {
+        _emailController.clear();
+        _passwordController.clear();
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const MyInicio()),

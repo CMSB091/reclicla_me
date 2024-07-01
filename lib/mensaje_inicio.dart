@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:recila_me/inicio.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:recila_me/login.dart';
@@ -145,7 +146,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateToHome() {
     Navigator.of(_context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginApp()),
+      MaterialPageRoute(builder: (context) => const LoginApp() /*MyInicio()*/),
     );
   }
 
