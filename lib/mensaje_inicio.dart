@@ -3,10 +3,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:recila_me/login.dart';
 
-void main() {
-  runApp(const mensajeInicio());
-}
-
 class mensajeInicio extends StatelessWidget {
   const mensajeInicio({super.key});
 
