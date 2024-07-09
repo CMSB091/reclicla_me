@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:recila_me/inicio.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:recila_me/login.dart';
@@ -107,7 +106,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             ),
                             const SizedBox(width: 10),
                             const Text(
-                              '¡Bienvenido!',
+                              'Consejo del día!',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,

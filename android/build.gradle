@@ -5,19 +5,40 @@ allprojects {
     }
 }
 
+/*allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+*/
 rootProject.buildDir = '../build'
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }
+
+/*rootProject.buildDir = "../build"
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}*/
+
 subprojects {
     project.evaluationDependsOn(':app')
 }
+
+/*subprojects {
+    project.evaluationDependsOn(":app")
+}*/
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
 
-buildscript {
+/*tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}*/
+
+/*buildscript {
     repositories {
         google()  // Asegúrate de tener este repositorio para las dependencias de Google
         mavenCentral() // También puedes necesitar jcenter o mavenCentral según tus otras dependencias
@@ -42,6 +63,10 @@ dependencies {
     implementation 'com.google.android.gms:play-services-plus:17.0.0'
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
     implementation 'com.android.support:support-annotations:28.0.0'
-}
-// Archivo build.gradle a nivel de proyecto (raíz)
-// Archivo build.gradle a nivel de proyecto (raíz)
+}*/
+
+
+
+
+
+
