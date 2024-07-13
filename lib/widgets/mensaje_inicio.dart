@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
-import 'package:recila_me/login.dart';
+import 'package:recila_me/widgets/login.dart';
 
+// ignore: camel_case_types
 class mensajeInicio extends StatelessWidget {
   const mensajeInicio({super.key});
 
@@ -145,7 +146,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateToHome() {
     Navigator.of(_context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginApp() /*MyInicio()*/),
+      MaterialPageRoute(builder: (context) => const LoginApp()),
     );
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'register_page.dart';
-import 'firestore_service.dart';
+import '../clases/firestore_service.dart';
 import 'inicio.dart';
 
 class LoginApp extends StatelessWidget {

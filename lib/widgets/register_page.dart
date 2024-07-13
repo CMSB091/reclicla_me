@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'firestore_service.dart';
+import '../clases/firestore_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -8,6 +8,7 @@ class RegisterPage extends StatefulWidget {
   _RegisterPageState createState() => _RegisterPageState();
 }
 
+/*Esta clase muestra la pantalla de inicio de la aplicacion */
 class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
