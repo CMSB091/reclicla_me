@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:email_validator/email_validator.dart';
 import '../clases/firestore_service.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -74,10 +75,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     labelText: 'Email',
                   ),
                   validator: (value) {
-                    if (value!.isEmpty) {
+                    if (value == null || value.isEmpty) {
                       return 'Por favor ingrese su email';
+                    }else if (!EmailValidator.validate(value)) {
+                      return 'Por favor ingrese un email válido'; // Mensaje si el email no es válido
                     }
-                    return null;
+                      return null;
                   },
                 ),
                 const SizedBox(height: 20.0),
