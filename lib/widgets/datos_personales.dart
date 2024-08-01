@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class DatosPersonales extends StatelessWidget {
+  const DatosPersonales({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -14,6 +16,8 @@ class DatosPersonales extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
   _MyHomePageState createState() => _MyHomePageState();
 }
@@ -32,7 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _isLoading = true;
       });
 
-      Future.delayed(Duration(seconds: 3), () {
+      Future.delayed(const Duration(seconds: 3), () {
         setState(() {
           _isLoading = false;
         });
@@ -47,14 +51,14 @@ class _MyHomePageState extends State<MyHomePage> {
           context: context,
           builder: (context) {
             return AlertDialog(
-              title: Text('Datos Guardados'),
+              title: const Text('Datos Guardados'),
               content: Text('Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion'),
               actions: [
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
-                  child: Text('OK'),
+                  child: const Text('OK'),
                 ),
               ],
             );
@@ -79,21 +83,21 @@ class _MyHomePageState extends State<MyHomePage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Datos sin guardar'),
-            content: Text('Hay datos sin guardar. ¿Desea salir de todas formas?'),
+            title: const Text('Datos sin guardar'),
+            content: const Text('Hay datos sin guardar. ¿Desea salir de todas formas?'),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('Cancelar'),
+                child: const Text('Cancelar'),
               ),
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();
                 },
-                child: Text('Salir'),
+                child: const Text('Salir'),
               ),
             ],
           );
@@ -112,13 +116,17 @@ class _MyHomePageState extends State<MyHomePage> {
           icon: Image.asset('assets/images/exitDoor.png'),
           onPressed: _intentarSalir,
         ),
-        title: Text('Formulario de Datos Personales'),
+        title: const Text('Datos Personales',
+        style: TextStyle(
+            fontFamily: 'Artwork',
+            fontSize: 30,
+          ),),
         backgroundColor: Colors.green.shade200,
       ),
       body: Stack(
         children: [
           Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: SingleChildScrollView(
               child: Form(
                 key: _formKey,
@@ -127,7 +135,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   children: [
                     TextFormField(
                       controller: _nombreController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Nombre',
                         border: OutlineInputBorder(),
                       ),
@@ -138,10 +146,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _apellidoController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Apellido',
                         border: OutlineInputBorder(),
                       ),
@@ -152,10 +160,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _edadController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Edad',
                         border: OutlineInputBorder(),
                       ),
@@ -171,10 +179,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _direccionController,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         labelText: 'Dirección',
                         border: OutlineInputBorder(),
                       ),
@@ -185,13 +193,13 @@ class _MyHomePageState extends State<MyHomePage> {
                         return null;
                       },
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _guardarDatos,
-                      child: Text('Guardar'),
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       ),
+                      child: const Text('Guardar'),
                     ),
                   ],
                 ),
@@ -204,7 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
               color: Colors.black.withOpacity(0.5),
             ),
           if (_isLoading)
-            Center(
+            const Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
