@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:email_validator/email_validator.dart'; // Importa email_validator
 import 'register_page.dart';
 import '../clases/firestore_service.dart';
 import 'inicio.dart';
 
 class LoginApp extends StatelessWidget {
-  const LoginApp({super.key});
+  const LoginApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +21,7 @@ class LoginApp extends StatelessWidget {
 }
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
   _LoginPageState createState() => _LoginPageState();
@@ -66,10 +67,11 @@ class _LoginPageState extends State<LoginPage> {
           color: Colors.black,
           fontSize: 18,
         ),
-        title: const Text('Iniciar Sesión',
+        title: const Text(
+          'Iniciar Sesión',
           style: TextStyle(
-              fontFamily: 'Artwork',
-              fontSize: 30
+            fontFamily: 'Artwork',
+            fontSize: 30,
           ),
         ),
       ),
@@ -97,6 +99,8 @@ class _LoginPageState extends State<LoginPage> {
                       validator: (value) {
                         if (value!.isEmpty) {
                           return 'Por favor ingrese su email';
+                        } else if (!EmailValidator.validate(value)) {
+                          return 'Por favor ingrese un email válido';
                         }
                         return null;
                       },
@@ -144,4 +148,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-

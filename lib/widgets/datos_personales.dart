@@ -113,85 +113,88 @@ class _MyHomePageState extends State<MyHomePage> {
           onPressed: _intentarSalir,
         ),
         title: Text('Formulario de Datos Personales'),
-        backgroundColor: Colors.green.shade200, // Cambiar el color del AppBar a verde limón
+        backgroundColor: Colors.green.shade200,
       ),
       body: Stack(
         children: [
           Padding(
             padding: EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  TextFormField(
-                    controller: _nombreController,
-                    decoration: InputDecoration(
-                      labelText: 'Nombre',
-                      border: OutlineInputBorder(),
+            child: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    TextFormField(
+                      controller: _nombreController,
+                      decoration: InputDecoration(
+                        labelText: 'Nombre',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa tu nombre';
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu nombre';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    controller: _apellidoController,
-                    decoration: InputDecoration(
-                      labelText: 'Apellido',
-                      border: OutlineInputBorder(),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      controller: _apellidoController,
+                      decoration: InputDecoration(
+                        labelText: 'Apellido',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa tu apellido';
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu apellido';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    controller: _edadController,
-                    decoration: InputDecoration(
-                      labelText: 'Edad',
-                      border: OutlineInputBorder(),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      controller: _edadController,
+                      decoration: InputDecoration(
+                        labelText: 'Edad',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa tu edad';
+                        }
+                        int? edad = int.tryParse(value);
+                        if (edad == null || edad < 1 || edad > 99) {
+                          return 'Por favor ingresa un número entre 1 y 99';
+                        }
+                        return null;
+                      },
                     ),
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu edad';
-                      }
-                      int? edad = int.tryParse(value);
-                      if (edad == null || edad < 1 || edad > 99) {
-                        return 'Por favor ingresa un número entre 1 y 99';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    controller: _direccionController,
-                    decoration: InputDecoration(
-                      labelText: 'Dirección',
-                      border: OutlineInputBorder(),
+                    SizedBox(height: 16),
+                    TextFormField(
+                      controller: _direccionController,
+                      decoration: InputDecoration(
+                        labelText: 'Dirección',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa tu dirección';
+                        }
+                        return null;
+                      },
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor ingresa tu dirección';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _guardarDatos,
-                    child: Text('Guardar'),
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: _guardarDatos,
+                      child: Text('Guardar'),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

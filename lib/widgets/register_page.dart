@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import '../clases/firestore_service.dart';
+import 'datos_personales.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -16,26 +17,39 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _passwordController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
 
+
   // Método para registrar un nuevo usuario
   void _register() async {
+  try {
     if (_formKey.currentState!.validate()) {
       bool registered = await _firestoreService.createUser(
         _emailController.text,
         _passwordController.text,
       );
-
       if (registered) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Usuario registrado correctamente')),
         );
-        Navigator.pop(context); // Regresa a la pantalla de inicio
+        await Future.delayed(const Duration(seconds: 3));
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => DatosPersonales()), // Reemplaza HomePage con la página a la que quieras redirigir
+          );
+        //Navigator.pop(context); // Regresa a la pantalla de inicio
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al registrar usuario')),
+          const SnackBar(content: Text('Error: No se pudo registrar el usuario')),
         );
       }
     }
+  } catch (e) {
+    // Captura y manejo de excepciones
+    print('Error en registro: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Error: Hubo un problema al registrar el usuario')),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
