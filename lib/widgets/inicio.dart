@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:recila_me/widgets/login.dart';
 
 void main() {
   runApp(MaterialApp(
-    home: MyInicio(),
+    home: MyInicio('',parametro: 'Usuario'), // Aquí pasas el parámetro
     routes: {
       '/page1': (context) => Page1(),
       '/page2': (context) => Page2(),
@@ -14,7 +15,9 @@ void main() {
 }
 
 class MyInicio extends StatelessWidget {
-  const MyInicio({super.key});
+  final String parametro;
+
+  const MyInicio(String s, {super.key, required this.parametro});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +31,7 @@ class MyInicio extends StatelessWidget {
           color: Colors.black,
           fontSize: 18,
         ),
-        title: const Text('Bienvenido  !!'),
+        title: Text('Bienvenido $parametro !!'),
         leading: IconButton(
           icon: Image.asset('assets/images/exitDoor.png'),
           onPressed: () {
@@ -43,7 +46,13 @@ class MyInicio extends StatelessWidget {
           children: List.generate(4, (index) {
             return GestureDetector(
               onTap: () {
-                Navigator.pushNamed(context, '/page${index + 1}');
+                //Navigator.pushNamed(context, '/page${index + 1}');
+                Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const LoginApp(),
+            ),
+          );
               },
               child: SizedBox(
                 width: 150.0, // Ancho de cada tarjeta

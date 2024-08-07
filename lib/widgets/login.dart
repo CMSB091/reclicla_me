@@ -45,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
         _passwordController.clear();
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const MyInicio()),
+          MaterialPageRoute(builder: (context) => const MyInicio('',parametro: 'PRUEBA',)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

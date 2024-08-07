@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/widgets/inicio.dart';
 
 class DatosPersonales extends StatelessWidget {
-  const DatosPersonales({super.key});
+  final String correo;
+
+  const DatosPersonales(String s, {
+    Key? key,
+    required this.correo,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -10,13 +17,18 @@ class DatosPersonales extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: MyHomePage(correo: correo),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
+  final String correo;
+
+  const MyHomePage({
+    Key? key,
+    required this.correo,
+  }) : super(key: key);
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -28,7 +40,11 @@ class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _apellidoController = TextEditingController();
   final TextEditingController _edadController = TextEditingController();
   final TextEditingController _direccionController = TextEditingController();
+  final TextEditingController _ciudadController = TextEditingController();
+  final TextEditingController _paisController = TextEditingController();
+  final TextEditingController _telefonoController = TextEditingController();
   bool _isLoading = false;
+  final FirestoreService _firestoreService = FirestoreService(); // Instancia del servicio Firestore
 
   void _guardarDatos() {
     if (_formKey.currentState?.validate() ?? false) {
@@ -36,7 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _isLoading = true;
       });
 
-      Future.delayed(const Duration(seconds: 3), () {
+      Future.delayed(const Duration(seconds: 3), () async {
         setState(() {
           _isLoading = false;
         });
@@ -45,6 +61,21 @@ class _MyHomePageState extends State<MyHomePage> {
         String apellido = _apellidoController.text;
         int edad = int.parse(_edadController.text);
         String direccion = _direccionController.text;
+        String ciudad = _ciudadController.text;
+        String pais = _paisController.text;
+        String telefono = _telefonoController.text;
+
+        // Llamar a updateUser en FirestoreService para actualizar los datos
+        bool result = await _firestoreService.updateUser(
+          nombre,
+          apellido,
+          edad,
+          direccion,
+          ciudad,
+          pais,
+          telefono,
+          widget.correo
+        );
 
         // Mostrar el diálogo con los datos ingresados
         showDialog(
@@ -52,11 +83,18 @@ class _MyHomePageState extends State<MyHomePage> {
           builder: (context) {
             return AlertDialog(
               title: const Text('Datos Guardados'),
-              content: Text('Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion'),
+              content: Text(
+                  'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono'),
               actions: [
                 TextButton(
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    // Redirigir a la página de inicio
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MyInicio('',parametro: nombre,),
+                      ),
+                    );
                   },
                   child: const Text('OK'),
                 ),
@@ -70,6 +108,9 @@ class _MyHomePageState extends State<MyHomePage> {
         _apellidoController.clear();
         _edadController.clear();
         _direccionController.clear();
+        _ciudadController.clear();
+        _paisController.clear();
+        _telefonoController.clear();
       });
     }
   }
@@ -78,7 +119,10 @@ class _MyHomePageState extends State<MyHomePage> {
     if (_nombreController.text.isNotEmpty ||
         _apellidoController.text.isNotEmpty ||
         _edadController.text.isNotEmpty ||
-        _direccionController.text.isNotEmpty) {
+        _direccionController.text.isNotEmpty ||
+        _ciudadController.text.isNotEmpty ||
+        _paisController.text.isNotEmpty ||
+        _telefonoController.text.isNotEmpty) {
       showDialog(
         context: context,
         builder: (context) {
@@ -116,11 +160,13 @@ class _MyHomePageState extends State<MyHomePage> {
           icon: Image.asset('assets/images/exitDoor.png'),
           onPressed: _intentarSalir,
         ),
-        title: const Text('Datos Personales',
-        style: TextStyle(
+        title: const Text(
+          'Datos Personales',
+          style: TextStyle(
             fontFamily: 'Artwork',
             fontSize: 30,
-          ),),
+          ),
+        ),
         backgroundColor: Colors.green.shade200,
       ),
       body: Stack(
@@ -193,6 +239,49 @@ class _MyHomePageState extends State<MyHomePage> {
                         return null;
                       },
                     ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _ciudadController,
+                      decoration: const InputDecoration(
+                        labelText: 'Ciudad',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa tu ciudad';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _paisController,
+                      decoration: const InputDecoration(
+                        labelText: 'País',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa tu país';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _telefonoController,
+                      decoration: const InputDecoration(
+                        labelText: 'Teléfono',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Por favor ingresa tu teléfono';
+                        }
+                        return null;
+                      },
+                    ),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _guardarDatos,
@@ -236,6 +325,9 @@ class _MyHomePageState extends State<MyHomePage> {
     _apellidoController.dispose();
     _edadController.dispose();
     _direccionController.dispose();
+    _ciudadController.dispose();
+    _paisController.dispose();
+    _telefonoController.dispose();
     super.dispose();
   }
 }
