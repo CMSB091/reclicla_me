@@ -101,6 +101,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Email',
+                    border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
@@ -117,6 +118,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   obscureText: true,
                   decoration: const InputDecoration(
                     labelText: 'Contraseña',
+                    border: OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value!.isEmpty) {

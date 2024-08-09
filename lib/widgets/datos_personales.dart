@@ -6,9 +6,9 @@ class DatosPersonales extends StatelessWidget {
   final String correo;
 
   const DatosPersonales(String s, {
-    Key? key,
+    super.key,
     required this.correo,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

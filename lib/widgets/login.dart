@@ -32,20 +32,53 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
+  late final String nombreUsuario;
 
   void _login() async {
     if (_formKey.currentState!.validate()) {
+      // Muestra el diálogo de progreso
+      var progressDialog = showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 20),
+                Text("Iniciando sesión...",
+                style: TextStyle(
+                  fontFamily: 'Artwork',
+                  fontSize: 20,
+                ),),
+              ],
+            ),
+          );
+        },
+      );
+
+      // Simula un retraso de 3 segundos
+      await Future.delayed(const Duration(seconds: 2));
+
+      // Realiza la autenticación
       bool authenticated = await _firestoreService.authenticateUser(
         _emailController.text,
         _passwordController.text,
       );
 
+      // Cierra el diálogo de progreso
+      Navigator.of(context, rootNavigator: true).pop();
+
       if (authenticated) {
+        String email = _emailController.text;
         _emailController.clear();
         _passwordController.clear();
+        // Obtén el nombre completo del usuario usando FirestoreService
+        String nombreUsuario = await _firestoreService.getUserName(email);
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const MyInicio('',parametro: 'PRUEBA',)),
+          MaterialPageRoute(builder: (context) => MyInicio('', parametro: nombreUsuario)),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -95,6 +128,7 @@ class _LoginPageState extends State<LoginPage> {
                       keyboardType: TextInputType.emailAddress,
                       decoration: const InputDecoration(
                         labelText: 'Email',
+                        border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value!.isEmpty) {
@@ -111,6 +145,7 @@ class _LoginPageState extends State<LoginPage> {
                       obscureText: true,
                       decoration: const InputDecoration(
                         labelText: 'Contraseña',
+                        border: OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value!.isEmpty) {
