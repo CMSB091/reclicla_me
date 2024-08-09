@@ -94,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => MyInicio('',parametro: nombre,),
+                        builder: (context) => MyInicio(nombre, parametro: nombre,),
                       ),
                     );
                   },
