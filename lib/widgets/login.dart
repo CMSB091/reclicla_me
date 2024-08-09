@@ -37,6 +37,7 @@ class _LoginPageState extends State<LoginPage> {
   void _login() async {
     if (_formKey.currentState!.validate()) {
       // Muestra el diálogo de progreso
+      // ignore: unused_local_variable
       var progressDialog = showDialog(
         context: context,
         barrierDismissible: false,
@@ -68,6 +69,7 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       // Cierra el diálogo de progreso
+      // ignore: use_build_context_synchronously
       Navigator.of(context, rootNavigator: true).pop();
 
       if (authenticated) {
@@ -77,10 +79,12 @@ class _LoginPageState extends State<LoginPage> {
         // Obtén el nombre completo del usuario usando FirestoreService
         String nombreUsuario = await _firestoreService.getUserName(email);
         Navigator.push(
+          // ignore: use_build_context_synchronously
           context,
           MaterialPageRoute(builder: (context) => MyInicio('', parametro: nombreUsuario)),
         );
       } else {
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Usuario o contraseña incorrectos')),
         );

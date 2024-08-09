@@ -66,6 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
         String telefono = _telefonoController.text;
 
         // Llamar a updateUser en FirestoreService para actualizar los datos
+        // ignore: unused_local_variable
         bool result = await _firestoreService.updateUser(
           nombre,
           apellido,
@@ -79,6 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
         // Mostrar el diálogo con los datos ingresados
         showDialog(
+          // ignore: use_build_context_synchronously
           context: context,
           builder: (context) {
             return AlertDialog(
