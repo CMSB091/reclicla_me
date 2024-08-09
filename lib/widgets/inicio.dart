@@ -59,7 +59,7 @@ class MyInicio extends StatelessWidget {
         title: Text('Bienvenido $parametro !!',
         style: const TextStyle(
           fontFamily: 'Artwork',
-          fontSize: 22,
+          fontSize: 18,
         ),),
         leading: IconButton(
           icon: Image.asset('assets/images/exitDoor.png'),
@@ -69,7 +69,7 @@ class MyInicio extends StatelessWidget {
         ),
       ),
       endDrawer: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.40, // 40% de la pantalla
+        width: MediaQuery.of(context).size.width * 0.50, // 40% de la pantalla
         child: Drawer(
           child: ListView(
             padding: EdgeInsets.zero,

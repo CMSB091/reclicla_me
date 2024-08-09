@@ -85,8 +85,7 @@ class FirestoreService {
           // Obtén los datos del documento
           Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
           String firstName = data['nombre'] ?? correo;
-          String lastName = data['apellido'] ?? '';
-          return '$firstName $lastName';
+          return '$firstName';
         }
       }
       
