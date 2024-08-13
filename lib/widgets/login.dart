@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'register_page.dart';
 import '../clases/firestore_service.dart';
 import 'inicio.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const LoginApp());
+}
 
 class LoginApp extends StatelessWidget {
   const LoginApp({super.key});
@@ -15,7 +23,29 @@ class LoginApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const LoginPage(),
+      home: const AuthenticationWrapper(),
+    );
+  }
+}
+
+class AuthenticationWrapper extends StatelessWidget {
+  const AuthenticationWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.active) {
+          if (snapshot.hasData) {
+            final nombreUsuario = snapshot.data!.email ?? '';
+            return MyInicio('', parametro: nombreUsuario);
+          } else {
+            return const LoginPage();
+          }
+        }
+        return const Center(child: CircularProgressIndicator());
+      },
     );
   }
 }
@@ -34,37 +64,47 @@ class _LoginPageState extends State<LoginPage> {
   final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-      });
+      setState(() => _isLoading = true);
 
-      final authenticated = await _firestoreService.authenticateUser(
-        _emailController.text,
-        _passwordController.text,
-      );
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
 
-      if (authenticated) {
-        final email = _emailController.text;
-        _emailController.clear();
-        _passwordController.clear();
-        final nombreUsuario = await _firestoreService.getUserName(email);
+        final nombreUsuario = await _firestoreService.getUserName(_emailController.text);
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MyInicio( '',parametro: nombreUsuario),
+            builder: (context) => MyInicio('', parametro: nombreUsuario),
           ),
         );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuario o contraseña incorrectos')),
-        );
-      }
+      } on FirebaseAuthException catch (e) {
+        final message = e.code == 'user-not-found'
+            ? 'No se encontró un usuario con ese email.'
+            : e.code == 'wrong-password'
+                ? 'Contraseña incorrecta.'
+                : 'Error en la autenticación.';
 
-      setState(() {
-        _isLoading = false;
-      });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+      }
     }
   }
 
@@ -96,7 +136,7 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.5,
-                child: Image.asset('assets/images/playstore.png'),
+                child: const ImageAsset(),
               ),
               const SizedBox(height: 20.0),
               _buildLoginForm(),
@@ -176,5 +216,14 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ],
     );
+  }
+}
+
+class ImageAsset extends StatelessWidget {
+  const ImageAsset({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.asset('assets/images/playstore.png');
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../clases/firestore_service.dart';
 import 'datos_personales.dart';
 
@@ -15,51 +16,118 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
+  bool _isWaitingForVerification = false;
+  bool _isSubmitting = false;
 
   // Método para registrar un nuevo usuario
   void _register() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (_isSubmitting) return; // Evitar múltiples envíos
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
     try {
-      if (_formKey.currentState!.validate()) {
-        // Verificar si el email ya existe
-        bool emailExists = await _firestoreService.checkEmailExists(_emailController.text);
+      // Verificar si el email ya existe
+      bool emailExists = await _firestoreService.checkEmailExists(_emailController.text);
 
-        if (emailExists) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('El email ya está registrado')),
-          );
-          return; // Detener el proceso de registro
-        }
-
-        // Registrar el nuevo usuario
-        bool registered = await _firestoreService.createUser(
-          _emailController.text,
-          _passwordController.text,
+      if (emailExists) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('El email ya está registrado')),
         );
+        return; // Detener el proceso de registro
+      }
 
-        if (registered) {
+      // Registrar el nuevo usuario en Firebase
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      User? user = userCredential.user;
+      if (user != null) {
+        if (!user.emailVerified) {
+          await user.sendEmailVerification();
+          setState(() {
+            _isWaitingForVerification = true;
+          });
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Usuario registrado correctamente')),
-          );
-          await Future.delayed(const Duration(seconds: 3));
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DatosPersonales(
-                _emailController.text, correo: _emailController.text, // Pasar el correo a DatosPersonales
-              ),
+            const SnackBar(
+              content: Text('Se ha enviado un correo de verificación. Por favor revisa tu bandeja de entrada.'),
             ),
           );
+          _waitForEmailVerification(user);
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error: No se pudo registrar el usuario')),
-          );
+          // El usuario ya está verificado
+          _proceedToNextPage();
         }
       }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      if (e.code == 'email-already-in-use') {
+        message = 'El email ya está registrado';
+      } else if (e.code == 'weak-password') {
+        message = 'La contraseña es demasiado débil';
+      } else {
+        message = 'Error en la autenticación: ${e.message}';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
     } catch (e) {
       // Captura y manejo de excepciones
       print('Error en registro: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error: Hubo un problema al registrar el usuario')),
+      );
+    } finally {
+      setState(() {
+        _isSubmitting = false; // Permitir nuevo envío
+      });
+    }
+  }
+
+  // Método para esperar la verificación del correo electrónico
+  void _waitForEmailVerification(User user) async {
+    while (!user.emailVerified) {
+      await Future.delayed(const Duration(seconds: 5));
+      await user.reload();
+      user = FirebaseAuth.instance.currentUser!;
+    }
+    setState(() {
+      _isWaitingForVerification = false;
+    });
+    _proceedToNextPage();
+  }
+
+  // Método para proceder a la siguiente página
+  void _proceedToNextPage() async {
+    bool registered = await _firestoreService.createUser(
+      _emailController.text,
+      _passwordController.text,
+    );
+
+    if (registered) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuario registrado correctamente')),
+      );
+      await Future.delayed(const Duration(seconds: 3));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DatosPersonales(
+            _emailController.text,
+            correo: _emailController.text, // Pasar el correo a DatosPersonales
+          ),
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: No se pudo registrar el usuario')),
       );
     }
   }
@@ -89,6 +157,7 @@ class _RegisterPageState extends State<RegisterPage> {
           child: Form(
             key: _formKey,
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Añadir la imagen aquí
                 Image.asset(
@@ -128,10 +197,12 @@ class _RegisterPageState extends State<RegisterPage> {
                   },
                 ),
                 const SizedBox(height: 20.0),
-                ElevatedButton(
-                  onPressed: _register,
-                  child: const Text('Registrar'),
-                ),
+                _isSubmitting
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton(
+                        onPressed: _isWaitingForVerification ? null : _register,
+                        child: const Text('Registrar'),
+                      ),
               ],
             ),
           ),

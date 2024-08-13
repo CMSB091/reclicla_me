@@ -1,5 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="tcc-recicla">
+    <uses-permission android:name="android.permission.INTERNET" />
     <application
         android:label="recila_me"
         android:name="${applicationName}"

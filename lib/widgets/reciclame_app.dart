@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:recila_me/widgets/mensaje_inicio.dart';
 
 class ReciclaMeApp extends StatelessWidget {
@@ -11,7 +12,11 @@ class ReciclaMeApp extends StatelessWidget {
     return MaterialApp(
       title: 'ReciclaMe',
       theme: ThemeData(
+        textTheme: GoogleFonts.robotoTextTheme(
+          Theme.of(context).textTheme,
+        ),
         primarySwatch: Colors.green,
+        
       ),
       home: const SplashScreen(),
     );

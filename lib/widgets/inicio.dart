@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
@@ -32,19 +33,22 @@ class MyInicio extends StatelessWidget {
         );
       },
     );
-
-    // Simula el cierre de sesión
     await Future.delayed(const Duration(seconds: 3));
-
-    // Cierra el diálogo
-    Navigator.of(context, rootNavigator: true).pop();
-
-    // Redirige a la página de login
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => const LoginApp(),
-      ),
-    );
+    try {
+      // Cierra la sesión del usuario
+      await FirebaseAuth.instance.signOut();
+    } catch (e) {
+      print('Error al cerrar sesión: $e');
+    } finally {
+      // Cierra el diálogo
+      Navigator.of(context, rootNavigator: true).pop();
+      // Redirige a la página de login
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const LoginApp(),
+        ),
+      );
+    }  
   }
 
   @override
@@ -96,7 +100,7 @@ class MyInicio extends StatelessWidget {
               context,
               icon: Icons.info,
               text: 'Información',
-              page: DatosPersonales('', correo: 'marcelo@gmail.com'),
+              page: const DatosPersonales('', correo: 'marcelo@gmail.com'),
             ),
             // Agrega más ListTile aquí si tienes más opciones en el menú
           ],
