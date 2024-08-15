@@ -1,3 +1,5 @@
+// ignore_for_file: no_leading_underscores_for_local_identifiers
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Importar Firebase Auth
 import 'package:recila_me/clases/firestore_service.dart';
@@ -30,9 +32,9 @@ class MyHomePage extends StatefulWidget {
   final bool desdeInicio;
 
   const MyHomePage({
-    Key? key,
+    super.key,
     required this.correo, required this.desdeInicio,
-  }) : super(key: key);
+  });
 
   @override
   _MyHomePageState createState() => _MyHomePageState();

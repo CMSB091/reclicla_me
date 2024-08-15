@@ -4,7 +4,6 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'register_page.dart';
-import '../clases/firestore_service.dart';
 import 'inicio.dart';
 
 void main() async {
@@ -61,7 +60,6 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
 
   @override
