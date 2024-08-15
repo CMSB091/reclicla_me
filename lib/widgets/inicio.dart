@@ -1,90 +1,76 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
-import 'package:recila_me/widgets/login.dart';
+import 'package:recila_me/clases/firestore_service.dart'; // Importa tu servicio de Firestore
 
 class MyInicio extends StatelessWidget {
   final String parametro;
+  final Funciones funciones = Funciones(); // Crea una instancia de la clase
+  final FirestoreService firestoreService = FirestoreService(); // Instancia de FirestoreService
 
-  const MyInicio(String nombre, {super.key, required this.parametro});
-
-  Future<void> _simulateLogout(BuildContext context) async {
-    // Muestra el diálogo de cierre de sesión
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const AlertDialog(
-          content: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(width: 20),
-              Text(
-                'Cerrando sesión...',
-                style: TextStyle(
-                  fontFamily: 'Artwork',
-                  fontSize: 20,
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-    await Future.delayed(const Duration(seconds: 3));
-    try {
-      // Cierra la sesión del usuario
-      await FirebaseAuth.instance.signOut();
-    } catch (e) {
-      print('Error al cerrar sesión: $e');
-    } finally {
-      // Cierra el diálogo
-      Navigator.of(context, rootNavigator: true).pop();
-      // Redirige a la página de login
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const LoginApp(),
-        ),
-      );
-    }  
-  }
+  MyInicio(String nombre, {super.key, required this.parametro});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        systemOverlayStyle: const SystemUiOverlayStyle(
-          statusBarBrightness: Brightness.light,
-        ),
-        backgroundColor: Colors.green.shade200,
-        titleTextStyle: const TextStyle(
-          color: Colors.black,
-          fontSize: 18,
-        ),
-        title: Text(
-          'Bienvenido $parametro !!',
-          style: const TextStyle(
-            fontFamily: 'Artwork',
-            fontSize: 18,
+    return FutureBuilder<String>(
+      future: firestoreService.getUserName(parametro),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Scaffold(
+            body: Center(
+              child: Lottie.asset('assets/animations/lotti-recycle.json'),
+            ),
+          );
+        }
+        if (snapshot.hasError) {
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Error'),
+            ),
+            body: Center(
+              child: Text('Error: ${snapshot.error}'),
+            ),
+          );
+        }
+
+        String userName = snapshot.data ?? parametro;
+
+        return Scaffold(
+          appBar: AppBar(
+            systemOverlayStyle: const SystemUiOverlayStyle(
+              statusBarBrightness: Brightness.light,
+            ),
+            backgroundColor: Colors.green.shade200,
+            titleTextStyle: const TextStyle(
+              color: Colors.black,
+              fontSize: 18,
+            ),
+            title: Text(
+              'Bienvenido $userName !!',
+              style: const TextStyle(
+                fontFamily: 'Artwork',
+                fontSize: 18,
+              ),
+            ),
+            leading: IconButton(
+              icon: Image.asset('assets/images/exitDoor.png'),
+              onPressed: () => funciones.simulateLogout(context),
+            ),
           ),
-        ),
-        leading: IconButton(
-          icon: Image.asset('assets/images/exitDoor.png'),
-          onPressed: () => _simulateLogout(context),
-        ),
-      ),
-      endDrawer: _buildDrawer(context),
-      body: Center(
-        child: Wrap(
-          spacing: 20.0,
-          runSpacing: 20.0,
-          children: List.generate(4, (index) {
-            return _buildMenuCard(context, index);
-          }),
-        ),
-      ),
+          endDrawer: _buildDrawer(context),
+          body: Center(
+            child: Wrap(
+              spacing: 20.0,
+              runSpacing: 20.0,
+              children: List.generate(4, (index) {
+                return _buildMenuCard(context, index);
+              }),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -183,7 +169,7 @@ class MyInicio extends StatelessWidget {
       case 3:
         return const Page4();
       default:
-        return const MyInicio('',parametro: '');
+        return  MyInicio('', parametro: '');
     }
   }
 }

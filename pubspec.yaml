@@ -35,6 +35,7 @@ dependencies:
   cloud_firestore: ^5.0.0
   email_validator: ^2.0.1
   firebase_auth: ^5.1.4
+  lottie: ^2.3.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -69,6 +70,8 @@ flutter:
     - assets/images/agregarUsuario.png
     - assets/images/exitDoor.png
     - assets/recycling_tips.json
+    - assets/animations/lotti-recycle.json
+    - assets/animations/lotti-trash.json
     
 
   fonts:
