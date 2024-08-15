@@ -81,10 +81,11 @@ class _LoginPageState extends State<LoginPage> {
           email: _emailController.text,
           password: _passwordController.text,
         );
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MyInicio(_emailController.text, parametro: _emailController.text),
+            builder: (context) => MyInicio('', parametro: _emailController.text),
           ),
         );
       } on FirebaseAuthException catch (e) {

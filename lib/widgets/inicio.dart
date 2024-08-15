@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
@@ -5,17 +6,22 @@ import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
 import 'package:recila_me/clases/firestore_service.dart'; // Importa tu servicio de Firestore
 
+class CustomIcons {
+  static const IconData customInfo = IconData(0xe900, fontFamily: 'CustomIcons');
+}
+
 class MyInicio extends StatelessWidget {
-  final String parametro;
+  final String parametro; // Se declara como final para asegurar inmutabilidad
   final Funciones funciones = Funciones(); // Crea una instancia de la clase
   final FirestoreService firestoreService = FirestoreService(); // Instancia de FirestoreService
+  User? user = FirebaseAuth.instance.currentUser;
 
-  MyInicio(String nombre, {super.key, required this.parametro});
+  MyInicio(String s, {super.key, required this.parametro}); // Constructor que recibe el parámetro como final
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<String>(
-      future: firestoreService.getUserName(parametro),
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: firestoreService.getUserData(user!.email.toString()), // Llama a getUserData
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
@@ -35,7 +41,8 @@ class MyInicio extends StatelessWidget {
           );
         }
 
-        String userName = snapshot.data ?? parametro;
+        // Extraer el nombre del Map
+        String userName = snapshot.data?['nombre'] ?? parametro;
 
         return Scaffold(
           appBar: AppBar(
@@ -84,9 +91,9 @@ class MyInicio extends StatelessWidget {
             _buildDrawerHeader(),
             _buildDrawerItem(
               context,
-              icon: Icons.info,
+              icon: const Icon(Icons.info), // Utiliza un icono del sistema
               text: 'Información',
-              page: const DatosPersonales('', correo: 'marcelo@gmail.com'),
+              page: DatosPersonales('',correo: parametro, desdeInicio: true), // Pasa el parámetro al constructor
             ),
             // Agrega más ListTile aquí si tienes más opciones en el menú
           ],
@@ -114,12 +121,12 @@ class MyInicio extends StatelessWidget {
 
   Widget _buildDrawerItem(
     BuildContext context, {
-    required IconData icon,
+    required Widget icon, // Cambia IconData a Widget
     required String text,
     required Widget page,
   }) {
     return ListTile(
-      leading: Icon(icon),
+      leading: icon, // Usa el widget icon directamente
       title: Text(text),
       onTap: () {
         Navigator.push(
@@ -169,7 +176,7 @@ class MyInicio extends StatelessWidget {
       case 3:
         return const Page4();
       default:
-        return  MyInicio('', parametro: '');
+        return MyInicio('',parametro: parametro); // Asegúrate de pasar el parámetro correcto
     }
   }
 }

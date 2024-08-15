@@ -69,9 +69,11 @@ flutter:
     - assets/images/branches_border.png
     - assets/images/agregarUsuario.png
     - assets/images/exitDoor.png
+    - assets/images/back.png
     - assets/recycling_tips.json
     - assets/animations/lotti-recycle.json
     - assets/animations/lotti-trash.json
+    - assets/paises.json
     
 
   fonts:
