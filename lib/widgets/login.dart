@@ -81,9 +81,6 @@ class _LoginPageState extends State<LoginPage> {
           email: _emailController.text,
           password: _passwordController.text,
         );
-
-        final nombreUsuario = await _firestoreService.getUserName(_emailController.text);
-
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
