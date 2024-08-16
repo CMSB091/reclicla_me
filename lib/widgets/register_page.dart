@@ -121,7 +121,7 @@ class _RegisterPageState extends State<RegisterPage> {
         MaterialPageRoute(
           builder: (context) => DatosPersonales(
             _emailController.text,
-            correo: _emailController.text, // Pasar el correo a DatosPersonales
+            correo: _emailController.text, desdeInicio: false, // Pasar el correo a DatosPersonales
           ),
         ),
       );
