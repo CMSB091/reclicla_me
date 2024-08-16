@@ -3,14 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
 import 'package:recila_me/widgets/login.dart';
+import 'package:recila_me/clases/object_detection_screen.dart';
+import 'package:camera/camera.dart';
 
 class MyInicio extends StatelessWidget {
   final String parametro;
+  final List<CameraDescription> cameras;
 
-  const MyInicio(String nombre, {super.key, required this.parametro});
+  const MyInicio(String nombre, {super.key, required this.parametro, required this.cameras});
 
   Future<void> _simulateLogout(BuildContext context) async {
-    // Muestra el diálogo de cierre de sesión
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -35,20 +37,17 @@ class MyInicio extends StatelessWidget {
     );
     await Future.delayed(const Duration(seconds: 3));
     try {
-      // Cierra la sesión del usuario
       await FirebaseAuth.instance.signOut();
     } catch (e) {
       print('Error al cerrar sesión: $e');
     } finally {
-      // Cierra el diálogo
       Navigator.of(context, rootNavigator: true).pop();
-      // Redirige a la página de login
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => const LoginApp(),
         ),
       );
-    }  
+    }
   }
 
   @override
@@ -102,7 +101,6 @@ class MyInicio extends StatelessWidget {
               text: 'Información',
               page: const DatosPersonales('', correo: 'marcelo@gmail.com'),
             ),
-            // Agrega más ListTile aquí si tienes más opciones en el menú
           ],
         ),
       ),
@@ -160,7 +158,7 @@ class MyInicio extends StatelessWidget {
           color: Colors.green.shade100,
           child: Center(
             child: Text(
-              'Menú ${index + 1}',
+              _getMenuTitle(index),
               style: const TextStyle(
                 fontSize: 20,
                 color: Colors.black,
@@ -172,10 +170,30 @@ class MyInicio extends StatelessWidget {
     );
   }
 
+  String _getMenuTitle(int index) {
+    switch (index) {
+      case 0:
+        return 'Detección de objetos';
+      case 1:
+        return 'Página 2';
+      case 2:
+        return 'Página 3';
+      case 3:
+        return 'Página 4';
+      default:
+        return 'Menú ${index + 1}';
+    }
+  }
+
   Widget _getPageForIndex(int index) {
     switch (index) {
       case 0:
-        return const Page1();
+        if (cameras.isEmpty) {
+          return const Scaffold(
+            body: Center(child: Text('No se encontraron cámaras disponibles')),
+          );
+        }
+        return ObjectDetectionScreen(cameras: cameras);
       case 1:
         return const Page2();
       case 2:
@@ -183,24 +201,8 @@ class MyInicio extends StatelessWidget {
       case 3:
         return const Page4();
       default:
-        return const MyInicio('',parametro: '');
+        return const MyInicio('', parametro: '', cameras: []);
     }
-  }
-}
-
-class Page1 extends StatelessWidget {
-  const Page1({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Página 1'),
-      ),
-      body: const Center(
-        child: Text('Contenido de la Página 1'),
-      ),
-    );
   }
 }
 

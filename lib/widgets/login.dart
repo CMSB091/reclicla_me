@@ -3,9 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:recila_me/main.dart';
 import 'register_page.dart';
 import '../clases/firestore_service.dart';
 import 'inicio.dart';
+import 'package:camera/camera.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +16,9 @@ void main() async {
 }
 
 class LoginApp extends StatelessWidget {
-  const LoginApp({super.key});
+  final List<CameraDescription>? cameras;
+
+  const LoginApp({Key? key, this.cameras}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,13 +27,15 @@ class LoginApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const AuthenticationWrapper(),
+      home: AuthenticationWrapper(cameras: cameras),
     );
   }
 }
 
 class AuthenticationWrapper extends StatelessWidget {
-  const AuthenticationWrapper({super.key});
+  final List<CameraDescription>? cameras;
+
+  const AuthenticationWrapper({super.key, this.cameras});
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +45,11 @@ class AuthenticationWrapper extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.active) {
           if (snapshot.hasData) {
             final nombreUsuario = snapshot.data!.email ?? '';
-            return MyInicio('', parametro: nombreUsuario);
+            return MyInicio(
+              '', 
+              parametro: nombreUsuario, 
+              cameras: cameras ?? [], // Pasa las cámaras correctas aquí
+            );
           } else {
             return const LoginPage();
           }
@@ -49,6 +59,7 @@ class AuthenticationWrapper extends StatelessWidget {
     );
   }
 }
+
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -87,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MyInicio('', parametro: nombreUsuario),
+            builder: (context) => MyInicio('', parametro: nombreUsuario, cameras: cameras!),  // Pasa las cámaras aquí
           ),
         );
       } on FirebaseAuthException catch (e) {

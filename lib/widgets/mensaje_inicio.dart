@@ -2,20 +2,17 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:recila_me/widgets/login.dart';
+import 'package:camera/camera.dart';
 
 // ignore: camel_case_types
 class mensajeInicio extends StatelessWidget {
-  const mensajeInicio({super.key});
+  final List<CameraDescription>? cameras;
+
+  const mensajeInicio({Key? key, this.cameras}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ReciclaMe',
-      theme: ThemeData(
-        primarySwatch: Colors.green,
-      ),
-      home: const SplashScreen(),
-    );
+    return SplashScreen(cameras: cameras);
   }
 }
 
@@ -32,14 +29,15 @@ class RecyclingTip {
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final List<CameraDescription>? cameras;
+
+  const SplashScreen({Key? key, this.cameras}) : super(key: key);
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  late BuildContext _context;
   List<RecyclingTip> _tips = [];
 
   @override
@@ -56,7 +54,6 @@ class _SplashScreenState extends State<SplashScreen> {
     } catch (e) {
       print("Error al cargar los consejos de reciclaje: $e");
     } finally {
-      _context = context;
       _showWelcomeDialog();
     }
   }
@@ -70,7 +67,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     showDialog(
-      context: _context,
+      context: context,  // Usar directamente el contexto actual
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Center(
@@ -145,8 +142,10 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _navigateToHome() {
-    Navigator.of(_context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginApp()),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => LoginApp(cameras: widget.cameras),  // Pasar las cámaras a LoginApp si es necesario
+      ),
     );
   }
 

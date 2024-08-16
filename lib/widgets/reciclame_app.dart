@@ -1,12 +1,14 @@
 import 'dart:async';
-
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:recila_me/widgets/mensaje_inicio.dart';
 
 class ReciclaMeApp extends StatelessWidget {
-  const ReciclaMeApp({super.key});
+  final List<CameraDescription>? cameras;
 
+  const ReciclaMeApp({Key? key, this.cameras}) : super(key: key);
+  
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -16,15 +18,16 @@ class ReciclaMeApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
         primarySwatch: Colors.green,
-        
       ),
-      home: const SplashScreen(),
+      home: SplashScreen(cameras: cameras),
     );
   }
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  final List<CameraDescription>? cameras;
+
+  const SplashScreen({Key? key, this.cameras}) : super(key: key);
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -48,7 +51,10 @@ class _SplashScreenState extends State<SplashScreen> {
           timer.cancel();
           // Navegar a la siguiente pantalla cuando la carga está completa
           Navigator.of(_context).pushReplacement(
-              MaterialPageRoute(builder: (context) => const mensajeInicio()));
+            MaterialPageRoute(
+              builder: (context) => mensajeInicio(cameras: widget.cameras), // Pasar las cámaras a la próxima pantalla
+            ),
+          );
         } else {
           _progress += 0.02;
         }
