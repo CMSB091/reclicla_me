@@ -19,28 +19,25 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _isWaitingForVerification = false;
   bool _isSubmitting = false;
 
-  // Método para registrar un nuevo usuario
   void _register() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (_isSubmitting) return; // Evitar múltiples envíos
+    if (_isSubmitting) return;
 
     setState(() {
       _isSubmitting = true;
     });
 
     try {
-      // Verificar si el email ya existe
       bool emailExists = await _firestoreService.checkEmailExists(_emailController.text);
 
       if (emailExists) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('El email ya está registrado')),
         );
-        return; // Detener el proceso de registro
+        return;
       }
 
-      // Registrar el nuevo usuario en Firebase
       UserCredential userCredential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
         email: _emailController.text,
@@ -61,7 +58,6 @@ class _RegisterPageState extends State<RegisterPage> {
           );
           _waitForEmailVerification(user);
         } else {
-          // El usuario ya está verificado
           _proceedToNextPage();
         }
       }
@@ -79,19 +75,16 @@ class _RegisterPageState extends State<RegisterPage> {
         SnackBar(content: Text(message)),
       );
     } catch (e) {
-      // Captura y manejo de excepciones
-      print('Error en registro: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error: Hubo un problema al registrar el usuario')),
       );
     } finally {
       setState(() {
-        _isSubmitting = false; // Permitir nuevo envío
+        _isSubmitting = false;
       });
     }
   }
 
-  // Método para esperar la verificación del correo electrónico
   void _waitForEmailVerification(User user) async {
     while (!user.emailVerified) {
       await Future.delayed(const Duration(seconds: 5));
@@ -104,7 +97,6 @@ class _RegisterPageState extends State<RegisterPage> {
     _proceedToNextPage();
   }
 
-  // Método para proceder a la siguiente página
   void _proceedToNextPage() async {
     bool registered = await _firestoreService.createUser(
       _emailController.text,
@@ -120,8 +112,9 @@ class _RegisterPageState extends State<RegisterPage> {
         context,
         MaterialPageRoute(
           builder: (context) => DatosPersonales(
-            _emailController.text,
-            correo: _emailController.text, desdeInicio: false, // Pasar el correo a DatosPersonales
+            correo: _emailController.text, 
+            desdeInicio: false, 
+            cameras: [], // Asegúrate de pasar las cámaras si las tienes disponibles
           ),
         ),
       );
@@ -149,7 +142,7 @@ class _RegisterPageState extends State<RegisterPage> {
             Navigator.pop(context);
           },
         ),
-        backgroundColor: Colors.green.shade200, // Establece el color de fondo aquí
+        backgroundColor: Colors.green.shade200, 
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -159,10 +152,9 @@ class _RegisterPageState extends State<RegisterPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Añadir la imagen aquí
                 Image.asset(
-                  'assets/images/agregarUsuario.png', // Reemplaza con la ruta de tu imagen
-                  height: 150.0, // Ajusta la altura según sea necesario
+                  'assets/images/agregarUsuario.png',
+                  height: 150.0,
                 ),
                 const SizedBox(height: 20.0),
                 TextFormField(
@@ -176,7 +168,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (value == null || value.isEmpty) {
                       return 'Por favor ingrese su email';
                     } else if (!EmailValidator.validate(value)) {
-                      return 'Por favor ingrese un email válido'; // Mensaje si el email no es válido
+                      return 'Por favor ingrese un email válido';
                     }
                     return null;
                   },

@@ -1,18 +1,20 @@
-// ignore_for_file: no_leading_underscores_for_local_identifiers
-
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Importar Firebase Auth
+import 'package:firebase_auth/firebase_auth.dart'; 
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/login.dart';
+import 'package:camera/camera.dart';  
 
 class DatosPersonales extends StatelessWidget {
   final String correo;
   final bool desdeInicio;
+  final List<CameraDescription> cameras;
 
-  const DatosPersonales(String s, {
+  const DatosPersonales({
     super.key,
-    required this.correo, required this.desdeInicio
+    required this.correo,
+    required this.desdeInicio,
+    required this.cameras,
   });
 
   @override
@@ -22,25 +24,32 @@ class DatosPersonales extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(correo: correo, desdeInicio: desdeInicio,),
+      home: DatosPersonalesPage(
+        correo: correo,
+        desdeInicio: desdeInicio,
+        cameras: cameras,
+      ),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
+class DatosPersonalesPage extends StatefulWidget {
   final String correo;
   final bool desdeInicio;
+  final List<CameraDescription> cameras;
 
-  const MyHomePage({
+  const DatosPersonalesPage({
     super.key,
-    required this.correo, required this.desdeInicio,
+    required this.correo,
+    required this.desdeInicio,
+    required this.cameras,
   });
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _DatosPersonalesPageState createState() => _DatosPersonalesPageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nombreController = TextEditingController();
   final TextEditingController _apellidoController = TextEditingController();
@@ -52,27 +61,23 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isLoading = false;
   bool _isLoadingData = false;
   String _loadingMessage = '';
-  final FirestoreService _firestoreService = FirestoreService(); // Instancia del servicio Firestore
-  User? user = FirebaseAuth.instance.currentUser; // Obtener el usuario autenticado
+  final FirestoreService _firestoreService = FirestoreService(); 
+  User? user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
     super.initState();
-    _cargarDatosUsuario(); // Cargar los datos del usuario al iniciar el estado
+    _cargarDatosUsuario(); 
   }
 
-  void _guardarDatos() {
+  void _guardarDatos() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         _isLoading = true;
         _loadingMessage = 'Guardando datos...';
       });
 
-      Future.delayed(const Duration(seconds: 3), () async {
-        setState(() {
-          _isLoading = false;
-        });
-
+      try {
         String nombre = _nombreController.text;
         String apellido = _apellidoController.text;
         int edad = int.parse(_edadController.text);
@@ -81,7 +86,6 @@ class _MyHomePageState extends State<MyHomePage> {
         String pais = _paisController.text;
         String telefono = _telefonoController.text;
 
-        // Llamar a updateUser en FirestoreService para actualizar los datos
         bool result = await _firestoreService.updateUser(
           nombre,
           apellido,
@@ -93,33 +97,47 @@ class _MyHomePageState extends State<MyHomePage> {
           widget.correo
         );
 
-        // Mostrar el diálogo con los datos ingresados
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Datos Guardados'),
-              content: Text(
-                  'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    // Redirigir a la página de inicio
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => MyInicio(nombre, parametro: nombre,cameras: [],),
-                      ),
-                    );
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
+        if (result && mounted) {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Datos Guardados'),
+                content: Text(
+                    'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MyInicio(
+                            parametro: nombre,
+                            cameras: widget.cameras,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al guardar los datos.')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
         );
+      } finally {
+        setState(() {
+          _isLoading = false;
+        });
 
-        // Limpiar los campos de texto
         _nombreController.clear();
         _apellidoController.clear();
         _edadController.clear();
@@ -127,12 +145,11 @@ class _MyHomePageState extends State<MyHomePage> {
         _ciudadController.clear();
         _paisController.clear();
         _telefonoController.clear();
-      });
+      }
     }
   }
 
   void _eliminarDatos() async {
-    // Mostrar un modal de confirmación antes de eliminar
     bool confirmarEliminar = await showDialog(
       context: context,
       builder: (context) {
@@ -142,13 +159,13 @@ class _MyHomePageState extends State<MyHomePage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); // Cancelar
+                Navigator.of(context).pop(false); 
               },
               child: const Text('Cancelar'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(true); // Confirmar
+                Navigator.of(context).pop(true);
               },
               child: const Text('Eliminar'),
             ),
@@ -158,59 +175,60 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     if (confirmarEliminar) {
-      setState(() {
-        _pedirContrasenaYEliminarCuenta();
-      });
+      _pedirContrasenaYEliminarCuenta();
     }
   }
 
   void _intentarSalir() {
-    if(widget.desdeInicio == false){
-      if (_nombreController.text.isNotEmpty ||
-          _apellidoController.text.isNotEmpty ||
-          _edadController.text.isNotEmpty ||
-          _direccionController.text.isNotEmpty ||
-          _ciudadController.text.isNotEmpty ||
-          _paisController.text.isNotEmpty ||
-          _telefonoController.text.isNotEmpty) {
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Datos sin guardar'),
-              content: const Text('Hay datos sin guardar. ¿Desea salir de todas formas?'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Cancelar'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.push(
+    if (!widget.desdeInicio &&
+        (_nombreController.text.isNotEmpty ||
+            _apellidoController.text.isNotEmpty ||
+            _edadController.text.isNotEmpty ||
+            _direccionController.text.isNotEmpty ||
+            _ciudadController.text.isNotEmpty ||
+            _paisController.text.isNotEmpty ||
+            _telefonoController.text.isNotEmpty)) {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Datos sin guardar'),
+            content: const Text('Hay datos sin guardar. ¿Desea salir de todas formas?'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Cancelar'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>  MyInicio('',parametro:user!.email.toString()),
+                      builder: (context) => MyInicio(
+                        parametro: user!.email.toString(),
+                        cameras: widget.cameras,
+                      ),
                     ),
-                    );
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Salir'),
-                ),
-              ],
-            );
-          },
-        );
-      } else {
-        Navigator.of(context).pop();
-      }
-    }else{
+                  );
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Salir'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
       Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => MyInicio('',parametro: '',), // La página a la que quieres redirigir
-      ),
+        context,
+        MaterialPageRoute(
+          builder: (context) => MyInicio(
+            parametro: '',
+            cameras: widget.cameras,
+          ),
+        ),
       );
     }
   }
@@ -222,12 +240,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
 
     try {
-      // Verificar si hay un usuario autenticado
       if (user != null) {
-        // Obtener el correo electrónico del usuario autenticado
         String correo = user!.email.toString();
 
-        // Llamar al servicio Firestore para obtener los datos del usuario
         Map<String, dynamic>? userData = await _firestoreService.getUserData(correo);
 
         if (userData != null) {
@@ -239,15 +254,12 @@ class _MyHomePageState extends State<MyHomePage> {
           _paisController.text = userData['pais'] ?? '';
           _telefonoController.text = userData['telefono'] ?? '';
         } else {
-          // Manejar el caso en el que no se obtienen datos
           print('No se encontraron datos para el usuario con correo $correo');
         }
       } else {
-        // Manejar el caso en el que no hay un usuario autenticado
         print('No hay un usuario autenticado');
       }
     } catch (e) {
-      // Manejar errores en la carga de datos
       print('Error al cargar datos del usuario: $e');
     } finally {
       setState(() {
@@ -277,13 +289,13 @@ class _MyHomePageState extends State<MyHomePage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); // Cancelar
+                Navigator.of(context).pop(false);
               },
               child: const Text('Cancelar'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(true); // Confirmar
+                Navigator.of(context).pop(true); 
               },
               child: const Text('Eliminar'),
             ),
@@ -293,10 +305,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     if (confirmarEliminar == true) {
-      // Mostrar el spinner mientras se elimina la cuenta
       showDialog(
         context: context,
-        barrierDismissible: false, // El usuario no puede cerrar el diálogo tocando fuera de él
+        barrierDismissible: false, 
         builder: (context) {
           return const AlertDialog(
             content: Row(
@@ -305,10 +316,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 CircularProgressIndicator(),
                 SizedBox(width: 16),
                 Text('Eliminando cuenta...',
-                style: TextStyle(
-                    fontFamily: 'Artwork',
-                    fontSize: 18
-                ),),
+                  style: TextStyle(
+                      fontFamily: 'Artwork',
+                      fontSize: 18
+                  ),),
               ],
             ),
           );
@@ -320,61 +331,59 @@ class _MyHomePageState extends State<MyHomePage> {
         if (user != null) {
           bool result = await _firestoreService.deleteUser(user.email ?? 'No disponible');
           if(result){
-            // Reautenticar al usuario con la contraseña ingresada
             AuthCredential credential = EmailAuthProvider.credential(
               email: user.email!,
               password: _contrasenaController.text,
             );
             await user.reauthenticateWithCredential(credential);
-            // Eliminar la cuenta
             await user.delete();
-            // Cerrar el diálogo del spinner
-            Navigator.of(context).pop();
-            // Mostrar un diálogo de éxito
-            showDialog(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  title: const Text('Cuenta Eliminada'),
-                  content: const Text('Tu cuenta ha sido eliminada correctamente.'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop(); // Cerrar el diálogo
-                        Navigator.of(context).pushAndRemoveUntil(
-                          MaterialPageRoute(builder: (context) => const LoginApp()), // Redirigir a la página de inicio de sesión
-                          (route) => false, // Eliminar todas las rutas anteriores
-                        );
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                );
-              },
-            );
+            if (mounted) {
+              Navigator.of(context).pop();
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: const Text('Cuenta Eliminada'),
+                    content: const Text('Tu cuenta ha sido eliminada correctamente.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (context) => const LoginApp()), 
+                            (route) => false, 
+                          );
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            }
           }
         }
       } catch (e) {
-        // Cerrar el diálogo del spinner
-        Navigator.of(context).pop();
-        // Manejar errores en la reautenticación o eliminación de cuenta
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text('Error'),
-              content: Text('Ocurrió un error al intentar eliminar la cuenta: $e'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('OK'),
-                ),
-              ],
-            );
-          },
-        );
+        if (mounted) {
+          Navigator.of(context).pop();
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Error'),
+                content: Text('Ocurrió un error al intentar eliminar la cuenta: $e'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       }
     }
   }

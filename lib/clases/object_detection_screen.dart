@@ -81,27 +81,43 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
   }
 
   void _runModelOnFrame(CameraImage img) async {
-    if (_interpreter == null) return;
+  if (_interpreter == null || _isDetecting) return;
 
-    try {
-      final input = _preprocessImage(img);
-      final output = List.filled(1 * 10 * 4, 0.0).reshape([1, 10, 4]);
+  try {
+    // Prevenimos múltiples ejecuciones concurrentes.
+    _isDetecting = true;
 
-      _interpreter!.run(input, output);
-
+    // Preprocesamos la imagen.
+    final input = _preprocessImage(img);
+    
+    // Verificamos que la entrada sea válida.
+    if (input == null) {
       setState(() {
-        _detectionResult = "Detección completa. Resultados: ${output.first}";
-        _saveImage(input);  // Guardar la imagen procesada
+        _detectionResult = "Error: la imagen no se procesó correctamente.";
       });
-    } catch (e) {
-      print("Error durante la detección: $e");
-      setState(() {
-        _detectionResult = "Error durante la detección: $e";
-      });
-    } finally {
       _isDetecting = false;
+      return;
     }
+
+    // Definimos la salida del modelo.
+    final output = List.filled(1 * 10 * 4, 0.0).reshape([1, 10, 4]);
+
+    // Ejecutamos el modelo.
+    _interpreter!.run(input, output);
+
+    setState(() {
+      _detectionResult = "Detección completa. Resultados: ${output.first}";
+      _saveImage(input);  // Guardar la imagen procesada
+    });
+  } catch (e) {
+    print("Error durante la detección: $e");
+    setState(() {
+      _detectionResult = "Error durante la detección: $e";
+    });
+  } finally {
+    _isDetecting = false;
   }
+}
 
   Uint8List _preprocessImage(CameraImage img) {
     final imageLibImage = _convertYUV420ToImage(img);

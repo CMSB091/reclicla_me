@@ -6,11 +6,24 @@ import 'package:recila_me/widgets/login.dart';
 import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
 
-class MyInicio extends StatelessWidget {
+class MyInicio extends StatefulWidget {
   final String parametro;
   final List<CameraDescription> cameras;
 
-  const MyInicio(String nombre, {super.key, required this.parametro, required this.cameras});
+  const MyInicio({super.key, required this.parametro, required this.cameras});
+
+  @override
+  _MyInicioState createState() => _MyInicioState();
+}
+
+class _MyInicioState extends State<MyInicio> {
+  bool _isCancelled = false;
+
+  @override
+  void dispose() {
+    _isCancelled = true;
+    super.dispose();
+  }
 
   Future<void> _simulateLogout(BuildContext context) async {
     showDialog(
@@ -36,17 +49,21 @@ class MyInicio extends StatelessWidget {
       },
     );
     await Future.delayed(const Duration(seconds: 3));
-    try {
-      await FirebaseAuth.instance.signOut();
-    } catch (e) {
-      print('Error al cerrar sesión: $e');
-    } finally {
-      Navigator.of(context, rootNavigator: true).pop();
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const LoginApp(),
-        ),
-      );
+    if (!_isCancelled && mounted) {
+      try {
+        await FirebaseAuth.instance.signOut();
+      } catch (e) {
+        print('Error al cerrar sesión: $e');
+      } finally {
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop();
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => const LoginApp(),
+            ),
+          );
+        }
+      }
     }
   }
 
@@ -63,7 +80,7 @@ class MyInicio extends StatelessWidget {
           fontSize: 18,
         ),
         title: Text(
-          'Bienvenido $parametro !!',
+          'Bienvenido ${widget.parametro} !!',
           style: const TextStyle(
             fontFamily: 'Artwork',
             fontSize: 18,
@@ -99,7 +116,7 @@ class MyInicio extends StatelessWidget {
               context,
               icon: Icons.info,
               text: 'Información',
-              page: const DatosPersonales('', correo: 'marcelo@gmail.com'),
+              page: DatosPersonales(correo: 'marcelo@gmail.com', desdeInicio: false, cameras: widget.cameras),
             ),
           ],
         ),
@@ -134,10 +151,12 @@ class MyInicio extends StatelessWidget {
       leading: Icon(icon),
       title: Text(text),
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => page),
-        );
+        if (!_isCancelled && mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => page),
+          );
+        }
       },
     );
   }
@@ -146,10 +165,12 @@ class MyInicio extends StatelessWidget {
     final page = _getPageForIndex(index);
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => page),
-        );
+        if (!_isCancelled && mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => page),
+          );
+        }
       },
       child: SizedBox(
         width: 150.0,
@@ -188,12 +209,12 @@ class MyInicio extends StatelessWidget {
   Widget _getPageForIndex(int index) {
     switch (index) {
       case 0:
-        if (cameras.isEmpty) {
+        if (widget.cameras.isEmpty) {
           return const Scaffold(
             body: Center(child: Text('No se encontraron cámaras disponibles')),
           );
         }
-        return ObjectDetectionScreen(cameras: cameras);
+        return ObjectDetectionScreen(cameras: widget.cameras);
       case 1:
         return const Page2();
       case 2:
@@ -201,7 +222,7 @@ class MyInicio extends StatelessWidget {
       case 3:
         return const Page4();
       default:
-        return const MyInicio('', parametro: '', cameras: []);
+        return MyInicio(parametro: '', cameras: widget.cameras);
     }
   }
 }

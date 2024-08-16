@@ -46,9 +46,8 @@ class AuthenticationWrapper extends StatelessWidget {
           if (snapshot.hasData) {
             final nombreUsuario = snapshot.data!.email ?? '';
             return MyInicio(
-              '', 
-              parametro: nombreUsuario, 
-              cameras: cameras ?? [], // Pasa las cámaras correctas aquí
+              parametro: nombreUsuario, // Aquí se utiliza el argumento nombrado correctamente
+              cameras: cameras ?? [],
             );
           } else {
             return const LoginPage();
@@ -59,7 +58,6 @@ class AuthenticationWrapper extends StatelessWidget {
     );
   }
 }
-
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -98,7 +96,10 @@ class _LoginPageState extends State<LoginPage> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MyInicio('', parametro: nombreUsuario, cameras: cameras!),  // Pasa las cámaras aquí
+            builder: (context) => MyInicio(
+              parametro: nombreUsuario, // Aquí también se usa el argumento nombrado
+              cameras: [], // Pasa las cámaras correctas si es necesario
+            ),
           ),
         );
       } on FirebaseAuthException catch (e) {
