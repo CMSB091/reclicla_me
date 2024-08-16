@@ -49,10 +49,10 @@ class _SplashScreenState extends State<SplashScreen> {
       setState(() {
         if (_progress >= 1) {
           timer.cancel();
-          // Navegar a la siguiente pantalla cuando la carga está completa
+          // Navega a la siguiente pantalla cuando la carga está completa
           Navigator.of(_context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => mensajeInicio(cameras: widget.cameras), // Pasar las cámaras a la próxima pantalla
+              builder: (context) => mensajeInicio(cameras: widget.cameras), // Pasa las cámaras a la próxima pantalla
             ),
           );
         } else {
@@ -86,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: Text(
                   'ReciclaMe',
                   style: TextStyle(
-                    fontFamily: 'Artwork', // Asegúrate de tener la fuente añadida
+                    fontFamily: 'Artwork',
                     fontSize: 40,
                     fontWeight: FontWeight.bold,
                     color: Colors.green,

@@ -104,10 +104,10 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
 
     // Ejecutamos el modelo.
     _interpreter!.run(input, output);
-
+    
     setState(() {
       _detectionResult = "Detección completa. Resultados: ${output.first}";
-      _saveImage(input);  // Guardar la imagen procesada
+      _saveImage(input);  // Guarda la imagen procesada
     });
   } catch (e) {
     print("Error durante la detección: $e");

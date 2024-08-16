@@ -114,7 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
           builder: (context) => DatosPersonales(
             correo: _emailController.text, 
             desdeInicio: false, 
-            cameras: [], // Asegúrate de pasar las cámaras si las tienes disponibles
+            cameras: [],
           ),
         ),
       );

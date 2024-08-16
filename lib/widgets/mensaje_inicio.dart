@@ -144,7 +144,7 @@ class _SplashScreenState extends State<SplashScreen> {
   void _navigateToHome() {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => LoginApp(cameras: widget.cameras),  // Pasar las cámaras a LoginApp si es necesario
+        builder: (context) => LoginApp(cameras: widget.cameras),
       ),
     );
   }

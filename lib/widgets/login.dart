@@ -46,7 +46,7 @@ class AuthenticationWrapper extends StatelessWidget {
           if (snapshot.hasData) {
             final nombreUsuario = snapshot.data!.email ?? '';
             return MyInicio(
-              parametro: nombreUsuario, // Aquí se utiliza el argumento nombrado correctamente
+              parametro: nombreUsuario,
               cameras: cameras ?? [],
             );
           } else {
@@ -97,8 +97,8 @@ class _LoginPageState extends State<LoginPage> {
           context,
           MaterialPageRoute(
             builder: (context) => MyInicio(
-              parametro: nombreUsuario, // Aquí también se usa el argumento nombrado
-              cameras: [], // Pasa las cámaras correctas si es necesario
+              parametro: nombreUsuario,
+              cameras: [],
             ),
           ),
         );
