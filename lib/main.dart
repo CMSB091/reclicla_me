@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:camera/camera.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:recila_me/widgets/reciclame_app.dart';
 import 'package:seq_logger/seq_logger.dart';
 import 'clases/firebase_options.dart';
@@ -31,10 +32,11 @@ void main() async {
   }
   if (!SeqLogger.initialized) {
     SeqLogger.init(
-      url: "http://localhost:5341",
+      url: "http://localhost:5341/#/events?range=1d", //"http://localhost:5341",
       apiKey: "g7byfn5mxxsGIUXAeUQf",
       batchSize: 50,
     );
   }
+  await dotenv.load();
   runApp(ReciclaMeApp(cameras: cameras));
 }
