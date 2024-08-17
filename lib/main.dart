@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:camera/camera.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:recila_me/widgets/reciclame_app.dart';
 import 'package:seq_logger/seq_logger.dart';
 import 'clases/firebase_options.dart';
@@ -37,6 +36,5 @@ void main() async {
       batchSize: 50,
     );
   }
-  await dotenv.load();
   runApp(ReciclaMeApp(cameras: cameras));
 }
