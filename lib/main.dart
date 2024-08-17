@@ -36,5 +36,7 @@ void main() async {
       batchSize: 50,
     );
   }
+
+  
   runApp(ReciclaMeApp(cameras: cameras));
 }
