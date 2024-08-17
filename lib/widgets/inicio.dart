@@ -1,16 +1,17 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
+import 'package:recila_me/widgets/lottie_widget.dart';
+import 'package:seq_logger/seq_logger.dart';
 
 class MyInicio extends StatefulWidget {
-  final String parametro;
   final List<CameraDescription> cameras;
-
-  const MyInicio({super.key, required this.parametro, required this.cameras});
+  const MyInicio({super.key, required this.cameras});
 
   @override
   _MyInicioState createState() => _MyInicioState();
@@ -18,6 +19,46 @@ class MyInicio extends StatefulWidget {
 
 class _MyInicioState extends State<MyInicio> {
   bool _isCancelled = false;
+  bool isLoading = true;
+  final FirestoreService _firestoreService = FirestoreService();
+  User? user = FirebaseAuth.instance.currentUser;
+  String? nombreUsuario; 
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+  if (user != null) {
+    setState(() {
+      isLoading = true;
+    });
+
+    final nombre = await _firestoreService.getUserName(user!.email.toString());
+    SeqLogger.addLogToDb(
+      message: "APP my foo is {foo}, my boolean is {b}",
+      data: {
+        "foo": "bar",
+        "b": true,
+        "additional": [
+          {"complexObject": 1},
+          {"complexObject": 2, "hello": "world"},
+        ]
+      },
+      level: LogLevel.info,
+    );
+    SeqLogger.sendLogs();
+    int count = await SeqLogger.getRecordCount();
+    print('LOGS: ${count}');
+    
+    setState(() {
+      nombreUsuario = nombre;
+      isLoading = false;
+    });
+  }
+}
 
   @override
   void dispose() {
@@ -79,13 +120,15 @@ class _MyInicioState extends State<MyInicio> {
           color: Colors.black,
           fontSize: 18,
         ),
-        title: Text(
-          'Bienvenido ${widget.parametro} !!',
-          style: const TextStyle(
-            fontFamily: 'Artwork',
-            fontSize: 18,
-          ),
-        ),
+        title: isLoading
+            ? null // No mostrar título cuando se está cargando
+            : Text(
+                'Bienvenido $nombreUsuario !!',
+                style: const TextStyle(
+                  fontFamily: 'Artwork',
+                  fontSize: 18,
+                ),
+              ),
         leading: IconButton(
           icon: Image.asset('assets/images/exitDoor.png'),
           onPressed: () => _simulateLogout(context),
@@ -93,17 +136,22 @@ class _MyInicioState extends State<MyInicio> {
       ),
       endDrawer: _buildDrawer(context),
       body: Center(
-        child: Wrap(
-          spacing: 20.0,
-          runSpacing: 20.0,
-          children: List.generate(4, (index) {
-            return _buildMenuCard(context, index);
-          }),
-        ),
+        child: isLoading
+            ? buildLottieAnimation(
+                path: 'assets/animations/lotti-recycle.json', // Ruta de tu archivo Lottie
+                width: 500, // Ajusta el tamaño según tus necesidades
+                height: 500, // Ajusta el tamaño según tus necesidades
+              )
+            : Wrap(
+                spacing: 20.0,
+                runSpacing: 20.0,
+                children: List.generate(4, (index) {
+                  return _buildMenuCard(context, index);
+                }),
+              ),
       ),
     );
   }
-
   Widget _buildDrawer(BuildContext context) {
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.50,
@@ -116,7 +164,7 @@ class _MyInicioState extends State<MyInicio> {
               context,
               icon: Icons.info,
               text: 'Información',
-              page: DatosPersonales(correo: 'marcelo@gmail.com', desdeInicio: false, cameras: widget.cameras),
+              page: DatosPersonales(correo: user!.email.toString(), desdeInicio: true, cameras: widget.cameras),
             ),
           ],
         ),
@@ -222,7 +270,7 @@ class _MyInicioState extends State<MyInicio> {
       case 3:
         return const Page4();
       default:
-        return MyInicio(parametro: '', cameras: widget.cameras);
+        return MyInicio(cameras: widget.cameras);
     }
   }
 }

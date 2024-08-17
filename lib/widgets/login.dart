@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:recila_me/main.dart';
+import 'package:logging/logging.dart';
+import 'package:recila_me/servicios/dynamicLinkService.dart';
 import 'register_page.dart';
 import '../clases/firestore_service.dart';
 import 'inicio.dart';
@@ -34,7 +35,6 @@ class LoginApp extends StatelessWidget {
 
 class AuthenticationWrapper extends StatelessWidget {
   final List<CameraDescription>? cameras;
-
   const AuthenticationWrapper({super.key, this.cameras});
 
   @override
@@ -44,16 +44,20 @@ class AuthenticationWrapper extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.active) {
           if (snapshot.hasData) {
-            final nombreUsuario = snapshot.data!.email ?? '';
             return MyInicio(
-              parametro: nombreUsuario,
               cameras: cameras ?? [],
             );
           } else {
             return const LoginPage();
           }
         }
-        return const Center(child: CircularProgressIndicator());
+        return Center(
+          child: Image.asset(
+            'assets/animations/lotti-recycle.json', // Ruta de tu archivo Lottie
+            width: 200,
+            height: 200,
+            fit: BoxFit.cover,
+          ),);
       },
     );
   }
@@ -72,6 +76,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
+  final Logger _logger = Logger('LoginPageLogger');  // Logger para esta página
 
   @override
   void dispose() {
@@ -83,8 +88,8 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
-
       try {
+        _logger.warning('Iniciando sesión con el email: ${_emailController.text}');
         UserCredential userCredential = await FirebaseAuth.instance
             .signInWithEmailAndPassword(
           email: _emailController.text,
@@ -92,12 +97,12 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         final nombreUsuario = await _firestoreService.getUserName(_emailController.text);
+        _logger.info('Sesión iniciada correctamente para el usuario: $nombreUsuario');
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MyInicio(
-              parametro: nombreUsuario,
+            builder: (context) => const MyInicio(
               cameras: [],
             ),
           ),
@@ -109,6 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                 ? 'Contraseña incorrecta.'
                 : 'Error en la autenticación.';
 
+        _logger.severe('Error en la autenticación: $message', e);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -122,6 +128,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Inicializar Dynamic Links aquí
+    DynamicLinkService().initDynamicLinks(context);
     return Scaffold(
       appBar: AppBar(
         systemOverlayStyle: const SystemUiOverlayStyle(

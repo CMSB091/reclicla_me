@@ -97,7 +97,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
           widget.correo
         );
 
-        if (result && mounted) {
+        if (result /*&& mounted*/) {
           showDialog(
             context: context,
             builder: (context) {
@@ -112,7 +112,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) => MyInicio(
-                            parametro: nombre,
                             cameras: widget.cameras,
                           ),
                         ),
@@ -207,7 +206,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => MyInicio(
-                        parametro: user!.email.toString(),
                         cameras: widget.cameras,
                       ),
                     ),
@@ -225,7 +223,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
         context,
         MaterialPageRoute(
           builder: (context) => MyInicio(
-            parametro: '',
             cameras: widget.cameras,
           ),
         ),
@@ -293,6 +290,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
               },
               child: const Text('Cancelar'),
             ),
+            if(widget.desdeInicio)
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop(true); 
@@ -390,6 +388,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
 
   @override
   Widget build(BuildContext context) {
+    print('Desde Inicio: ${widget.desdeInicio}'); // Añadir esto para depurar
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -552,7 +551,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const CircularProgressIndicator(),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     _loadingMessage,
                     style: const TextStyle(color: Colors.white, fontSize: 18),
