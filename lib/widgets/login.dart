@@ -53,7 +53,7 @@ class AuthenticationWrapper extends StatelessWidget {
         }
         return Center(
           child: Image.asset(
-            'assets/animations/lotti-recycle.json', // Ruta de tu archivo Lottie
+            'assets/animations/lotti-recycle.json',
             width: 200,
             height: 200,
             fit: BoxFit.cover,
