@@ -171,6 +171,34 @@ class FirestoreService {
       return false;
     }
   }
+  // Metodo para obtener los paises de la base de datos
+  Future<List<String>> getPaises() async {
+    try {
+      final snapshot = await _db.collection('paises').get();
+      return snapshot.docs.map((doc) => doc['nombre'] as String).toList();
+    } catch (e) {
+      print('Error al obtener países: $e');
+      return [];
+    }
+  }
+   // Metodo para obtener las ciudades de la base de datos
+  Future<List<String>> getCiudadesPorPais(String paisId) async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('ciudades')
+          .where('pais', isEqualTo: paisId)
+          .get();
+
+      List<String> ciudades = snapshot.docs.map((doc) {
+        return doc['nombre'] as String;
+      }).toList();
+
+      return ciudades;
+    } catch (e) {
+      throw Exception('Error al cargar las ciudades: $e');
+    }
+  }
+
   
 }
 
