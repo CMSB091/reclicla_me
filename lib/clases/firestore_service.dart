@@ -21,14 +21,15 @@ class FirestoreService {
   }
 
   // Método para crear un nuevo usuario
-  Future<bool> createUser(String correo, String contrasena) async {
+  Future<bool> createUser(String email) async {
     try {
-      await _db.collection('usuario').add({
-        'correo': correo,
-        'contrasena': contrasena,
+      await _db.collection('usuario').doc(email).set({
+        'correo': email,
+        // Add any other user fields here, but exclude the password.
       });
       return true;
     } catch (e) {
+      print('Error creating user: $e');
       return false;
     }
   }
@@ -170,6 +171,35 @@ class FirestoreService {
       return false;
     }
   }
+  // Metodo para obtener los paises de la base de datos
+  Future<List<String>> getPaises() async {
+    try {
+      final snapshot = await _db.collection('paises').get();
+      return snapshot.docs.map((doc) => doc['nombre'] as String).toList();
+    } catch (e) {
+      print('Error al obtener países: $e');
+      return [];
+    }
+  }
+   // Metodo para obtener las ciudades de la base de datos
+  Future<List<String>> getCiudadesPorPais(String paisId) async {
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('ciudades')
+          .where('pais', isEqualTo: paisId)
+          .get();
+
+      List<String> ciudades = snapshot.docs.map((doc) {
+        return doc['nombre'] as String;
+      }).toList();
+
+      return ciudades;
+    } catch (e) {
+      throw Exception('Error al cargar las ciudades: $e');
+    }
+  }
+
+  
 }
 
 
