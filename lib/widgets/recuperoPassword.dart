@@ -1,48 +1,23 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
-class recuperoPassword extends StatefulWidget {
-  const recuperoPassword({super.key});
-
+class RecuperoPassword extends StatefulWidget {
   @override
-  _recuperoPasswordPage createState() => _recuperoPasswordPage();
+  _RecuperoPasswordState createState() => _RecuperoPasswordState();
 }
 
-class _recuperoPasswordPage extends State<recuperoPassword> {
-  final _emailController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+class _RecuperoPasswordState extends State<RecuperoPassword> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
   Future<void> _enviarEmailRestablecimiento() async {
-    final email = _emailController.text;
-
-    if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingrese su email')),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      await _auth.sendPasswordResetEmail(email: email);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Se ha enviado un enlace de restablecimiento a tu correo')),
-      );
-      Navigator.pop(context); // Regresa a la página anterior
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
-    } finally {
-      if (mounted) {
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() => _isLoading = true);
+      try {
+        // Lógica para enviar el email de restablecimiento
+      } finally {
         setState(() => _isLoading = false);
       }
     }
@@ -52,25 +27,57 @@ class _recuperoPasswordPage extends State<recuperoPassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Recuperar Contraseña'),
+        leading: IconButton(
+          icon: Image.asset('assets/images/exitDoor.png'),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarBrightness: Brightness.light,
+        ),
+        backgroundColor: Colors.green.shade200,
+        titleTextStyle: const TextStyle(
+          color: Colors.black,
+          fontSize: 26,
+        ),
+        title: const Text(
+          'Recuperar Contraseña',
+          style: TextStyle(
+            fontFamily: 'Artwork',
+            fontSize: 26,
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Correo Electrónico'),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _enviarEmailRestablecimiento,
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Enviar Enlace de Restablecimiento'),
-            ),
-          ],
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: <Widget>[
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Correo Electrónico',
+                  border: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Por favor ingrese su email';
+                  } else if (!EmailValidator.validate(value)) {
+                    return 'Por favor ingrese un email válido';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: _enviarEmailRestablecimiento,
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : const Text('Enviar Enlace de Restablecimiento'),
+              ),
+            ],
+          ),
         ),
       ),
     );

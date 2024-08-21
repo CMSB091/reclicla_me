@@ -63,12 +63,103 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
   String _loadingMessage = '';
   final FirestoreService _firestoreService = FirestoreService(); 
   User? user = FirebaseAuth.instance.currentUser;
+  List<String> _paises = [];
+  List<String> ciudades = [];
 
   @override
   void initState() {
     super.initState();
     _cargarDatosUsuario(); 
+    _cargarPaises();
   }
+
+  Future<void> _cargarPaises() async {
+    try {
+      List<String> paises = await _firestoreService.getPaises();
+      setState(() {
+        _paises = paises;
+        print(paises);
+      });
+    } catch (e) {
+      print('Error al cargar países: $e');
+    }
+  }
+
+  void _mostrarSeleccionPais() async {
+    String? selectedPais = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Selecciona tu país'),
+          content: SizedBox(
+            width: 100,
+            height: 300,
+            child: ListView(
+              children: _paises.map((pais) {
+                return ListTile(
+                  title: Text(pais),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 1.0),
+                  onTap: () {
+                    Navigator.of(context).pop(pais);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selectedPais != null) {
+      setState(() {
+        _paisController.text = selectedPais;
+        // Establecer el campo de ciudad en nulo o vacío cuando se selecciona un nuevo país
+      _ciudadController.text = '';  // Aquí puedes usar '' si prefieres mostrarlo vacío en lugar de null
+      });
+
+      // Cargar ciudades para el país seleccionado
+      try {
+        ciudades = await _firestoreService.getCiudadesPorPais(selectedPais);
+        print('Ciudades cargadas: $ciudades');  // Verifica el contenido
+        _mostrarSeleccionCiudad(ciudades);  // Muestra la lista de ciudades
+      } catch (e) {
+        print('Error al cargar ciudades: $e');
+      }
+    }
+  }
+
+  void _mostrarSeleccionCiudad(List<String> ciudades) async {
+    String? selectedCiudad = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Selecciona tu ciudad'),
+          content: SizedBox(
+            width: 100,
+            height: 300,
+            child: ListView(
+              children: ciudades.map((ciudad) {
+                return ListTile(
+                  title: Text(ciudad),
+                  onTap: () {
+                    Navigator.of(context).pop(ciudad);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selectedCiudad != null) {
+      setState(() {
+        _ciudadController.text = selectedCiudad;
+      });
+    }
+  }
+
+
 
   void _guardarDatos() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -85,7 +176,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
         String ciudad = _ciudadController.text;
         String pais = _paisController.text;
         String telefono = _telefonoController.text;
-
         bool result = await _firestoreService.updateUser(
           nombre,
           apellido,
@@ -239,7 +329,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
     try {
       if (user != null) {
         String correo = user!.email.toString();
-
         Map<String, dynamic>? userData = await _firestoreService.getUserData(correo);
 
         if (userData != null) {
@@ -250,6 +339,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
           _ciudadController.text = userData['ciudad'] ?? '';
           _paisController.text = userData['pais'] ?? '';
           _telefonoController.text = userData['telefono'] ?? '';
+          ciudades = await _firestoreService.getCiudadesPorPais(_paisController.text);
         } else {
           print('No se encontraron datos para el usuario con correo $correo');
         }
@@ -474,34 +564,57 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         return null;
                       },
                     ),
+                    
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _ciudadController,
-                      decoration: const InputDecoration(
-                        labelText: 'Ciudad',
-                        border: OutlineInputBorder(),
+                    GestureDetector(
+                      onTap: _mostrarSeleccionPais,
+                      child: AbsorbPointer(
+                        child: TextFormField(
+                          controller: _paisController,
+                          decoration: const InputDecoration(
+                            labelText: 'País',
+                            suffixIcon: Icon(Icons.arrow_drop_down), // Icono de flecha hacia abajo
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor ingresa tu país';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu ciudad';
-                        }
-                        return null;
-                      },
                     ),
+
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _paisController,
-                      decoration: const InputDecoration(
-                        labelText: 'País',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu país';
+                    GestureDetector(
+                      onTap: () {
+                        if (_paisController.text.isNotEmpty) {
+                          _mostrarSeleccionCiudad(ciudades);
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Selecciona un país primero.')),
+                          );
                         }
-                        return null;
                       },
+                      child: AbsorbPointer(
+                        child: TextFormField(
+                          controller: _ciudadController,
+                          decoration: const InputDecoration(
+                            labelText: 'Ciudad',
+                            suffixIcon: Icon(Icons.arrow_drop_down), // Icono de flecha hacia abajo
+                            border: OutlineInputBorder(),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Por favor ingresa tu ciudad';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
                     ),
+
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _telefonoController,

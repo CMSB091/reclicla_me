@@ -9,6 +9,7 @@ import 'register_page.dart';
 import '../clases/firestore_service.dart';
 import 'inicio.dart';
 import 'package:camera/camera.dart';
+import 'recuperoPassword.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,7 +58,8 @@ class AuthenticationWrapper extends StatelessWidget {
             width: 200,
             height: 200,
             fit: BoxFit.cover,
-          ),);
+          ),
+        );
       },
     );
   }
@@ -76,6 +78,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
+  bool _obscurePassword = true; // Estado para mostrar/ocultar contraseña
   final Logger _logger = Logger('LoginPageLogger');  // Logger para esta página
 
   @override
@@ -196,10 +199,20 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(height: 20.0),
           TextFormField(
             controller: _passwordController,
-            obscureText: true,
-            decoration: const InputDecoration(
+            obscureText: _obscurePassword, // Controlar visibilidad de la contraseña
+            decoration: InputDecoration(
               labelText: 'Contraseña',
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -216,23 +229,38 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Column(
       children: [
-        ElevatedButton(
-          onPressed: _login,
-          child: const Text('Iniciar Sesión'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton(
+              onPressed: _login,
+              child: const Text('Iniciar Sesión'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const RegisterPage(),
+                  ),
+                );
+              },
+              child: const Text('Registrar cuenta'),
+            ),
+          ],
         ),
         TextButton(
           onPressed: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const RegisterPage(),
+                builder: (context) => RecuperoPassword(),
               ),
             );
           },
-          child: const Text('Registrar cuenta'),
+          child: const Text('¿Olvidaste tu contraseña?'),
         ),
       ],
     );
