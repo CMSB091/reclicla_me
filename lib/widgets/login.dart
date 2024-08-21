@@ -9,6 +9,8 @@ import 'register_page.dart';
 import '../clases/firestore_service.dart';
 import 'inicio.dart';
 import 'package:camera/camera.dart';
+import 'recuperoPassword.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -216,27 +218,43 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+    return Column(
       children: [
-        ElevatedButton(
-          onPressed: _login,
-          child: const Text('Iniciar Sesión'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            ElevatedButton(
+              onPressed: _login,
+              child: const Text('Iniciar Sesión'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const RegisterPage(),
+                  ),
+                );
+              },
+              child: const Text('Registrar cuenta'),
+            ),
+          ],
         ),
         TextButton(
           onPressed: () {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const RegisterPage(),
+                builder: (context) => RecuperoPassword(),
               ),
             );
           },
-          child: const Text('Registrar cuenta'),
+          child: const Text('¿Olvidaste tu contraseña?'),
         ),
       ],
     );
   }
+
 }
 
 class ImageAsset extends StatelessWidget {
