@@ -21,14 +21,15 @@ class FirestoreService {
   }
 
   // Método para crear un nuevo usuario
-  Future<bool> createUser(String correo, String contrasena) async {
+  Future<bool> createUser(String email) async {
     try {
-      await _db.collection('usuario').add({
-        'correo': correo,
-        'contrasena': contrasena,
+      await _db.collection('usuario').doc(email).set({
+        'correo': email,
+        // Add any other user fields here, but exclude the password.
       });
       return true;
     } catch (e) {
+      print('Error creating user: $e');
       return false;
     }
   }

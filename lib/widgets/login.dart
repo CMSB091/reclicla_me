@@ -11,7 +11,6 @@ import 'inicio.dart';
 import 'package:camera/camera.dart';
 import 'recuperoPassword.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -59,7 +58,8 @@ class AuthenticationWrapper extends StatelessWidget {
             width: 200,
             height: 200,
             fit: BoxFit.cover,
-          ),);
+          ),
+        );
       },
     );
   }
@@ -78,6 +78,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
+  bool _obscurePassword = true; // Estado para mostrar/ocultar contraseña
   final Logger _logger = Logger('LoginPageLogger');  // Logger para esta página
 
   @override
@@ -198,10 +199,20 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(height: 20.0),
           TextFormField(
             controller: _passwordController,
-            obscureText: true,
-            decoration: const InputDecoration(
+            obscureText: _obscurePassword, // Controlar visibilidad de la contraseña
+            decoration: InputDecoration(
               labelText: 'Contraseña',
-              border: OutlineInputBorder(),
+              border: const OutlineInputBorder(),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              ),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
@@ -254,7 +265,6 @@ class _LoginPageState extends State<LoginPage> {
       ],
     );
   }
-
 }
 
 class ImageAsset extends StatelessWidget {

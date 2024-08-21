@@ -85,7 +85,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
         String ciudad = _ciudadController.text;
         String pais = _paisController.text;
         String telefono = _telefonoController.text;
-
+        print(widget.correo);
         bool result = await _firestoreService.updateUser(
           nombre,
           apellido,
