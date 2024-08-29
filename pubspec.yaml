@@ -43,6 +43,7 @@ dependencies:
   lottie: ^2.0.0
   firebase_dynamic_links: ^6.0.4
   seq_logger: ^1.0.6
+  flutter_dotenv: ^5.0.2
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -80,6 +81,7 @@ flutter:
     - assets/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-recycle.json
+    - .env
 
   fonts:
     - family: Artwork

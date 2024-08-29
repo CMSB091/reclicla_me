@@ -7,6 +7,7 @@ import 'package:recila_me/widgets/login.dart';
 import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:recila_me/widgets/lottie_widget.dart';
+import 'package:recila_me/widgets/noticias.dart';
 import 'package:seq_logger/seq_logger.dart';
 
 class MyInicio extends StatefulWidget {
@@ -244,7 +245,7 @@ class _MyInicioState extends State<MyInicio> {
       case 0:
         return 'Detección de objetos';
       case 1:
-        return 'Página 2';
+        return 'ChatGpt';
       case 2:
         return 'Página 3';
       case 3:
@@ -264,7 +265,7 @@ class _MyInicioState extends State<MyInicio> {
         }
         return ObjectDetectionScreen(cameras: widget.cameras);
       case 1:
-        return const Page2();
+        return noticiasChatgpt();
       case 2:
         return const Page3();
       case 3:

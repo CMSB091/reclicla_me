@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:recila_me/widgets/login.dart';
+import 'package:http/http.dart' as http;
 
 class Funciones {
   // Función para cerrar sesón
@@ -44,5 +47,33 @@ class Funciones {
         ),
       );
     }  
+  }
+
+  Future<String> getChatGPTResponse(String prompt) async {
+    final apiKey = dotenv.env['OPENAI_API_KEY'];
+    const apiUrl = 'https://api.openai.com/v1/chat/completions';
+
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiKey',
+      },
+      body: jsonEncode({
+        'model': 'gpt-3.5-turbo',
+        'messages': [
+          {'role': 'system', 'content': 'You are a helpful assistant.'},
+          {'role': 'user', 'content': prompt},
+        ],
+        'max_tokens': 100,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> data = jsonDecode(response.body);
+      return data['choices'][0]['message']['content'];
+    } else {
+      throw Exception('Failed to load ChatGPT response');
+    }
   }
 }
