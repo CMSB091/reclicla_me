@@ -73,7 +73,9 @@ class Funciones {
       final Map<String, dynamic> data = jsonDecode(response.body);
       return data['choices'][0]['message']['content'];
     } else {
+      print('Error ${response.statusCode}: ${response.body}');
       throw Exception('Failed to load ChatGPT response');
     }
   }
+
 }

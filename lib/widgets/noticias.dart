@@ -1,66 +1,42 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:recila_me/clases/funciones.dart';  // Asegúrate de importar la clase Funciones
 
-class noticiasChatgpt extends StatelessWidget {
+class noticiasChatgpt extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ChatGPT Example',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: ChatPage(),
-    );
-  }
+  _MyChatWidgetState createState() => _MyChatWidgetState();
 }
 
-class ChatPage extends StatefulWidget {
-  @override
-  _ChatPageState createState() => _ChatPageState();
-}
+class _MyChatWidgetState extends State<noticiasChatgpt> {
+  final Funciones funciones = Funciones();  // Crear una instancia de Funciones
+  final TextEditingController _controller = TextEditingController();  // Controlador para el TextField
+  String chatResponse = '';
 
-class _ChatPageState extends State<ChatPage> {
-  final TextEditingController _controller = TextEditingController();
-  String _response = '';
-
-  Future<void> _getChatGPTResponse(String prompt) async {
-    final apiKey = dotenv.env['OPENAI_API_KEY']; // Obtener la clave API del entorno
-    const apiUrl = 'https://api.openai.com/v1/chat/completions';
-
-    final response = await http.post(
-      Uri.parse(apiUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $apiKey',
-      },
-      body: jsonEncode({
-        'model': 'gpt-3.5-turbo',
-        'messages': [
-          {'role': 'user', 'content': prompt},
-        ],
-        'max_tokens': 100,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+  void _fetchChatGPTResponse(String prompt) async {
+    try {
+      String response = await funciones.getChatGPTResponse(prompt);
       setState(() {
-        _response = data['choices'][0]['message']['content'];
+        chatResponse = response;
       });
-    } else {
-      setState(() {
-        _response = 'Error: ${response.statusCode}';
-      });
+    } catch (e) {
+      if (e.toString().contains('insufficient_quota')) {
+        setState(() {
+          chatResponse = 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.';
+        });
+      } else {
+        setState(() {
+          chatResponse = 'Error: $e';
+        });
+      }
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('ChatGPT Example'),
+        title: Text('ChatGPT Response'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -69,25 +45,25 @@ class _ChatPageState extends State<ChatPage> {
             TextField(
               controller: _controller,
               decoration: InputDecoration(
+                labelText: 'Enter prompt',
                 border: OutlineInputBorder(),
-                labelText: 'Enter your prompt',
               ),
-              maxLines: 5,
+              maxLines: null,
             ),
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
                 final prompt = _controller.text;
                 if (prompt.isNotEmpty) {
-                  _getChatGPTResponse(prompt);
+                  _fetchChatGPTResponse(prompt);  // Llamar a getChatGPTResponse
                 }
               },
-              child: Text('Send'),
+              child: Text('Enviar Consulta'),
             ),
             SizedBox(height: 16),
             Expanded(
               child: SingleChildScrollView(
-                child: Text(_response),
+                child: Text(chatResponse),
               ),
             ),
           ],
