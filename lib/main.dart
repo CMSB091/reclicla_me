@@ -37,7 +37,7 @@ void main() async {
   }
   if (!SeqLogger.initialized) {
     SeqLogger.init(
-      url: "http://localhost:5341/#/events?range=1d", //"http://localhost:5341",
+      url: "http://localhost:5341", //"http://localhost:5341",
       apiKey: dotenv.env['SEQ_LOGGER'],
       batchSize: 50,
     );
