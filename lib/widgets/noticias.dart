@@ -28,7 +28,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     return recyclingKeywords.any((keyword) => prompt.toLowerCase().contains(keyword));
   }
 
-  Future<void> _fetchChatGPTResponse(String prompt) async {
+  /*Future<void> _fetchChatGPTResponse(String prompt) async {
     if (!_isRecyclingRelated(prompt)) {
       setState(() {
         chatResponse = 'Oops! La consulta debe estar relacionada con el reciclaje.';
@@ -62,9 +62,77 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         isLoading = false;
       });
     }
+  }*/
+  Future<void> _fetchChatGPTResponse(String prompt) async {
+    if (!_isRecyclingRelated(prompt)) {
+      setState(() {
+        chatResponse = 'Oops! La consulta debe estar relacionada con el reciclaje.';
+      });
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+      chatResponse = '';
+      imageUrl = ''; // Resetear la URL de la imagen
+    });
+
+    try {
+      String response = await funciones.getChatGPTResponse(prompt);
+      setState(() {
+        chatResponse = response;
+      });
+
+      // Generar una imagen relacionada
+      await _fetchGeneratedImage('$prompt . Representa gráficamente');
+      
+    } catch (e) {
+      setState(() {
+        chatResponse = e.toString().contains('insufficient_quota')
+            ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
+            : 'Error: $e';
+      });
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
-  Future<void> _fetchImage(String query) async {
+
+  Future<void> _fetchGeneratedImage(String prompt) async {
+    final apiKey = dotenv.env['OPENAI_API_KEY'];
+    final apiUrl = 'https://api.openai.com/v1/images/generations';
+
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $apiKey',
+      },
+      body: jsonEncode({
+        'prompt': prompt,
+        'n': 1, // Número de imágenes a generar
+        'size': '640x480' // Tamaño de la imagen
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final imageUrlGenerated = data['data'][0]['url'];
+      setState(() {
+        imageUrl = imageUrlGenerated;
+      });
+    } else {
+      print('Error al generar la imagen: ${response.statusCode}');
+      setState(() {
+        imageUrl = '';
+      });
+    }
+  }
+
+
+  /*Future<void> _fetchImage(String query) async {
     final apiKey = dotenv.env['UNPLASH_KEY'];
     final apiUrl = 'https://api.unsplash.com/search/photos?query=$query+illustration&client_id=$apiKey&content_filter=high';
 
@@ -89,7 +157,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         imageUrl = '';
       });
     }
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
