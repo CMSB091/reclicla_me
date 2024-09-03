@@ -49,7 +49,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       });
 
       // Buscar una imagen relacionada
-      await _fetchImage(prompt);
+      await _fetchImage('RECICLAJE');
       
     } catch (e) {
       setState(() {
@@ -81,10 +81,15 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       String response = await funciones.getChatGPTResponse(prompt);
       setState(() {
         chatResponse = response;
+        print(response);
       });
 
+      String imagePrompt = 'A detailed graphic illustration showing the process of recycling glass. The image depicts the collection of glass bottles, their transportation to a recycling plant, and the transformation into new glass products. The illustration should be clear, visually appealing, and without any text. The style should be clean and informative, highlighting the steps involved in glass recycling, such as sorting, crushing, melting, and forming new glass items. Size 512x512';
+
+
+
       // Generar una imagen relacionada
-      await _fetchGeneratedImage('$prompt . Representa gráficamente');
+      await _fetchGeneratedImage(imagePrompt);
       
     } catch (e) {
       setState(() {
@@ -113,7 +118,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       body: jsonEncode({
         'prompt': prompt,
         'n': 1, // Número de imágenes a generar
-        'size': '640x480' // Tamaño de la imagen
+        'size': '512x512' // Tamaño de la imagen
       }),
     );
 
@@ -222,7 +227,14 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           if (imageUrl.isNotEmpty)
-                            Image.network(imageUrl), // Mostrar la imagen
+                            Container(
+                              width: 512, // Establece el ancho deseado
+                              height: 512, // Establece la altura deseada
+                              child: Image.network(
+                                imageUrl,
+                                fit: BoxFit.contain, // Ajusta la imagen dentro del contenedor sin recortarla
+                              ),
+                            ),// Mostrar la imagen
                           const SizedBox(height: 8),
                           Text(
                             chatResponse,
