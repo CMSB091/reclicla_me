@@ -265,7 +265,7 @@ class _MyInicioState extends State<MyInicio> {
         }
         return ObjectDetectionScreen(cameras: widget.cameras);
       case 1:
-        return noticiasChatgpt();
+        return NoticiasChatGPT();
       case 2:
         return const Page3();
       case 3:

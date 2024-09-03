@@ -56,24 +56,25 @@ class Funciones {
     final response = await http.post(
       Uri.parse(apiUrl),
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $apiKey',
       },
-      body: jsonEncode({
+      body: utf8.encode(jsonEncode({
         'model': 'gpt-3.5-turbo',
         'messages': [
           {'role': 'system', 'content': 'You are a helpful assistant.'},
           {'role': 'user', 'content': prompt},
         ],
-        'max_tokens': 100,
-      }),
+        'max_tokens': 800,
+      })),
     );
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(response.body);
+      print(prompt);
+      final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['choices'][0]['message']['content'];
     } else {
-      print('Error ${response.statusCode}: ${response.body}');
+      print('Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
       throw Exception('Failed to load ChatGPT response');
     }
   }
