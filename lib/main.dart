@@ -37,11 +37,10 @@ void main() async {
   }
   if (!SeqLogger.initialized) {
     SeqLogger.init(
-      url: "http://localhost:5341", //"http://localhost:5341",
+      url: 'http://127.0.0.1:8080',//"http://localhost:5341", //"http://localhost:5341",
       apiKey: dotenv.env['SEQ_LOGGER'],
       batchSize: 50,
     );
   }
-  
   runApp(ReciclaMeApp(cameras: cameras));
 }
