@@ -37,10 +37,33 @@ void main() async {
   }
   if (!SeqLogger.initialized) {
     SeqLogger.init(
-      url: 'http://127.0.0.1:8080',//"http://localhost:5341", //"http://localhost:5341",
+      url: 'http://10.0.2.2:8080',//"http://localhost:5341", //"http://localhost:5341",
       apiKey: dotenv.env['SEQ_LOGGER'],
-      batchSize: 50,
+      batchSize: 1,
     );
+    /* para dispositivos fisicos
+    SeqLogger.init(
+  url: 'http://192.168.1.100:8080', // IP de tu máquina local
+  apiKey: dotenv.env['SEQ_LOGGER'],
+  batchSize: 1,
+  );
+*/
+
+    /*SeqLogger.log(
+      level: SeqLogLevel.warning,
+      message: 'Este es un mensaje de advertencia',
+      properties: {
+        'AppName': 'MiApp',
+        'Version': '1.0.0',
+      },
+    );
+    SeqLogger.flush();*/
+    try {
+      SeqLogger.logWarning(message: 'Este es un mensaje de advertencia');
+      SeqLogger.logError(message: 'Este es un mensaje de error');
+    } catch (e) {
+      print('Error al enviar el log: $e');
+    }
   }
   runApp(ReciclaMeApp(cameras: cameras));
 }

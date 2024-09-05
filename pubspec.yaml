@@ -81,6 +81,7 @@ flutter:
     - assets/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-recycle.json
+    - assets/animations/lotti-trash-2.json
     - .env
 
   fonts:

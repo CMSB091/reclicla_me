@@ -38,7 +38,7 @@ class _MyInicioState extends State<MyInicio> {
     });
 
     final nombre = await _firestoreService.getUserName(user!.email.toString());
-    SeqLogger.addLogToDb(
+    /*SeqLogger.addLogToDb(
       message: "APP my foo is {foo}, my boolean is {b}",
       data: {
         "foo": "bar",
@@ -52,7 +52,7 @@ class _MyInicioState extends State<MyInicio> {
     );
     SeqLogger.sendLogs();
     int count = await SeqLogger.getRecordCount();
-    print('LOGS: ${count}');
+    print('LOGS: ${count}');*/
     
     setState(() {
       nombreUsuario = nombre;
