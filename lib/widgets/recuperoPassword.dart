@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class RecuperoPassword extends StatefulWidget {
+  const RecuperoPassword({super.key});
+
   @override
   _RecuperoPasswordState createState() => _RecuperoPasswordState();
 }

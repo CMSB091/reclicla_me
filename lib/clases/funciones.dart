@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:dart_seq/dart_seq.dart';
+import 'package:dart_seq_http_client/dart_seq_http_client.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -99,7 +101,7 @@ class Funciones {
   }
 
    Future<String> fetchChatGPTResponse(
-      String prompt, bool isRecyclingRelated(String prompt)) async {
+      String prompt, bool Function(String prompt) isRecyclingRelated) async {
     if (!isRecyclingRelated(prompt)) {
       return 'Oops! La consulta debe estar relacionada con el reciclaje.';
     }
@@ -116,7 +118,7 @@ class Funciones {
 
   Future<String> fetchGeneratedImage(String prompt) async {
     final apiKey = dotenv.env['OPENAI_API_KEY'];
-    final apiUrl = 'https://api.openai.com/v1/images/generations';
+    const apiUrl = 'https://api.openai.com/v1/images/generations';
 
     final response = await http.post(
       Uri.parse(apiUrl),
@@ -139,6 +141,53 @@ class Funciones {
       print('Error al generar la imagen: ${response.statusCode}');
       return '';
     }
+  }
+
+  Future<void> log(String status, message) async {
+    final logger = SeqHttpLogger.create(
+      host: 'http://10.0.2.2:43674',
+      globalContext: {
+        'App': 'ReciclaMe',
+      },
+    );
+    if(status == 'information'){
+      await logger.log(
+        SeqLogLevel.information,
+        message,
+        null,
+        {
+          'Timestamp': DateTime.now().toUtc().toIso8601String(),
+        },
+      );
+    }else if (status == 'warning'){
+    await logger.log(
+        SeqLogLevel.warning,
+        message,
+        null,
+        {
+          'Timestamp': DateTime.now().toUtc().toIso8601String(),
+        },
+      );
+    }else if (status == 'error'){
+      await logger.log(
+        SeqLogLevel.error,
+        message,
+        null,
+        {
+          'Timestamp': DateTime.now().toUtc().toIso8601String(),
+        },
+      );
+    }else if(status == 'debug'){
+      await logger.log(
+        SeqLogLevel.debug,
+        message,
+        null,
+        {
+          'Timestamp': DateTime.now().toUtc().toIso8601String(),
+        },
+      );
+    }
+    await logger.flush();
   }
 
 }

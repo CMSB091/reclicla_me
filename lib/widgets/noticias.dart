@@ -28,6 +28,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   }
 
   Future<void> _fetchChatGPTResponse(String prompt) async {
+    await funciones.log('error','mensaje de prueba del log');
     if (!_isRecyclingRelated(prompt)) {
       setState(() {
         chatResponse = 'Oops! La consulta debe estar relacionada con el reciclaje.';
@@ -131,7 +132,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           if (imageUrl.isNotEmpty)
-                            Container(
+                            SizedBox(
                               width: 312, // Establece el ancho deseado
                               height: 312, // Establece la altura deseada
                               child: Image.network(

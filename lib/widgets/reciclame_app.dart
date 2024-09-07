@@ -7,7 +7,7 @@ import 'package:recila_me/widgets/mensaje_inicio.dart';
 class ReciclaMeApp extends StatelessWidget {
   final List<CameraDescription>? cameras;
 
-  const ReciclaMeApp({Key? key, this.cameras}) : super(key: key);
+  const ReciclaMeApp({super.key, this.cameras});
   
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class ReciclaMeApp extends StatelessWidget {
 class SplashScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
 
-  const SplashScreen({Key? key, this.cameras}) : super(key: key);
+  const SplashScreen({super.key, this.cameras});
 
   @override
   _SplashScreenState createState() => _SplashScreenState();

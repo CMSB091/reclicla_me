@@ -8,7 +8,7 @@ import 'package:camera/camera.dart';
 class mensajeInicio extends StatelessWidget {
   final List<CameraDescription>? cameras;
 
-  const mensajeInicio({Key? key, this.cameras}) : super(key: key);
+  const mensajeInicio({super.key, this.cameras});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class RecyclingTip {
 class SplashScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
 
-  const SplashScreen({Key? key, this.cameras}) : super(key: key);
+  const SplashScreen({super.key, this.cameras});
 
   @override
   _SplashScreenState createState() => _SplashScreenState();

@@ -26,7 +26,7 @@ class DynamicLinkService {
           builder: (context) => DatosPersonales(
             correo: deepLink.queryParameters['email'] ?? '', // Pasar el correo electrónico extraído del deep link
             desdeInicio: false,
-            cameras: [],
+            cameras: const [],
           ),
         ),
       );

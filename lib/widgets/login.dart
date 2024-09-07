@@ -19,7 +19,7 @@ void main() async {
 
 class LoginApp extends StatelessWidget {
   final List<CameraDescription>? cameras;
-  const LoginApp({Key? key, this.cameras}) : super(key: key);
+  const LoginApp({super.key, this.cameras});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(

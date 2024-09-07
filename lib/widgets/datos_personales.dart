@@ -356,7 +356,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
   }
 
   Future<void> _pedirContrasenaYEliminarCuenta() async {
-    final TextEditingController _contrasenaController = TextEditingController();
+    final TextEditingController contrasenaController = TextEditingController();
     bool? confirmarEliminar = await showDialog(
       context: context,
       builder: (context) {
@@ -367,7 +367,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
             children: [
               const Text('Para eliminar tu cuenta, ingresa tu contraseña:'),
               TextField(
-                controller: _contrasenaController,
+                controller: contrasenaController,
                 obscureText: true,
                 decoration: const InputDecoration(labelText: 'Contraseña'),
               ),
@@ -421,7 +421,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
           if(result){
             AuthCredential credential = EmailAuthProvider.credential(
               email: user.email!,
-              password: _contrasenaController.text,
+              password: contrasenaController.text,
             );
             await user.reauthenticateWithCredential(credential);
             await user.delete();

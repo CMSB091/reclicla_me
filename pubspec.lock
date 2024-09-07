@@ -169,6 +169,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.14.0"
+  dart_seq:
+    dependency: "direct main"
+    description:
+      name: dart_seq
+      sha256: "36445edfa58db4d0191642c69588dd4c896ed686d0fb258ce7514fac4b0bb720"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.0"
+  dart_seq_http_client:
+    dependency: "direct main"
+    description:
+      name: dart_seq_http_client
+      sha256: b8ef0da6bda94524c5cc5e9c5143dff8d5c87eacb05831acac88d0d6c6d20935
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   dio:
     dependency: transitive
     description:

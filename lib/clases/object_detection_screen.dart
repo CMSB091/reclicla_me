@@ -9,7 +9,7 @@ import 'dart:io';
 class ObjectDetectionScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
 
-  const ObjectDetectionScreen({Key? key, required this.cameras}) : super(key: key);
+  const ObjectDetectionScreen({super.key, required this.cameras});
 
   @override
   _ObjectDetectionScreenState createState() => _ObjectDetectionScreenState();
@@ -89,15 +89,6 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
 
     // Preprocesamos la imagen.
     final input = _preprocessImage(img);
-    
-    // Verificamos que la entrada sea válida.
-    if (input == null) {
-      setState(() {
-        _detectionResult = "Error: la imagen no se procesó correctamente.";
-      });
-      _isDetecting = false;
-      return;
-    }
 
     // Definimos la salida del modelo.
     final output = List.filled(1 * 10 * 4, 0.0).reshape([1, 10, 4]);
@@ -206,19 +197,19 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
             bottom: 16,
             left: 16,
             child: Container(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               color: Colors.white,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     _detectionResult,
-                    style: TextStyle(color: Colors.black),
+                    style: const TextStyle(color: Colors.black),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     _modelStatus,
-                    style: TextStyle(color: Colors.red),
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ],
               ),
