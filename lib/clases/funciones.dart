@@ -57,7 +57,7 @@ class Funciones {
       // Cierra la sesión del usuario
       await FirebaseAuth.instance.signOut();
     } catch (e) {
-      print('Error al cerrar sesión: $e');
+      await log('error','Error al cerrar sesión: $e');
     } finally {
       // Cierra el diálogo
       Navigator.of(context, rootNavigator: true).pop();
@@ -91,11 +91,10 @@ class Funciones {
     );
 
     if (response.statusCode == 200) {
-      print(prompt);
       final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['choices'][0]['message']['content'];
     } else {
-      print('Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
+      await log('error','Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
       throw Exception('Failed to load ChatGPT response');
     }
   }
@@ -103,6 +102,7 @@ class Funciones {
    Future<String> fetchChatGPTResponse(
       String prompt, bool Function(String prompt) isRecyclingRelated) async {
     if (!isRecyclingRelated(prompt)) {
+      await log('debug','Consulta a la API no permitida');
       return 'Oops! La consulta debe estar relacionada con el reciclaje.';
     }
 
@@ -110,6 +110,7 @@ class Funciones {
       String response = await getChatGPTResponse('$prompt. Dame la respuesta en 200 palabras');
       return response;
     } catch (e) {
+      await log('error','Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.');
       return e.toString().contains('insufficient_quota')
           ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
           : 'Error: $e';
@@ -138,7 +139,7 @@ class Funciones {
       final imageUrlGenerated = data['data'][0]['url'];
       return imageUrlGenerated;
     } else {
-      print('Error al generar la imagen: ${response.statusCode}');
+      await log('error','Error al generar la imagen: ${response.statusCode}');
       return '';
     }
   }

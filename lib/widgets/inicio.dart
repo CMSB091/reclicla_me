@@ -8,7 +8,6 @@ import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:recila_me/widgets/lottie_widget.dart';
 import 'package:recila_me/widgets/noticias.dart';
-import 'package:seq_logger/seq_logger.dart';
 
 class MyInicio extends StatefulWidget {
   final List<CameraDescription> cameras;
