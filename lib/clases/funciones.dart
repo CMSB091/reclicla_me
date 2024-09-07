@@ -146,7 +146,8 @@ class Funciones {
 
   Future<void> log(String status, message) async {
     final logger = SeqHttpLogger.create(
-      host: 'http://10.0.2.2:43674',
+      host: 'http://192.168.100.16:43674',//'http://10.0.2.2:43674', para el emulador
+      apiKey: dotenv.env['OPENAI_API_KEY'],
       globalContext: {
         'App': 'ReciclaMe',
       },

@@ -28,6 +28,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   }
 
   Future<void> _fetchChatGPTResponse(String prompt) async {
+    await funciones.log('debug','Prueba desde el celular fisico');
     if (!_isRecyclingRelated(prompt)) {
       setState(() {
         chatResponse = 'Oops! La consulta debe estar relacionada con el reciclaje.';
