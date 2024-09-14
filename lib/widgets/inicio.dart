@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:recila_me/clases/object_detection_screen.dart';
@@ -23,6 +24,7 @@ class _MyInicioState extends State<MyInicio> {
   final FirestoreService _firestoreService = FirestoreService();
   User? user = FirebaseAuth.instance.currentUser;
   String? nombreUsuario; 
+  final Funciones funciones = Funciones();
 
   @override
   void initState() {
@@ -31,34 +33,18 @@ class _MyInicioState extends State<MyInicio> {
   }
 
   Future<void> _loadUserName() async {
-  if (user != null) {
-    setState(() {
-      isLoading = true;
-    });
+    if (user != null) {
+      setState(() {
+        isLoading = true;
+      });
 
-    final nombre = await _firestoreService.getUserName(user!.email.toString());
-    /*SeqLogger.addLogToDb(
-      message: "APP my foo is {foo}, my boolean is {b}",
-      data: {
-        "foo": "bar",
-        "b": true,
-        "additional": [
-          {"complexObject": 1},
-          {"complexObject": 2, "hello": "world"},
-        ]
-      },
-      level: LogLevel.info,
-    );
-    SeqLogger.sendLogs();
-    int count = await SeqLogger.getRecordCount();
-    print('LOGS: ${count}');*/
-    
-    setState(() {
-      nombreUsuario = nombre;
-      isLoading = false;
-    });
+      final nombre = await _firestoreService.getUserName(user!.email.toString());
+      setState(() {
+        nombreUsuario = nombre;
+        isLoading = false;
+      });
+    }
   }
-}
 
   @override
   void dispose() {
@@ -94,7 +80,7 @@ class _MyInicioState extends State<MyInicio> {
       try {
         await FirebaseAuth.instance.signOut();
       } catch (e) {
-        print('Error al cerrar sesión: $e');
+        await funciones.log('error','Error al cerrar sesión: $e');
       } finally {
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop();

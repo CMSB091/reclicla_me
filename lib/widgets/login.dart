@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:logging/logging.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/servicios/dynamicLinkService.dart';
 import 'register_page.dart';
 import '../clases/firestore_service.dart';
@@ -77,7 +77,7 @@ class _LoginPageState extends State<LoginPage> {
   final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
   bool _obscurePassword = true; // Estado para mostrar/ocultar contraseña
-  final Logger _logger = Logger('LoginPageLogger');  // Logger para esta página
+  final Funciones funciones = Funciones();
 
   @override
   void dispose() {
@@ -90,7 +90,7 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
       try {
-        _logger.warning('Iniciando sesión con el email: ${_emailController.text}');
+        await funciones.log('information','Iniciando sesión con el email: ${_emailController.text}');
         UserCredential userCredential = await FirebaseAuth.instance
             .signInWithEmailAndPassword(
           email: _emailController.text,
@@ -98,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         final nombreUsuario = await _firestoreService.getUserName(_emailController.text);
-        _logger.info('Sesión iniciada correctamente para el usuario: $nombreUsuario');
+        await funciones.log('information','Sesión iniciada correctamente para el usuario: $nombreUsuario');
 
         Navigator.pushReplacement(
           context,
@@ -114,8 +114,7 @@ class _LoginPageState extends State<LoginPage> {
             : e.code == 'wrong-password'
                 ? 'Contraseña incorrecta.'
                 : 'Error en la autenticación.';
-
-        _logger.severe('Error en la autenticación: $message', e);
+        await funciones.log('error','Error en la autenticación: $message');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );

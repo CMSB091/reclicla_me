@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; 
 import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:camera/camera.dart';  
@@ -65,6 +66,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
   User? user = FirebaseAuth.instance.currentUser;
   List<String> _paises = [];
   List<String> ciudades = [];
+  final Funciones funciones = Funciones();
 
   @override
   void initState() {
@@ -78,10 +80,10 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       List<String> paises = await _firestoreService.getPaises();
       setState(() {
         _paises = paises;
-        print(paises);
+        funciones.log('information',paises);
       });
     } catch (e) {
-      print('Error al cargar países: $e');
+      funciones.log('error','Error al cargar países: $e');
     }
   }
 
@@ -120,10 +122,10 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       // Cargar ciudades para el país seleccionado
       try {
         ciudades = await _firestoreService.getCiudadesPorPais(selectedPais);
-        print('Ciudades cargadas: $ciudades');  // Verifica el contenido
+        await funciones.log('information','Ciudades cargadas: $ciudades');
         _mostrarSeleccionCiudad(ciudades);  // Muestra la lista de ciudades
       } catch (e) {
-        print('Error al cargar ciudades: $e');
+        await funciones.log('error','Error al cargar ciudades: $e');
       }
     }
   }
@@ -158,8 +160,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       });
     }
   }
-
-
 
   void _guardarDatos() async {
     if (_formKey.currentState?.validate() ?? false) {
@@ -341,13 +341,13 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
           _telefonoController.text = userData['telefono'] ?? '';
           ciudades = await _firestoreService.getCiudadesPorPais(_paisController.text);
         } else {
-          print('No se encontraron datos para el usuario con correo $correo');
+          await funciones.log('information','No se encontraron datos para el usuario con correo $correo');
         }
       } else {
-        print('No hay un usuario autenticado');
+        await funciones.log('information','No hay un usuario autenticado');
       }
     } catch (e) {
-      print('Error al cargar datos del usuario: $e');
+      await funciones.log('error','Error al cargar datos del usuario: $e');
     } finally {
       setState(() {
         _isLoadingData = false;

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_seq/dart_seq.dart';
 import 'package:dart_seq_http_client/dart_seq_http_client.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,7 +26,6 @@ class Funciones {
       return 'Una ilustración que muestre diversas actividades de reciclaje, como la clasificación de diferentes materiales como plástico, vidrio, metal y papel para su reutilización. La imagen debe enfatizar la sostenibilidad y el impacto ambiental.';
     }
   }
-
 
   // Función para cerrar sesón
   Future<void> simulateLogout(BuildContext context) async {
@@ -99,7 +99,7 @@ class Funciones {
     }
   }
 
-   Future<String> fetchChatGPTResponse(
+   /*Future<String> fetchChatGPTResponse(
       String prompt, bool Function(String prompt) isRecyclingRelated) async {
     if (!isRecyclingRelated(prompt)) {
       await log('debug','Consulta a la API no permitida');
@@ -115,6 +115,46 @@ class Funciones {
           ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
           : 'Error: $e';
     }
+  }*/
+
+  Future<List<Map<String, String>>> _fetchInteractionsFromFirestore() async {
+    List<Map<String, String>> interactions = [];
+
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('chat_interactions')
+        .orderBy('timestamp', descending: true)
+        .limit(10) // Limit to the last 10 interactions for training
+        .get();
+
+    for (var doc in snapshot.docs) {
+      interactions.add({
+        'userPrompt': doc['userPrompt'] ?? '',
+        'chatResponse': doc['chatResponse'] ?? '',
+      });
+    }
+
+    return interactions;
+  }
+    Future<String> fetchChatGPTResponse(String prompt, bool isRecyclingRelated) async {
+    // Fetch recent interactions for context
+    List<Map<String, String>> recentInteractions = await _fetchInteractionsFromFirestore();
+
+    // Build a context string from recent interactions
+    String context = recentInteractions.map((interaction) {
+      return 'User: ${interaction['userPrompt']}\nBot: ${interaction['chatResponse']}';
+    }).join('\n\n');
+
+    // Combine context with the new prompt
+    String finalPrompt = '$context\n\nUser: $prompt\nBot:';
+
+    // Call the ChatGPT API with the finalPrompt
+    if(isRecyclingRelated){
+          String response = await getChatGPTResponse(finalPrompt);
+      return response;
+    }else{
+      return 'Por favor, realiza una consulta relacionada con el reciclaje de materiales en el hogar y cómo reutilizarlos de manera creativa.';
+    }
+
   }
 
   Future<String> fetchGeneratedImage(String prompt) async {
@@ -145,14 +185,15 @@ class Funciones {
   }
 
   Future<void> log(String status, message) async {
-    final logger = SeqHttpLogger.create(
-      host: 'http://192.168.100.16:43674',//'http://10.0.2.2:43674', para el emulador
-      apiKey: dotenv.env['OPENAI_API_KEY'],
-      globalContext: {
-        'App': 'ReciclaMe',
-      },
-    );
-    if(status == 'information'){
+    try{
+      final logger = SeqHttpLogger.create(
+        host: 'http://192.168.100.16:43674',//'http://10.0.2.2:43674', para el emulador
+        apiKey: dotenv.env['OPENAI_API_KEY'],
+        globalContext: {
+          'App': 'ReciclaMe',
+        },
+      );
+      if(status == 'information'){
       await logger.log(
         SeqLogLevel.information,
         message,
@@ -190,6 +231,9 @@ class Funciones {
       );
     }
     await logger.flush();
+    }catch(e){
+      print('Se produjo un error al intentar acceder al SEQ $e');
+    }
   }
 
 }

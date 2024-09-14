@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:recila_me/widgets/login.dart';
@@ -39,6 +40,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   List<RecyclingTip> _tips = [];
+  final Funciones funciones = Funciones();
 
   @override
   void initState() {
@@ -52,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
       final jsonData = json.decode(data);
       _tips = List<RecyclingTip>.from(jsonData.map((x) => RecyclingTip.fromJson(x)));
     } catch (e) {
-      print("Error al cargar los consejos de reciclaje: $e");
+      await funciones.log('error','Error al cargar los consejos de reciclaje: $e');
     } finally {
       _showWelcomeDialog();
     }

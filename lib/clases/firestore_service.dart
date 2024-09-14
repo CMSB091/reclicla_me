@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -199,6 +200,19 @@ class FirestoreService {
     }
   }
 
+  void saveInteractionToFirestore(String prompt, String response, String userMail) {
+    FirebaseFirestore.instance.collection('chat_interactions').add({
+      'userPrompt': prompt,
+      'chatResponse': response,
+      'timestamp': FieldValue.serverTimestamp(),
+      'email' : userMail
+    });
+  }
+
+  Future<String?> loadUserEmail() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    return user?.email;
+  }
   
 }
 
