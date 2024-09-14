@@ -87,6 +87,8 @@ flutter:
     - assets/animations/lotti-recycle.json
     - assets/animations/lotti-trash-2.json
     - .env
+    - assets/animations/lottie-dot.json
+    - assets/animations/lottie-chat-bot.json
 
   fonts:
     - family: Artwork

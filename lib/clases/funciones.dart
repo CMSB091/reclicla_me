@@ -1,15 +1,23 @@
 import 'dart:convert';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_seq/dart_seq.dart';
 import 'package:dart_seq_http_client/dart_seq_http_client.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http; // Asegúrate de ajustar la ruta según tu estructura
 
 
 class Funciones {
+
+  final FirestoreService firestoreService = FirestoreService();
+  final List<String> recyclingKeywords = [
+  'reciclaje', 'reciclar', 'reutilizar', 'sostenible', 'casa', 'hogar', 
+  'materiales', 'botella', 'plástico', 'papel', 'cartón', 'vidrio', 
+  'lata', 'metal', 'residuos', 'desechos', 'decoración', 'manualidades', 
+  'ecología', 'basura', 'compostaje','pila','pilas'
+  ];
 
   String generateImagePromptFromResponse(String chatGPTResponse) {
     // Aquí puedes aplicar lógica para extraer una idea clave de la respuesta.
@@ -99,45 +107,10 @@ class Funciones {
     }
   }
 
-   /*Future<String> fetchChatGPTResponse(
-      String prompt, bool Function(String prompt) isRecyclingRelated) async {
-    if (!isRecyclingRelated(prompt)) {
-      await log('debug','Consulta a la API no permitida');
-      return 'Oops! La consulta debe estar relacionada con el reciclaje.';
-    }
-
-    try {
-      String response = await getChatGPTResponse('$prompt. Dame la respuesta en 200 palabras');
-      return response;
-    } catch (e) {
-      await log('error','Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.');
-      return e.toString().contains('insufficient_quota')
-          ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
-          : 'Error: $e';
-    }
-  }*/
-
-  Future<List<Map<String, String>>> _fetchInteractionsFromFirestore() async {
-    List<Map<String, String>> interactions = [];
-
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('chat_interactions')
-        .orderBy('timestamp', descending: true)
-        .limit(10) // Limit to the last 10 interactions for training
-        .get();
-
-    for (var doc in snapshot.docs) {
-      interactions.add({
-        'userPrompt': doc['userPrompt'] ?? '',
-        'chatResponse': doc['chatResponse'] ?? '',
-      });
-    }
-
-    return interactions;
-  }
+  
     Future<String> fetchChatGPTResponse(String prompt, bool isRecyclingRelated) async {
     // Fetch recent interactions for context
-    List<Map<String, String>> recentInteractions = await _fetchInteractionsFromFirestore();
+    List<Map<String, String>> recentInteractions = await firestoreService.fetchInteractionsFromFirestore();
 
     // Build a context string from recent interactions
     String context = recentInteractions.map((interaction) {
@@ -187,7 +160,7 @@ class Funciones {
   Future<void> log(String status, message) async {
     try{
       final logger = SeqHttpLogger.create(
-        host: 'http://192.168.100.16:43674',//'http://10.0.2.2:43674', para el emulador
+        host: /*'http://192.168.100.16:43674',*/'http://10.0.2.2:43674', /*para el emulador*/
         apiKey: dotenv.env['OPENAI_API_KEY'],
         globalContext: {
           'App': 'ReciclaMe',
@@ -235,5 +208,6 @@ class Funciones {
       print('Se produjo un error al intentar acceder al SEQ $e');
     }
   }
+  
 
 }
