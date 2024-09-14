@@ -45,6 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _startLoading() {
+    print('Checkpoint ');
     Timer.periodic(const Duration(milliseconds: 50), (Timer timer) {
       setState(() {
         if (_progress >= 1) {
@@ -52,7 +53,7 @@ class _SplashScreenState extends State<SplashScreen> {
           // Navega a la siguiente pantalla cuando la carga está completa
           Navigator.of(_context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => mensajeInicio(cameras: widget.cameras), // Pasa las cámaras a la próxima pantalla
+              builder: (context) => mensajeInicio(widget.cameras), // Pasa las cámaras a la próxima pantalla
             ),
           );
         } else {

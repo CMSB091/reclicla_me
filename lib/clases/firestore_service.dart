@@ -2,7 +2,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:recila_me/clases/funciones.dart';
 class FirestoreService {
-  final Funciones funciones = Funciones();
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   Future<bool> authenticateUser(String correo, String contrasena) async {
     try {
@@ -18,6 +17,7 @@ class FirestoreService {
         return true;
       }
     } catch (e) {
+      Funciones.SeqLog('error', 'Se produjo un error en la autenticación $e');
       return false;
     }
   }
@@ -31,7 +31,7 @@ class FirestoreService {
       });
       return true;
     } catch (e) {
-      await funciones.log('error','Error creating user: $e');
+      await Funciones.SeqLog('error','Error creating user: $e');
       return false;
     }
   }
@@ -54,11 +54,11 @@ class FirestoreService {
         });
         return true;
       } else {
-        await funciones.log('information','No se encontró ningún usuario con el correo electrónico proporcionado');
+        await Funciones.SeqLog('information','No se encontró ningún usuario con el correo electrónico proporcionado');
         return false;
       }
     } catch (e) {
-      await funciones.log('error','Error updating user: $e');
+      await Funciones.SeqLog('error','Error updating user: $e');
       return false;
     }
   }
@@ -73,13 +73,12 @@ class FirestoreService {
       // Obtén el documento del usuario basado en el correo electrónico
       QuerySnapshot query = await _db.collection('usuario').where('correo', isEqualTo: correo).limit(1).get();
       
-      await funciones.log('debug','Query snapshot count: ${query.docs.length}'); // Depuración
+      await Funciones.SeqLog('debug','Query snapshot count: ${query.docs.length}'); // Depuración
       
-
       if (query.docs.isNotEmpty) {
         // Obtén el ID del primer documento encontrado
         String docId = query.docs.first.id;
-        await funciones.log('debug','Document ID: $docId'); // Depuración
+        await Funciones.SeqLog('debug','Document ID: $docId'); // Depuración
 
         // Usa el ID para obtener el documento específico
         DocumentSnapshot doc = await FirebaseFirestore.instance
@@ -87,49 +86,49 @@ class FirestoreService {
             .doc(docId)
             .get();
 
-        await funciones.log('debug','Document exists: ${doc.exists}'); // Depuración
+        await Funciones.SeqLog('debug','Document exists: ${doc.exists}'); // Depuración
 
         if (doc.exists) {
           // Obtén los datos del documento
           Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
           
-          await funciones.log('debug','Document data: $data'); // Depuración
+          await Funciones.SeqLog('debug','Document data: $data'); // Depuración
 
           if (data != null && data.containsKey('nombre')) {
             String firstName = data['nombre'] ?? correo;
-            await funciones.log('debug','Document firstName: $firstName'); // Depuración
+            await Funciones.SeqLog('debug','Document firstName: $firstName'); // Depuración
             return firstName;
           } else {
-            await funciones.log('information','Field "nombre" not found in the document.');
+            await Funciones.SeqLog('information','Field "nombre" not found in the document.');
             return correo; // Valor por defecto si el campo no está presente
           }
         } else {
           
-          await funciones.log('information','Document does not exist.');
+          await Funciones.SeqLog('information','Document does not exist.');
           return correo; // Valor por defecto si el documento no existe
         }
       } else {
-        await funciones.log('information','No document found with the provided email.');
+        await Funciones.SeqLog('information','No document found with the provided email.');
         return correo; // Valor por defecto si no se encuentra el documento
       }
     } catch (e) {
-      await funciones.log('error','Error retrieving user data: $e');
+      await Funciones.SeqLog('error','Error retrieving user data: $e');
       return correo;
     }
   }
 
   Future<Map<String, dynamic>?> getUserData(String correo) async {
-    await funciones.log('debug','EMAIL INGREASADO: $correo}');
+    await Funciones.SeqLog('debug','EMAIL INGREASADO: $correo}');
     try {
       // Obtén el documento del usuario basado en el correo electrónico
       QuerySnapshot query = await _db.collection('usuario').where('correo', isEqualTo: correo).limit(1).get();
       
-      await funciones.log('debug','Query snapshot count: ${query.docs.length}'); // Depuración
+      await Funciones.SeqLog('debug','Query snapshot count: ${query.docs.length}'); // Depuración
 
       if (query.docs.isNotEmpty) {
         // Obtén el ID del primer documento encontrado
         String docId = query.docs.first.id;
-        await funciones.log('debug','Document ID: $docId'); // Depuración
+        await Funciones.SeqLog('debug','Document ID: $docId'); // Depuración
 
         // Usa el ID para obtener el documento específico
         DocumentSnapshot doc = await FirebaseFirestore.instance
@@ -137,24 +136,24 @@ class FirestoreService {
             .doc(docId)
             .get();
 
-        await funciones.log('debug','Document exists: ${doc.exists}'); // Depuración
+        await Funciones.SeqLog('debug','Document exists: ${doc.exists}'); // Depuración
 
         if (doc.exists) {
           // Obtén los datos del documento
           Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-          await funciones.log('debug','Document data: $data'); // Depuración
+          await Funciones.SeqLog('debug','Document data: $data'); // Depuración
 
           return data;  // Retorna los datos del usuario
         } else {
-          await funciones.log('information','Document does not exist.');
+          await Funciones.SeqLog('information','Document does not exist.');
           return null; // Retorna null si el documento no existe
         }
       } else {
-        await funciones.log('information','No document found with the provided email.');
+        await Funciones.SeqLog('information','No document found with the provided email.');
         return null; // Retorna null si no se encuentra el documento
       }
     } catch (e) {
-      await funciones.log('error','Error retrieving user data: $e');
+      await Funciones.SeqLog('error','Error retrieving user data: $e');
       return null;
     }
   }
@@ -171,7 +170,7 @@ class FirestoreService {
         return false; // No se encontró el usuario con el correo especificado
       }
     } catch (e) {
-      await funciones.log('error','Error al eliminar el usuario: $e');
+      await Funciones.SeqLog('error','Error al eliminar el usuario: $e');
       return false;
     }
   }
@@ -181,7 +180,7 @@ class FirestoreService {
       final snapshot = await _db.collection('paises').get();
       return snapshot.docs.map((doc) => doc['nombre'] as String).toList();
     } catch (e) {
-      await funciones.log('error','Error al obtener países: $e');
+      await Funciones.SeqLog('error','Error al obtener países: $e');
       return [];
     }
   }
@@ -199,7 +198,7 @@ class FirestoreService {
 
       return ciudades;
     } catch (e) {
-      await funciones.log('error','Error al cargar las ciudades: $e');
+      await Funciones.SeqLog('error','Error al cargar las ciudades: $e');
       throw Exception('Error al cargar las ciudades: $e');
     }
   }
@@ -227,7 +226,7 @@ class FirestoreService {
           .get();
 
           snapshot.docs.forEach((doc) {
-            funciones.log('debug','Document found: ${doc['email']}'); // Debugging line
+            Funciones.SeqLog('debug','Document found: ${doc['email']}'); // Debugging line
         });
 
       return snapshot.docs.map((doc) {
@@ -238,7 +237,7 @@ class FirestoreService {
         };
       }).toList();
     } catch (e) {
-      await funciones.log('error','Error fetching chat history: $e');
+      await Funciones.SeqLog('error','Error fetching chat history: $e');
       return [];
     }
   }
@@ -265,7 +264,7 @@ class FirestoreService {
     }
 
   } catch (e) {
-    await funciones.log('error', 'Error fetching interactions from Firestore: $e');
+    await Funciones.SeqLog('error', 'Error fetching interactions from Firestore: $e');
   }
 
   return interactions;

@@ -77,7 +77,6 @@ class _LoginPageState extends State<LoginPage> {
   final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
   bool _obscurePassword = true; // Estado para mostrar/ocultar contraseña
-  final Funciones funciones = Funciones();
 
   @override
   void dispose() {
@@ -90,7 +89,7 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
       try {
-        await funciones.log('information','Iniciando sesión con el email: ${_emailController.text}');
+        Funciones.SeqLog('information','Iniciando sesión con el email: ${_emailController.text}');
         UserCredential userCredential = await FirebaseAuth.instance
             .signInWithEmailAndPassword(
           email: _emailController.text,
@@ -98,8 +97,7 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         final nombreUsuario = await _firestoreService.getUserName(_emailController.text);
-        await funciones.log('information','Sesión iniciada correctamente para el usuario: $nombreUsuario');
-
+        Funciones.SeqLog('information','Sesión iniciada correctamente para el usuario: $nombreUsuario');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -114,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
             : e.code == 'wrong-password'
                 ? 'Contraseña incorrecta.'
                 : 'Error en la autenticación.';
-        await funciones.log('error','Error en la autenticación: $message');
+        Funciones.SeqLog('error','Error en la autenticación: $message');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );

@@ -7,12 +7,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http; // Asegúrate de ajustar la ruta según tu estructura
-
-
+final FirestoreService firestoreService = FirestoreService();
 class Funciones {
-
-  final FirestoreService firestoreService = FirestoreService();
-  final List<String> recyclingKeywords = [
+  static final List<String> recyclingKeywords = [
   'reciclaje', 'reciclar', 'reutilizar', 'sostenible', 'casa', 'hogar', 
   'materiales', 'botella', 'plástico', 'papel', 'cartón', 'vidrio', 
   'lata', 'metal', 'residuos', 'desechos', 'decoración', 'manualidades', 
@@ -36,7 +33,7 @@ class Funciones {
   }
 
   // Función para cerrar sesón
-  Future<void> simulateLogout(BuildContext context) async {
+  static Future<void> simulateLogout(BuildContext context) async {
     // Muestra el diálogo de cierre de sesión
     showDialog(
       context: context,
@@ -65,7 +62,7 @@ class Funciones {
       // Cierra la sesión del usuario
       await FirebaseAuth.instance.signOut();
     } catch (e) {
-      await log('error','Error al cerrar sesión: $e');
+      await SeqLog('error','Error al cerrar sesión: $e');
     } finally {
       // Cierra el diálogo
       Navigator.of(context, rootNavigator: true).pop();
@@ -78,7 +75,7 @@ class Funciones {
     }  
   }
 
-  Future<String> getChatGPTResponse(String prompt) async {
+  static Future<String> getChatGPTResponse(String prompt) async {
     final apiKey = dotenv.env['OPENAI_API_KEY'];
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
@@ -102,13 +99,11 @@ class Funciones {
       final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
       return data['choices'][0]['message']['content'];
     } else {
-      await log('error','Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
+      await SeqLog('error','Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
       throw Exception('Failed to load ChatGPT response');
     }
   }
-
-  
-    Future<String> fetchChatGPTResponse(String prompt, bool isRecyclingRelated) async {
+  static Future<String> fetchChatGPTResponse(String prompt, bool isRecyclingRelated) async {
     // Fetch recent interactions for context
     List<Map<String, String>> recentInteractions = await firestoreService.fetchInteractionsFromFirestore();
 
@@ -130,7 +125,7 @@ class Funciones {
 
   }
 
-  Future<String> fetchGeneratedImage(String prompt) async {
+  static Future<String> fetchGeneratedImage(String prompt) async {
     final apiKey = dotenv.env['OPENAI_API_KEY'];
     const apiUrl = 'https://api.openai.com/v1/images/generations';
 
@@ -152,12 +147,12 @@ class Funciones {
       final imageUrlGenerated = data['data'][0]['url'];
       return imageUrlGenerated;
     } else {
-      await log('error','Error al generar la imagen: ${response.statusCode}');
+      await SeqLog('error','Error al generar la imagen: ${response.statusCode}');
       return '';
     }
   }
 
-  Future<void> log(String status, message) async {
+  static Future<void> SeqLog(String status, message) async {
     try{
       final logger = SeqHttpLogger.create(
         host: /*'http://192.168.100.16:43674',*/'http://10.0.2.2:43674', /*para el emulador*/
@@ -205,9 +200,8 @@ class Funciones {
     }
     await logger.flush();
     }catch(e){
-      print('Se produjo un error al intentar acceder al SEQ $e');
+      SeqLog('error','Se produjo un error al intentar acceder al SEQ $e');
     }
   }
-  
 
 }

@@ -8,9 +8,7 @@ import 'package:camera/camera.dart';
 // ignore: camel_case_types
 class mensajeInicio extends StatelessWidget {
   final List<CameraDescription>? cameras;
-
-  const mensajeInicio({super.key, this.cameras});
-
+  const mensajeInicio(camera, {super.key, this.cameras});
   @override
   Widget build(BuildContext context) {
     return SplashScreen(cameras: cameras);
@@ -19,7 +17,6 @@ class mensajeInicio extends StatelessWidget {
 
 class RecyclingTip {
   final String message;
-
   RecyclingTip({required this.message});
 
   factory RecyclingTip.fromJson(Map<String, dynamic> json) {
@@ -40,7 +37,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   List<RecyclingTip> _tips = [];
-  final Funciones funciones = Funciones();
 
   @override
   void initState() {
@@ -49,12 +45,13 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _loadTips() async {
+    print('Checkpoint 3');
     try {
       final String data = await DefaultAssetBundle.of(context).loadString('assets/recycling_tips.json');
       final jsonData = json.decode(data);
       _tips = List<RecyclingTip>.from(jsonData.map((x) => RecyclingTip.fromJson(x)));
     } catch (e) {
-      await funciones.log('error','Error al cargar los consejos de reciclaje: $e');
+      Funciones.SeqLog('error','Error al cargar los consejos de reciclaje: $e');
     } finally {
       _showWelcomeDialog();
     }

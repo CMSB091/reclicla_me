@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/firestore_service.dart';
@@ -14,17 +13,17 @@ class NoticiasChatGPT extends StatefulWidget {
 }
 
 class _MyChatWidgetState extends State<NoticiasChatGPT> {
-  final Funciones funciones = Funciones();
   final FirestoreService firestoreService = FirestoreService();
   final TextEditingController _controller = TextEditingController();
   String chatResponse = '';
   String imageUrl = '';
   bool isLoading = false;
   List<Map<String, dynamic>> chatHistory = [];
-  late String userEmail;
+  late String userEmail = 'Cargando...'; // Inicializamos con un valor por defecto
   final ScrollController _scrollController = ScrollController();
   bool isTyping = false;
-  String typingIndicator = 'Escribiendo'; // Initial text for typing indicator
+  String typingIndicator = 'Escribiendo'; // Texto inicial para el indicador de escritura
+  Timer? _typingTimer; // Timer para animación de "Escribiendo..."
 
   Future<void> _setUserEmail() async {
     String? email = await firestoreService.loadUserEmail();
@@ -34,7 +33,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       });
     } else {
       setState(() {
-        funciones.log('information', 'Correo no disponible');
+        Funciones.SeqLog('information', 'Correo no disponible');
         userEmail = 'Correo no disponible';
       });
     }
@@ -43,13 +42,19 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   void _startTypingAnimation() {
     setState(() {
       isTyping = true;
-      typingIndicator = '';
     });
 
+    int dotCount = 0;
+    _typingTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      setState(() {
+        dotCount = (dotCount + 1) % 4; // Ciclo entre 0, 1, 2, 3
+        typingIndicator = 'Escribiendo${'.' * dotCount}'; // Agrega puntos de manera cíclica
+      });
+    });
   }
 
   bool _isRecyclingRelated(String prompt) {
-    return funciones.recyclingKeywords.any((keyword) => prompt.toLowerCase().contains(keyword));
+    return Funciones.recyclingKeywords.any((keyword) => prompt.toLowerCase().contains(keyword));
   }
 
   void _scrollToBottom() {
@@ -75,13 +80,14 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       chatResponse = '';
       imageUrl = '';
       isTyping = true;
+      _startTypingAnimation();
     });
 
     _startTypingAnimation();
 
     try {
       String finalPrompt = 'Eres un experto en reciclaje de residuos comunes del hogar, incluyendo plásticos, metales, cartones, papeles, pilas y compostaje. Proporciona consejos prácticos y creativos sobre cómo reciclar o reutilizar estos materiales de manera sostenible en el hogar. Por favor, da la respuesta en no más de 200 palabras teniendo en cuenta lo siguiente: $prompt';
-      String response = await funciones.fetchChatGPTResponse(finalPrompt, _isRecyclingRelated(prompt));
+      String response = await Funciones.fetchChatGPTResponse(finalPrompt, _isRecyclingRelated(prompt));
       
       setState(() {
         isTyping = false;
@@ -89,18 +95,14 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         chatHistory.add({'message': response, 'isUser': false});
       });
 
-      /*String imagePrompt = funciones.generateImagePromptFromResponse(response);
-      imageUrl = await funciones.fetchGeneratedImage(imagePrompt);
-      setState(() {});*/
       firestoreService.saveInteractionToFirestore(prompt, response, userEmail);
     } catch (e) {
       setState(() {
         isTyping = false;
-        funciones.log('error', e.toString().contains('insufficient_quota')
+        Funciones.SeqLog('error', e.toString().contains('insufficient_quota')
             ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
             : 'Error: $e');
       });
-
     } finally {
       setState(() {
         isLoading = false;
@@ -127,49 +129,49 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   }
 
   Future<void> _showChatHistory() async {
-  List<Map<String, dynamic>> chatHistoryList = await firestoreService.fetchChatHistoryByEmail(userEmail);
+    List<Map<String, dynamic>> chatHistoryList = await firestoreService.fetchChatHistoryByEmail(userEmail);
 
-  if (chatHistoryList.isEmpty) {
-    // If no chat history is found, display a message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('No se encontraron interacciones previas para este usuario.')),
+    if (chatHistoryList.isEmpty) {
+      // If no chat history is found, display a message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se encontraron interacciones previas para este usuario.')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Chat History'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: chatHistoryList.length,
+              itemBuilder: (context, index) {
+                final chat = chatHistoryList[index];
+                return ListTile(
+                  title: Text(chat['timestamp'] ?? 'No Date'),
+                  subtitle: Text(
+                    chat['userPrompt'] ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop(); // Close the dialog
+                    _loadSelectedChat(chat); // Load the selected chat
+                  },
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
-    return;
   }
 
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Chat History'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: chatHistoryList.length,
-            itemBuilder: (context, index) {
-              final chat = chatHistoryList[index];
-              return ListTile(
-                title: Text(chat['timestamp'] ?? 'No Date'),
-                subtitle: Text(
-                  chat['userPrompt'] ?? '',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                onTap: () {
-                  Navigator.of(context).pop(); // Close the dialog
-                  _loadSelectedChat(chat); // Load the selected chat
-                },
-              );
-            },
-          ),
-        ),
-      );
-    },
-  );
-}
-
-@override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(

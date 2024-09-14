@@ -24,7 +24,6 @@ class _MyInicioState extends State<MyInicio> {
   final FirestoreService _firestoreService = FirestoreService();
   User? user = FirebaseAuth.instance.currentUser;
   String? nombreUsuario; 
-  final Funciones funciones = Funciones();
 
   @override
   void initState() {
@@ -80,7 +79,7 @@ class _MyInicioState extends State<MyInicio> {
       try {
         await FirebaseAuth.instance.signOut();
       } catch (e) {
-        await funciones.log('error','Error al cerrar sesión: $e');
+        Funciones.SeqLog('error','Error al cerrar sesión: $e');
       } finally {
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop();

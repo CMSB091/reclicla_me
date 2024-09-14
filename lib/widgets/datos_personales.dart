@@ -80,10 +80,10 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       List<String> paises = await _firestoreService.getPaises();
       setState(() {
         _paises = paises;
-        funciones.log('information',paises);
+        Funciones.SeqLog('information',paises);
       });
     } catch (e) {
-      funciones.log('error','Error al cargar países: $e');
+      Funciones.SeqLog('error','Error al cargar países: $e');
     }
   }
 
@@ -122,10 +122,10 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       // Cargar ciudades para el país seleccionado
       try {
         ciudades = await _firestoreService.getCiudadesPorPais(selectedPais);
-        await funciones.log('information','Ciudades cargadas: $ciudades');
+        Funciones.SeqLog('information','Ciudades cargadas: $ciudades');
         _mostrarSeleccionCiudad(ciudades);  // Muestra la lista de ciudades
       } catch (e) {
-        await funciones.log('error','Error al cargar ciudades: $e');
+        Funciones.SeqLog('error','Error al cargar ciudades: $e');
       }
     }
   }
@@ -341,13 +341,13 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
           _telefonoController.text = userData['telefono'] ?? '';
           ciudades = await _firestoreService.getCiudadesPorPais(_paisController.text);
         } else {
-          await funciones.log('information','No se encontraron datos para el usuario con correo $correo');
+          Funciones.SeqLog('information','No se encontraron datos para el usuario con correo $correo');
         }
       } else {
-        await funciones.log('information','No hay un usuario autenticado');
+        await Funciones.SeqLog('information','No hay un usuario autenticado');
       }
     } catch (e) {
-      await funciones.log('error','Error al cargar datos del usuario: $e');
+      await Funciones.SeqLog('error','Error al cargar datos del usuario: $e');
     } finally {
       setState(() {
         _isLoadingData = false;
