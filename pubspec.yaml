@@ -45,6 +45,7 @@ dependencies:
   seq_logger: ^1.0.6
   flutter_dotenv: ^5.0.2
   dart_seq_http_client: ^1.0.0
+  intl: ^0.18.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -88,7 +89,8 @@ flutter:
     - assets/animations/lotti-trash-2.json
     - .env
     - assets/animations/lottie-dot.json
-    - assets/animations/lottie-chat-bot.json
+    - assets/animations/lottie-chat-bot.json 
+    - assets/animations/lottie-recomendations.json
 
   fonts:
     - family: Artwork

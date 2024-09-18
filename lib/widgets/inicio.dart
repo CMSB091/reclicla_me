@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
@@ -193,36 +194,67 @@ class _MyInicioState extends State<MyInicio> {
       },
     );
   }
-
   Widget _buildMenuCard(BuildContext context, int index) {
     final page = _getPageForIndex(index);
-    return GestureDetector(
-      onTap: () {
-        if (!_isCancelled && mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => page),
-          );
-        }
-      },
-      child: SizedBox(
-        width: 150.0,
-        height: 150.0,
-        child: Card(
-          color: Colors.green.shade100,
+
+    return SizedBox(
+      width: 180.0, // Aumentar el ancho
+      height: 180.0, // Aumentar la altura
+      child: Card(
+        color: Colors.green.shade100,
+        elevation: 5.0, // Agregar sombreado
+        shadowColor: Colors.black.withOpacity(0.5), // Color del sombreado
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0), // Bordes redondeados
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10.0), // Ajustar el radio de las esquinas
+          onTap: () {
+            if (!_isCancelled && mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => page),
+              );
+            }
+          },
           child: Center(
-            child: Text(
-              _getMenuTitle(index),
-              style: const TextStyle(
-                fontSize: 20,
-                color: Colors.black,
-              ),
-            ),
+            child: index == 1
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Lottie.asset(
+                          'assets/animations/lottie-recomendations.json',
+                          width: 100, // Ajustar el tamaño de la animación
+                          height: 100, // Ajustar el tamaño de la animación
+                          repeat: true,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Recomendaciones',
+                        style: TextStyle(
+                          fontFamily: 'Artwork',
+                          fontSize: 16,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    _getMenuTitle(index),
+                    style: const TextStyle(
+                      fontSize: 22, // Aumentar tamaño de la fuente
+                      color: Colors.black,
+                    ),
+                  ),
           ),
         ),
       ),
     );
   }
+
+
 
   String _getMenuTitle(int index) {
     switch (index) {

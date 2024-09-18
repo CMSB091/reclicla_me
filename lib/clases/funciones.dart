@@ -103,6 +103,7 @@ class Funciones {
       throw Exception('Failed to load ChatGPT response');
     }
   }
+
   static Future<String> fetchChatGPTResponse(String prompt, bool isRecyclingRelated) async {
     // Fetch recent interactions for context
     List<Map<String, String>> recentInteractions = await firestoreService.fetchInteractionsFromFirestore();
@@ -203,5 +204,6 @@ class Funciones {
       SeqLog('error','Se produjo un error al intentar acceder al SEQ $e');
     }
   }
+  
 
 }

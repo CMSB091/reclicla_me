@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:recila_me/clases/funciones.dart';
+import 'package:intl/intl.dart'; // Asegúrate de importar intl para formatear las fechas.
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   Future<bool> authenticateUser(String correo, String contrasena) async {
@@ -217,60 +218,88 @@ class FirestoreService {
     return user?.email;
   }
 
-    Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(String email) async {
+Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(String userEmail) async {
     try {
+      // Obtener los documentos de la colección 'chat_interactions' filtrados por el correo electrónico
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('chat_interactions')
-          .where('email', isEqualTo: email)
-          .orderBy('timestamp', descending: true)
+          .where('email', isEqualTo: userEmail)
           .get();
 
-          snapshot.docs.forEach((doc) {
-            Funciones.SeqLog('debug','Document found: ${doc['email']}'); // Debugging line
-        });
-
+      // Convertir los documentos a una lista de mapas que incluye el ID del documento
       return snapshot.docs.map((doc) {
+        // Convertir el timestamp a un formato de fecha legible
+        String formattedDate = '';
+        if (doc['timestamp'] != null) {
+          formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(doc['timestamp'].toDate());
+        }
+
         return {
+          'id': doc.id, // Agregar el ID del documento
+          'timestamp': formattedDate, // Usar el formato de fecha
           'userPrompt': doc['userPrompt'] ?? '',
           'chatResponse': doc['chatResponse'] ?? '',
-          'timestamp': doc['timestamp']?.toDate().toString() ?? '',
         };
       }).toList();
     } catch (e) {
-      await Funciones.SeqLog('error','Error fetching chat history: $e');
+      Funciones.SeqLog('error', 'Error al recuperar el historial de chat: $e');
       return [];
     }
   }
 
+
   Future<List<Map<String, String>>> fetchInteractionsFromFirestore() async {
   List<Map<String, String>> interactions = [];
 
-  try {
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('chat_interactions')
-        .orderBy('timestamp', descending: true)
-        .limit(10) // Limit to the last 10 interactions for training
-        .get();
+    try {
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('chat_interactions')
+          .orderBy('timestamp', descending: true)
+          .limit(10) // Limit to the last 10 interactions for training
+          .get();
 
-    for (var doc in snapshot.docs) {
-      // Maneja posibles valores nulos para 'userPrompt' y 'chatResponse'
-      String userPrompt = doc['userPrompt'] ?? 'No user prompt available';
-      String chatResponse = doc['chatResponse'] ?? 'No response available';
+      for (var doc in snapshot.docs) {
+        // Maneja posibles valores nulos para 'userPrompt' y 'chatResponse'
+        String userPrompt = doc['userPrompt'] ?? 'No user prompt available';
+        String chatResponse = doc['chatResponse'] ?? 'No response available';
 
-      interactions.add({
-        'userPrompt': userPrompt,
-        'chatResponse': chatResponse,
-      });
+        interactions.add({
+          'userPrompt': userPrompt,
+          'chatResponse': chatResponse,
+        });
+      }
+
+    } catch (e) {
+      await Funciones.SeqLog('error', 'Error fetching interactions from Firestore: $e');
     }
 
-  } catch (e) {
-    await Funciones.SeqLog('error', 'Error fetching interactions from Firestore: $e');
+    return interactions;
+  }
+  // Elimina los chats guardados del historial de chats
+  Future<void> deleteChatById(String? chatId) async {
+    // Verificar si chatId es null o vacío
+    if (chatId == null || chatId.isEmpty) {
+      Funciones.SeqLog('warning', 'ID de chat no válido: null o vacío.');
+      return;
+    }
+
+    try {
+      // Obtener el documento por su ID
+      DocumentSnapshot chatDoc = await FirebaseFirestore.instance.collection('chat_interactions').doc(chatId).get();
+
+      if (chatDoc.exists) {
+        // El documento existe, proceder a eliminarlo
+        await FirebaseFirestore.instance.collection('chat_interactions').doc(chatId).delete();
+        Funciones.SeqLog('information', 'Chat con ID $chatId eliminado correctamente.');
+      } else {
+        // El documento no existe
+        Funciones.SeqLog('warning', 'No se encontró un chat con el ID $chatId para eliminar.');
+      }
+    } catch (e) {
+      Funciones.SeqLog('error', 'Error al eliminar el chat: $e');
+    }
   }
 
-  return interactions;
-}
-
-  
 }
 
 

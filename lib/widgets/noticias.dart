@@ -129,47 +129,92 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   }
 
   Future<void> _showChatHistory() async {
-    List<Map<String, dynamic>> chatHistoryList = await firestoreService.fetchChatHistoryByEmail(userEmail);
+    List<Map<String, dynamic>> chatHistoryList = await firestoreService.  fetchChatHistoryByEmail(userEmail);
 
     if (chatHistoryList.isEmpty) {
-      // If no chat history is found, display a message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se encontraron interacciones previas para este usuario.')),
       );
       return;
     }
 
-    showDialog(
+    await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Chat History'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: chatHistoryList.length,
-              itemBuilder: (context, index) {
-                final chat = chatHistoryList[index];
-                return ListTile(
-                  title: Text(chat['timestamp'] ?? 'No Date'),
-                  subtitle: Text(
-                    chat['userPrompt'] ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  onTap: () {
-                    Navigator.of(context).pop(); // Close the dialog
-                    _loadSelectedChat(chat); // Load the selected chat
+        return StatefulBuilder( // Utilizar StatefulBuilder para refrescar la UI dentro del diálogo
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Chat History'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: chatHistoryList.length,
+                  itemBuilder: (context, index) {
+                    final chat = chatHistoryList[index];
+                    return ListTile(
+                      title: Text(chat['timestamp'] ?? 'No Date'),
+                      subtitle: Text(
+                        chat['userPrompt'] ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          // Confirmar la eliminación del chat
+                          final confirmDelete = await showDialog<bool>(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: const Text('Confirmar eliminación'),
+                                content: const Text('¿Estás seguro de que quieres eliminar este chat?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    child: const Text('Eliminar'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+
+                          if (confirmDelete == true) {
+                            // Eliminar el chat de la base de datos
+                            await firestoreService.deleteChatById(chat['id']);
+
+                            // Remover el chat de la lista local y actualizar la UI
+                            setState(() {
+                              chatHistoryList.removeAt(index);
+                            });
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Chat eliminado.')),
+                            );
+                          }
+                        },
+                      ),
+                      onTap: () {
+                        Navigator.of(context).pop(); // Cerrar el diálogo
+                        setState(() {
+                          _loadSelectedChat(chat); // Cargar el chat seleccionado
+                        });
+                      },
+                    );
                   },
-                );
-              },
-            ),
-          ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
