@@ -156,7 +156,7 @@ class Funciones {
   static Future<void> SeqLog(String status, message) async {
     try{
       final logger = SeqHttpLogger.create(
-        host: /*'http://192.168.100.16:43674',*/'http://10.0.2.2:43674', /*para el emulador*/
+        host: /*'http://192.168.100.16:43674'*/'http://10.0.2.2:43674', /*para el emulador*/
         apiKey: dotenv.env['OPENAI_API_KEY'],
         globalContext: {
           'App': 'ReciclaMe',
@@ -201,7 +201,7 @@ class Funciones {
     }
     await logger.flush();
     }catch(e){
-      SeqLog('error','Se produjo un error al intentar acceder al SEQ $e');
+      print('Se produjo un error al intentar acceder al SEQ $e');
     }
   }
   
