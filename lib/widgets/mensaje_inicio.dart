@@ -66,7 +66,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     showDialog(
-      context: context,  // Usar directamente el contexto actual
+      context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Center(

@@ -72,14 +72,14 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: const Color(0xFFccffcc), // Fondo verde muy claro
       body: Center(
         child: SizedBox(
-          width: screenWidth * 0.8, // Ajusta el ancho según el ancho de la pantalla
+          width: screenWidth * 0.8,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Image.asset(
                 'assets/images/reciclaje1.gif',
-                width: screenWidth * 0.5, // Ajusta el ancho según el ancho de la pantalla
-                height: screenHeight * 0.3, // Ajusta la altura según el alto de la pantalla
+                width: screenWidth * 0.5, 
+                height: screenHeight * 0.3,
               ),
               const SizedBox(height: 20),
               const FittedBox(
@@ -97,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen> {
               const SizedBox(height: 20),
               if (_progress > 0)
                 Container(
-                  width: screenWidth * 0.6, // Ajusta el ancho según el ancho de la pantalla
+                  width: screenWidth * 0.6, 
                   height: 20, // Altura de la barra de progreso
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),

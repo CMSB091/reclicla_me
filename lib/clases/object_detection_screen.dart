@@ -1,6 +1,7 @@
 import 'dart:typed_data';  // Para Uint8List
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as image_lib;
 import 'package:path_provider/path_provider.dart';
@@ -60,9 +61,9 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
 
   Future<void> _loadModel() async {
     try {
-      print("Intentando cargar el modelo...");
+      Funciones.SeqLog('information',"Intentando cargar el modelo...");
       _interpreter = await Interpreter.fromAsset('assets/tflite/model.tflite');
-      print("Modelo cargado correctamente");
+      Funciones.SeqLog("information","Modelo cargado correctamente");
       if (mounted) {
         setState(() {
           _modelStatus = "Modelo cargado correctamente";
@@ -70,7 +71,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
         });
       }
     } catch (e) {
-      print("Error al cargar el modelo: $e");
+      Funciones.SeqLog("error","Error al cargar el modelo: $e");
       if (mounted) {
         setState(() {
           _modelStatus = "Error al cargar el modelo.";
@@ -101,7 +102,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
       _saveImage(input);  // Guarda la imagen procesada
     });
   } catch (e) {
-    print("Error durante la detección: $e");
+    Funciones.SeqLog("error","Error durante la detección: $e");
     setState(() {
       _detectionResult = "Error durante la detección: $e";
     });
@@ -170,9 +171,9 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
       final imagePath = '${directory.path}/detected_image.png';
       final file = File(imagePath);
       await file.writeAsBytes(input);
-      print("Imagen guardada en: $imagePath");
+      Funciones.SeqLog('information',"Imagen guardada en: $imagePath");
     } catch (e) {
-      print("Error al guardar la imagen: $e");
+      Funciones.SeqLog("error","Error al guardar la imagen: $e");
     }
   }
 

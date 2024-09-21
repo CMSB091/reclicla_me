@@ -19,7 +19,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   String imageUrl = '';
   bool isLoading = false;
   List<Map<String, dynamic>> chatHistory = [];
-  late String userEmail = 'Cargando...'; // Inicializamos con un valor por defecto
+  late String userEmail = 'Cargando...'; // valor por defecto
   final ScrollController _scrollController = ScrollController();
   bool isTyping = false;
   String typingIndicator = 'Escribiendo'; // Texto inicial para el indicador de escritura
@@ -119,12 +119,12 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
 
   void _loadSelectedChat(Map<String, dynamic> chat) {
     setState(() {
-      chatHistory.clear(); // Clear the current chat history
+      chatHistory.clear();
       chatHistory.add({
         'user': chat['userPrompt'],
         'bot': chat['chatResponse'],
       });
-      chatResponse = chat['chatResponse']; // Display the selected chat's response
+      chatResponse = chat['chatResponse'];
     });
   }
 
@@ -141,7 +141,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     await showDialog(
       context: context,
       builder: (context) {
-        return StatefulBuilder( // Utilizar StatefulBuilder para refrescar la UI dentro del diálogo
+        return StatefulBuilder( 
           builder: (context, setState) {
             return AlertDialog(
               title: const Text('Chat History'),
@@ -246,10 +246,9 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
             child: ListView.builder(
               reverse: true,
               padding: const EdgeInsets.all(10),
-              itemCount: chatHistory.length + (isTyping ? 3 : 2), // Include typing indicator, intro text, and Lottie animation
+              itemCount: chatHistory.length + (isTyping ? 3 : 2), 
               itemBuilder: (context, index) {
                 if (index == chatHistory.length + (isTyping ? 2 : 1)) {
-                  // Show the introductory text
                   return const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                     child: Text(
@@ -262,10 +261,9 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                 }
 
                 if (index == chatHistory.length + (isTyping ? 1 : 0)) {
-                  // Show Lottie animation
                   return Center(
                     child: Lottie.asset(
-                      'assets/animations/lottie-chat-bot.json', // Replace with your Lottie file path
+                      'assets/animations/lottie-chat-bot.json', 
                       width: 500,
                       height: 500,
                       repeat: true,

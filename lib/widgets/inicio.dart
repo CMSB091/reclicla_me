@@ -124,9 +124,9 @@ class _MyInicioState extends State<MyInicio> {
       body: Center(
         child: isLoading
             ? buildLottieAnimation(
-                path: 'assets/animations/lotti-recycle.json', // Ruta de tu archivo Lottie
-                width: 500, // Ajusta el tamaño según tus necesidades
-                height: 500, // Ajusta el tamaño según tus necesidades
+                path: 'assets/animations/lotti-recycle.json',
+                width: 500, 
+                height: 500,
               )
             : Wrap(
                 spacing: 20.0,
@@ -198,8 +198,8 @@ class _MyInicioState extends State<MyInicio> {
     final page = _getPageForIndex(index);
 
     return SizedBox(
-      width: 180.0, // Aumentar el ancho
-      height: 180.0, // Aumentar la altura
+      width: 180.0, 
+      height: 180.0,
       child: Card(
         color: Colors.green.shade100,
         elevation: 5.0, // Agregar sombreado
@@ -208,7 +208,7 @@ class _MyInicioState extends State<MyInicio> {
           borderRadius: BorderRadius.circular(10.0), // Bordes redondeados
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(10.0), // Ajustar el radio de las esquinas
+          borderRadius: BorderRadius.circular(10.0), //  radio de las esquinas
           onTap: () {
             if (!_isCancelled && mounted) {
               Navigator.push(
@@ -225,8 +225,8 @@ class _MyInicioState extends State<MyInicio> {
                       Flexible(
                         child: Lottie.asset(
                           'assets/animations/lottie-recomendations.json',
-                          width: 100, // Ajustar el tamaño de la animación
-                          height: 100, // Ajustar el tamaño de la animación
+                          width: 100, // tamaño de la animación
+                          height: 100, // tamaño de la animación
                           repeat: true,
                         ),
                       ),
@@ -244,7 +244,7 @@ class _MyInicioState extends State<MyInicio> {
                 : Text(
                     _getMenuTitle(index),
                     style: const TextStyle(
-                      fontSize: 22, // Aumentar tamaño de la fuente
+                      fontSize: 22, //tamaño de la fuente
                       color: Colors.black,
                     ),
                   ),

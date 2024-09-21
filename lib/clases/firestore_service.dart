@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:recila_me/clases/funciones.dart';
-import 'package:intl/intl.dart'; // Asegúrate de importar intl para formatear las fechas.
+import 'package:intl/intl.dart'; // Para formatear las fechas.
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   Future<bool> authenticateUser(String correo, String contrasena) async {
@@ -28,7 +28,6 @@ class FirestoreService {
     try {
       await _db.collection('usuario').doc(email).set({
         'correo': email,
-        // Add any other user fields here, but exclude the password.
       });
       return true;
     } catch (e) {
@@ -37,13 +36,14 @@ class FirestoreService {
     }
   }
 
+  // Método para actualizar los datos del usuario
   Future<bool> updateUser(String nombre, String apellido, int edad, String direccion,String ciudad, String pais, String telefono, String correo) async {
     try {
-      // Consultar el documento basado en el correo electrónico
+      // Consulta el documento basado en el correo electrónico
       QuerySnapshot querySnapshot = await _db.collection('usuario').where('correo', isEqualTo: correo).limit(1).get();
       String docId = querySnapshot.docs.isNotEmpty ? querySnapshot.docs.first.id : '';
       if (docId.isNotEmpty) {
-        // Actualizar el documento con el ID obtenido
+        // Actualiza el documento con el ID obtenido
         await _db.collection('usuario').doc(docId).update({
           'nombre': nombre,
           'apellido': apellido,
@@ -63,86 +63,79 @@ class FirestoreService {
       return false;
     }
   }
-
+  // Método que valida si existe un email ya registrado en la base de datos 
   Future<bool> checkEmailExists(String email) async {
     final snapshot = await _db.collection('usuario').where('correo', isEqualTo: email).get();
     return snapshot.docs.isNotEmpty;
   }
 
+  // Método que recupera el nombre del usuario
   Future<String> getUserName(String correo) async {
     try {
-      // Obtén el documento del usuario basado en el correo electrónico
       QuerySnapshot query = await _db.collection('usuario').where('correo', isEqualTo: correo).limit(1).get();
       
-      await Funciones.SeqLog('debug','Query snapshot count: ${query.docs.length}'); // Depuración
+      await Funciones.SeqLog('debug','Query snapshot count: ${query.docs.length}');
       
       if (query.docs.isNotEmpty) {
-        // Obtén el ID del primer documento encontrado
         String docId = query.docs.first.id;
-        await Funciones.SeqLog('debug','Document ID: $docId'); // Depuración
+        await Funciones.SeqLog('debug','Document ID: $docId'); 
 
-        // Usa el ID para obtener el documento específico
         DocumentSnapshot doc = await FirebaseFirestore.instance
-            .collection('usuario')  // Asegúrate de usar la misma colección que antes
+            .collection('usuario')
             .doc(docId)
             .get();
 
-        await Funciones.SeqLog('debug','Document exists: ${doc.exists}'); // Depuración
+        await Funciones.SeqLog('debug','Document exists: ${doc.exists}');
 
-        if (doc.exists) {
-          // Obtén los datos del documento
+        if (doc.exists) { // Valida que se haya recuperado los datos
           Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
           
-          await Funciones.SeqLog('debug','Document data: $data'); // Depuración
+          await Funciones.SeqLog('debug','Document data: $data');
 
           if (data != null && data.containsKey('nombre')) {
             String firstName = data['nombre'] ?? correo;
-            await Funciones.SeqLog('debug','Document firstName: $firstName'); // Depuración
+            await Funciones.SeqLog('debug','Document firstName: $firstName');
             return firstName;
           } else {
             await Funciones.SeqLog('information','Field "nombre" not found in the document.');
-            return correo; // Valor por defecto si el campo no está presente
+            return correo; // Valor por defecto
           }
         } else {
           
           await Funciones.SeqLog('information','Document does not exist.');
-          return correo; // Valor por defecto si el documento no existe
+          return correo; // Valor por defecto
         }
       } else {
         await Funciones.SeqLog('information','No document found with the provided email.');
-        return correo; // Valor por defecto si no se encuentra el documento
+        return correo; // Valor por defecto
       }
     } catch (e) {
       await Funciones.SeqLog('error','Error retrieving user data: $e');
       return correo;
     }
   }
-
+  //Método que recupera todos los datos del usuario
   Future<Map<String, dynamic>?> getUserData(String correo) async {
     await Funciones.SeqLog('debug','EMAIL INGREASADO: $correo}');
     try {
-      // Obtén el documento del usuario basado en el correo electrónico
       QuerySnapshot query = await _db.collection('usuario').where('correo', isEqualTo: correo).limit(1).get();
       
-      await Funciones.SeqLog('debug','Query snapshot count: ${query.docs.length}'); // Depuración
+      await Funciones.SeqLog('debug','Query snapshot count: ${query.docs.length}'); 
 
       if (query.docs.isNotEmpty) {
-        // Obtén el ID del primer documento encontrado
         String docId = query.docs.first.id;
-        await Funciones.SeqLog('debug','Document ID: $docId'); // Depuración
+        await Funciones.SeqLog('debug','Document ID: $docId');
 
-        // Usa el ID para obtener el documento específico
         DocumentSnapshot doc = await FirebaseFirestore.instance
-            .collection('usuario')  // Asegúrate de usar la misma colección que antes
+            .collection('usuario') 
             .doc(docId)
             .get();
 
-        await Funciones.SeqLog('debug','Document exists: ${doc.exists}'); // Depuración
+        await Funciones.SeqLog('debug','Document exists: ${doc.exists}'); 
 
         if (doc.exists) {
-          // Obtén los datos del documento
           Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-          await Funciones.SeqLog('debug','Document data: $data'); // Depuración
+          await Funciones.SeqLog('debug','Document data: $data');
 
           return data;  // Retorna los datos del usuario
         } else {
@@ -158,7 +151,7 @@ class FirestoreService {
       return null;
     }
   }
-
+  //Método para eliminar usuario
   Future<bool> deleteUser(String correo) async {
     try {
       QuerySnapshot snapshot = await _db.collection('usuario')
@@ -203,7 +196,7 @@ class FirestoreService {
       throw Exception('Error al cargar las ciudades: $e');
     }
   }
-
+  // Metodo para guardar las recomendaciones obtenidas de la consulta al chatBot
   void saveInteractionToFirestore(String prompt, String response, String userMail) {
     FirebaseFirestore.instance.collection('chat_interactions').add({
       'userPrompt': prompt,
@@ -212,31 +205,31 @@ class FirestoreService {
       'email' : userMail
     });
   }
-
+  // Metodo para recuperar el email del usuario
   Future<String?> loadUserEmail() async {
     User? user = FirebaseAuth.instance.currentUser;
     return user?.email;
   }
-
-Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(String userEmail) async {
+  // Metodo para recuperar el historial de consultas al chatBot
+  Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(String userEmail) async {
     try {
-      // Obtener los documentos de la colección 'chat_interactions' filtrados por el correo electrónico
+      // Se obtiene los datos filtrados por el correo electrónico
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('chat_interactions')
           .where('email', isEqualTo: userEmail)
           .get();
 
-      // Convertir los documentos a una lista de mapas que incluye el ID del documento
+      // Se retorna los datos como una lista 
       return snapshot.docs.map((doc) {
-        // Convertir el timestamp a un formato de fecha legible
+        // Se convierte la fecha a un formato legible
         String formattedDate = '';
         if (doc['timestamp'] != null) {
           formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(doc['timestamp'].toDate());
         }
 
         return {
-          'id': doc.id, // Agregar el ID del documento
-          'timestamp': formattedDate, // Usar el formato de fecha
+          'id': doc.id, 
+          'timestamp': formattedDate,
           'userPrompt': doc['userPrompt'] ?? '',
           'chatResponse': doc['chatResponse'] ?? '',
         };
@@ -246,8 +239,7 @@ Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(String userEmail) asy
       return [];
     }
   }
-
-
+  // Metodo que recupera las recomendaciones de la base de datos para entrenar el modelo
   Future<List<Map<String, String>>> fetchInteractionsFromFirestore() async {
   List<Map<String, String>> interactions = [];
 
@@ -255,7 +247,7 @@ Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(String userEmail) asy
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('chat_interactions')
           .orderBy('timestamp', descending: true)
-          .limit(10) // Limit to the last 10 interactions for training
+          .limit(10)
           .get();
 
       for (var doc in snapshot.docs) {
@@ -275,7 +267,7 @@ Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(String userEmail) asy
 
     return interactions;
   }
-  // Elimina los chats guardados del historial de chats
+  // Metodo que elimina los chats guardados del historial de chats
   Future<void> deleteChatById(String? chatId) async {
     // Verificar si chatId es null o vacío
     if (chatId == null || chatId.isEmpty) {
@@ -284,15 +276,15 @@ Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(String userEmail) asy
     }
 
     try {
-      // Obtener el documento por su ID
+      
       DocumentSnapshot chatDoc = await FirebaseFirestore.instance.collection('chat_interactions').doc(chatId).get();
 
       if (chatDoc.exists) {
-        // El documento existe, proceder a eliminarlo
+        // Si el documento existe, proceder a eliminarlo
         await FirebaseFirestore.instance.collection('chat_interactions').doc(chatId).delete();
         Funciones.SeqLog('information', 'Chat con ID $chatId eliminado correctamente.');
       } else {
-        // El documento no existe
+        // Si el documento no existe
         Funciones.SeqLog('warning', 'No se encontró un chat con el ID $chatId para eliminar.');
       }
     } catch (e) {

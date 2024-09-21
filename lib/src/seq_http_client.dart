@@ -1,13 +1,10 @@
 import 'dart:convert';
-
 import 'package:dart_seq/dart_seq.dart';
 import 'package:dart_seq_http_client/dart_seq_http_client.dart';
 import 'package:http/http.dart' as http;
 
-/// Calculates a linearly increasing duration to based on the number of [tries].
 Duration linearBackoff(int tries) => Duration(milliseconds: tries * 100);
 
-/// A HTTP ingestion client for Seq. Implements the [SeqClient] interface.
 class SeqHttpClient implements SeqClient {
   SeqHttpClient({
     required String host,

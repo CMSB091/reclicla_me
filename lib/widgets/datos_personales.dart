@@ -116,10 +116,10 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       setState(() {
         _paisController.text = selectedPais;
         // Establecer el campo de ciudad en nulo o vacío cuando se selecciona un nuevo país
-      _ciudadController.text = '';  // Aquí puedes usar '' si prefieres mostrarlo vacío en lugar de null
+      _ciudadController.text = '';  
       });
 
-      // Cargar ciudades para el país seleccionado
+      // Carga ciudades para el país seleccionado
       try {
         ciudades = await _firestoreService.getCiudadesPorPais(selectedPais);
         Funciones.SeqLog('information','Ciudades cargadas: $ciudades');
@@ -187,7 +187,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
           widget.correo
         );
 
-        if (result /*&& mounted*/) {
+        if (result && mounted) {
           showDialog(
             context: context,
             builder: (context) {
@@ -478,7 +478,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('Desde Inicio: ${widget.desdeInicio}'); // Añadir esto para depurar
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(

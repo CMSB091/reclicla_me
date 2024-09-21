@@ -18,13 +18,12 @@ class DynamicLinkService {
     final Uri? deepLink = dynamicLinkData?.link;
 
     if (deepLink != null) {
-      // Aquí puedes manejar el enlace profundo según tu necesidad.
-      // Por ejemplo, redirigir al usuario a la página de datos personales.
+      // Manejo del enlace profundo, para cuando el usuario valida su email
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => DatosPersonales(
-            correo: deepLink.queryParameters['email'] ?? '', // Pasar el correo electrónico extraído del deep link
+            correo: deepLink.queryParameters['email'] ?? '',
             desdeInicio: false,
             cameras: const [],
           ),

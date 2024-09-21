@@ -6,19 +6,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/login.dart';
-import 'package:http/http.dart' as http; // Asegúrate de ajustar la ruta según tu estructura
+import 'package:http/http.dart' as http; 
+
 final FirestoreService firestoreService = FirestoreService();
 class Funciones {
+  // Palabras clave relacionadas con reciclaje.
   static final List<String> recyclingKeywords = [
   'reciclaje', 'reciclar', 'reutilizar', 'sostenible', 'casa', 'hogar', 
   'materiales', 'botella', 'plástico', 'papel', 'cartón', 'vidrio', 
   'lata', 'metal', 'residuos', 'desechos', 'decoración', 'manualidades', 
   'ecología', 'basura', 'compostaje','pila','pilas'
   ];
-
+  // Función que prepara el prompt parala API de la IA
   String generateImagePromptFromResponse(String chatGPTResponse) {
-    // Aquí puedes aplicar lógica para extraer una idea clave de la respuesta.
-    // En este ejemplo, simplemente extraemos palabras clave relacionadas con reciclaje.
     if (chatGPTResponse.contains('plástico')) {
       return 'Imagen de varios objetos de plástico';
     } else if (chatGPTResponse.contains('vidrio')) {
@@ -74,7 +74,7 @@ class Funciones {
       );
     }  
   }
-
+  // Función que retorna la respuesta de la API
   static Future<String> getChatGPTResponse(String prompt) async {
     final apiKey = dotenv.env['OPENAI_API_KEY'];
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
@@ -105,18 +105,13 @@ class Funciones {
   }
 
   static Future<String> fetchChatGPTResponse(String prompt, bool isRecyclingRelated) async {
-    // Fetch recent interactions for context
     List<Map<String, String>> recentInteractions = await firestoreService.fetchInteractionsFromFirestore();
-
-    // Build a context string from recent interactions
     String context = recentInteractions.map((interaction) {
       return 'User: ${interaction['userPrompt']}\nBot: ${interaction['chatResponse']}';
     }).join('\n\n');
 
-    // Combine context with the new prompt
     String finalPrompt = '$context\n\nUser: $prompt\nBot:';
 
-    // Call the ChatGPT API with the finalPrompt
     if(isRecyclingRelated){
           String response = await getChatGPTResponse(finalPrompt);
       return response;
@@ -125,7 +120,7 @@ class Funciones {
     }
 
   }
-
+    // Genera imagenes con la ayuda de la IA
   static Future<String> fetchGeneratedImage(String prompt) async {
     final apiKey = dotenv.env['OPENAI_API_KEY'];
     const apiUrl = 'https://api.openai.com/v1/images/generations';
@@ -152,7 +147,7 @@ class Funciones {
       return '';
     }
   }
-
+  // Función que registra los acontecimientos en el SEQ log
   static Future<void> SeqLog(String status, message) async {
     try{
       final logger = SeqHttpLogger.create(
@@ -204,6 +199,5 @@ class Funciones {
       print('Se produjo un error al intentar acceder al SEQ $e');
     }
   }
-  
 
 }

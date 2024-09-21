@@ -21,7 +21,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscureConfirmPassword = true;
 
   void _register() async {
-    // Código de registro...
+    null;
   }
 
   @override
