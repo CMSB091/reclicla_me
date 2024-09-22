@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
@@ -160,7 +161,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                         overflow: TextOverflow.ellipsis,
                       ),
                       trailing: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
+                        icon: const Icon(FontAwesomeIcons.trash, color: Colors.red),
                         onPressed: () async {
                           // Confirmar la eliminación del chat
                           final confirmDelete = await showDialog<bool>(

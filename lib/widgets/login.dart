@@ -10,6 +10,7 @@ import '../clases/firestore_service.dart';
 import 'inicio.dart';
 import 'package:camera/camera.dart';
 import 'recuperoPassword.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -200,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
               border: const OutlineInputBorder(),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  _obscurePassword ? FontAwesomeIcons.eye : FontAwesomeIcons.eyeSlash,
                 ),
                 onPressed: () {
                   setState(() {

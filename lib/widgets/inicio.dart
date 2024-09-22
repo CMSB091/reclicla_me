@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
@@ -148,7 +149,7 @@ class _MyInicioState extends State<MyInicio> {
             _buildDrawerHeader(),
             _buildDrawerItem(
               context,
-              icon: Icons.info,
+              icon: FontAwesomeIcons.info,
               text: 'Información',
               page: DatosPersonales(correo: user!.email.toString(), desdeInicio: true, cameras: widget.cameras),
             ),

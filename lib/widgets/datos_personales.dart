@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart'; 
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/inicio.dart';
@@ -481,7 +482,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Image.asset('assets/images/exitDoor.png'),
+          icon: const FaIcon(FontAwesomeIcons.arrowLeft),
           onPressed: _intentarSalir,
         ),
         title: const Text(
