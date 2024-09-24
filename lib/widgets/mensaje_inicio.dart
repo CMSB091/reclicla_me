@@ -45,7 +45,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _loadTips() async {
-    print('Checkpoint 3');
     try {
       final String data = await DefaultAssetBundle.of(context).loadString('assets/recycling_tips.json');
       final jsonData = json.decode(data);

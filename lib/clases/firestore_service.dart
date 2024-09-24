@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:intl/intl.dart'; // Para formatear las fechas.
+
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   Future<bool> authenticateUser(String correo, String contrasena) async {
@@ -31,17 +36,30 @@ class FirestoreService {
       });
       return true;
     } catch (e) {
-      await Funciones.SeqLog('error','Error creating user: $e');
+      await Funciones.SeqLog('error', 'Error creating user: $e');
       return false;
     }
   }
 
   // Método para actualizar los datos del usuario
-  Future<bool> updateUser(String nombre, String apellido, int edad, String direccion,String ciudad, String pais, String telefono, String correo) async {
+  Future<bool> updateUser(
+      String nombre,
+      String apellido,
+      int edad,
+      String direccion,
+      String ciudad,
+      String pais,
+      String telefono,
+      String correo) async {
     try {
       // Consulta el documento basado en el correo electrónico
-      QuerySnapshot querySnapshot = await _db.collection('usuario').where('correo', isEqualTo: correo).limit(1).get();
-      String docId = querySnapshot.docs.isNotEmpty ? querySnapshot.docs.first.id : '';
+      QuerySnapshot querySnapshot = await _db
+          .collection('usuario')
+          .where('correo', isEqualTo: correo)
+          .limit(1)
+          .get();
+      String docId =
+          querySnapshot.docs.isNotEmpty ? querySnapshot.docs.first.id : '';
       if (docId.isNotEmpty) {
         // Actualiza el documento con el ID obtenido
         await _db.collection('usuario').doc(docId).update({
@@ -55,106 +73,125 @@ class FirestoreService {
         });
         return true;
       } else {
-        await Funciones.SeqLog('information','No se encontró ningún usuario con el correo electrónico proporcionado');
+        await Funciones.SeqLog('information',
+            'No se encontró ningún usuario con el correo electrónico proporcionado');
         return false;
       }
     } catch (e) {
-      await Funciones.SeqLog('error','Error updating user: $e');
+      await Funciones.SeqLog('error', 'Error updating user: $e');
       return false;
     }
   }
-  // Método que valida si existe un email ya registrado en la base de datos 
+
+  // Método que valida si existe un email ya registrado en la base de datos
   Future<bool> checkEmailExists(String email) async {
-    final snapshot = await _db.collection('usuario').where('correo', isEqualTo: email).get();
+    final snapshot =
+        await _db.collection('usuario').where('correo', isEqualTo: email).get();
     return snapshot.docs.isNotEmpty;
   }
 
   // Método que recupera el nombre del usuario
   Future<String> getUserName(String correo) async {
     try {
-      QuerySnapshot query = await _db.collection('usuario').where('correo', isEqualTo: correo).limit(1).get();
-      
-      await Funciones.SeqLog('debug','Query snapshot count: ${query.docs.length}');
-      
+      QuerySnapshot query = await _db
+          .collection('usuario')
+          .where('correo', isEqualTo: correo)
+          .limit(1)
+          .get();
+
+      await Funciones.SeqLog(
+          'debug', 'Query snapshot count: ${query.docs.length}');
+
       if (query.docs.isNotEmpty) {
         String docId = query.docs.first.id;
-        await Funciones.SeqLog('debug','Document ID: $docId'); 
+        await Funciones.SeqLog('debug', 'Document ID: $docId');
 
         DocumentSnapshot doc = await FirebaseFirestore.instance
             .collection('usuario')
             .doc(docId)
             .get();
 
-        await Funciones.SeqLog('debug','Document exists: ${doc.exists}');
+        await Funciones.SeqLog('debug', 'Document exists: ${doc.exists}');
 
-        if (doc.exists) { // Valida que se haya recuperado los datos
+        if (doc.exists) {
+          // Valida que se haya recuperado los datos
           Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-          
-          await Funciones.SeqLog('debug','Document data: $data');
+
+          await Funciones.SeqLog('debug', 'Document data: $data');
 
           if (data != null && data.containsKey('nombre')) {
             String firstName = data['nombre'] ?? correo;
-            await Funciones.SeqLog('debug','Document firstName: $firstName');
+            await Funciones.SeqLog('debug', 'Document firstName: $firstName');
             return firstName;
           } else {
-            await Funciones.SeqLog('information','Field "nombre" not found in the document.');
+            await Funciones.SeqLog(
+                'information', 'Field "nombre" not found in the document.');
             return correo; // Valor por defecto
           }
         } else {
-          
-          await Funciones.SeqLog('information','Document does not exist.');
+          await Funciones.SeqLog('information', 'Document does not exist.');
           return correo; // Valor por defecto
         }
       } else {
-        await Funciones.SeqLog('information','No document found with the provided email.');
+        await Funciones.SeqLog(
+            'information', 'No document found with the provided email.');
         return correo; // Valor por defecto
       }
     } catch (e) {
-      await Funciones.SeqLog('error','Error retrieving user data: $e');
+      await Funciones.SeqLog('error', 'Error retrieving user data: $e');
       return correo;
     }
   }
+
   //Método que recupera todos los datos del usuario
   Future<Map<String, dynamic>?> getUserData(String correo) async {
-    await Funciones.SeqLog('debug','EMAIL INGREASADO: $correo}');
+    await Funciones.SeqLog('debug', 'EMAIL INGREASADO: $correo}');
     try {
-      QuerySnapshot query = await _db.collection('usuario').where('correo', isEqualTo: correo).limit(1).get();
-      
-      await Funciones.SeqLog('debug','Query snapshot count: ${query.docs.length}'); 
+      QuerySnapshot query = await _db
+          .collection('usuario')
+          .where('correo', isEqualTo: correo)
+          .limit(1)
+          .get();
+
+      await Funciones.SeqLog(
+          'debug', 'Query snapshot count: ${query.docs.length}');
 
       if (query.docs.isNotEmpty) {
         String docId = query.docs.first.id;
-        await Funciones.SeqLog('debug','Document ID: $docId');
+        await Funciones.SeqLog('debug', 'Document ID: $docId');
 
         DocumentSnapshot doc = await FirebaseFirestore.instance
-            .collection('usuario') 
+            .collection('usuario')
             .doc(docId)
             .get();
 
-        await Funciones.SeqLog('debug','Document exists: ${doc.exists}'); 
+        await Funciones.SeqLog('debug', 'Document exists: ${doc.exists}');
 
         if (doc.exists) {
           Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-          await Funciones.SeqLog('debug','Document data: $data');
+          await Funciones.SeqLog('debug', 'Document data: $data');
 
-          return data;  // Retorna los datos del usuario
+          return data; // Retorna los datos del usuario
         } else {
-          await Funciones.SeqLog('information','Document does not exist.');
+          await Funciones.SeqLog('information', 'Document does not exist.');
           return null; // Retorna null si el documento no existe
         }
       } else {
-        await Funciones.SeqLog('information','No document found with the provided email.');
+        await Funciones.SeqLog(
+            'information', 'No document found with the provided email.');
         return null; // Retorna null si no se encuentra el documento
       }
     } catch (e) {
-      await Funciones.SeqLog('error','Error retrieving user data: $e');
+      await Funciones.SeqLog('error', 'Error retrieving user data: $e');
       return null;
     }
   }
+
   //Método para eliminar usuario
   Future<bool> deleteUser(String correo) async {
     try {
-      QuerySnapshot snapshot = await _db.collection('usuario')
+      QuerySnapshot snapshot = await _db
+          .collection('usuario')
           .where('correo', isEqualTo: correo)
           .get();
       if (snapshot.docs.isNotEmpty) {
@@ -164,21 +201,23 @@ class FirestoreService {
         return false; // No se encontró el usuario con el correo especificado
       }
     } catch (e) {
-      await Funciones.SeqLog('error','Error al eliminar el usuario: $e');
+      await Funciones.SeqLog('error', 'Error al eliminar el usuario: $e');
       return false;
     }
   }
+
   // Metodo para obtener los paises de la base de datos
   Future<List<String>> getPaises() async {
     try {
       final snapshot = await _db.collection('paises').get();
       return snapshot.docs.map((doc) => doc['nombre'] as String).toList();
     } catch (e) {
-      await Funciones.SeqLog('error','Error al obtener países: $e');
+      await Funciones.SeqLog('error', 'Error al obtener países: $e');
       return [];
     }
   }
-   // Metodo para obtener las ciudades de la base de datos
+
+  // Metodo para obtener las ciudades de la base de datos
   Future<List<String>> getCiudadesPorPais(String paisId) async {
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
@@ -192,26 +231,31 @@ class FirestoreService {
 
       return ciudades;
     } catch (e) {
-      await Funciones.SeqLog('error','Error al cargar las ciudades: $e');
+      await Funciones.SeqLog('error', 'Error al cargar las ciudades: $e');
       throw Exception('Error al cargar las ciudades: $e');
     }
   }
+
   // Metodo para guardar las recomendaciones obtenidas de la consulta al chatBot
-  void saveInteractionToFirestore(String prompt, String response, String userMail) {
+  void saveInteractionToFirestore(
+      String prompt, String response, String userMail) {
     FirebaseFirestore.instance.collection('chat_interactions').add({
       'userPrompt': prompt,
       'chatResponse': response,
       'timestamp': FieldValue.serverTimestamp(),
-      'email' : userMail
+      'email': userMail
     });
   }
+
   // Metodo para recuperar el email del usuario
   Future<String?> loadUserEmail() async {
     User? user = FirebaseAuth.instance.currentUser;
     return user?.email;
   }
+
   // Metodo para recuperar el historial de consultas al chatBot
-  Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(String userEmail) async {
+  Future<List<Map<String, dynamic>>> fetchChatHistoryByEmail(
+      String userEmail) async {
     try {
       // Se obtiene los datos filtrados por el correo electrónico
       QuerySnapshot snapshot = await FirebaseFirestore.instance
@@ -219,16 +263,17 @@ class FirestoreService {
           .where('email', isEqualTo: userEmail)
           .get();
 
-      // Se retorna los datos como una lista 
+      // Se retorna los datos como una lista
       return snapshot.docs.map((doc) {
         // Se convierte la fecha a un formato legible
         String formattedDate = '';
         if (doc['timestamp'] != null) {
-          formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(doc['timestamp'].toDate());
+          formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss')
+              .format(doc['timestamp'].toDate());
         }
 
         return {
-          'id': doc.id, 
+          'id': doc.id,
           'timestamp': formattedDate,
           'userPrompt': doc['userPrompt'] ?? '',
           'chatResponse': doc['chatResponse'] ?? '',
@@ -239,9 +284,10 @@ class FirestoreService {
       return [];
     }
   }
+
   // Metodo que recupera las recomendaciones de la base de datos para entrenar el modelo
   Future<List<Map<String, String>>> fetchInteractionsFromFirestore() async {
-  List<Map<String, String>> interactions = [];
+    List<Map<String, String>> interactions = [];
 
     try {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
@@ -260,13 +306,14 @@ class FirestoreService {
           'chatResponse': chatResponse,
         });
       }
-
     } catch (e) {
-      await Funciones.SeqLog('error', 'Error fetching interactions from Firestore: $e');
+      await Funciones.SeqLog(
+          'error', 'Error fetching interactions from Firestore: $e');
     }
 
     return interactions;
   }
+
   // Metodo que elimina los chats guardados del historial de chats
   Future<void> deleteChatById(String? chatId) async {
     // Verificar si chatId es null o vacío
@@ -276,22 +323,87 @@ class FirestoreService {
     }
 
     try {
-      
-      DocumentSnapshot chatDoc = await FirebaseFirestore.instance.collection('chat_interactions').doc(chatId).get();
+      DocumentSnapshot chatDoc = await FirebaseFirestore.instance
+          .collection('chat_interactions')
+          .doc(chatId)
+          .get();
 
       if (chatDoc.exists) {
         // Si el documento existe, proceder a eliminarlo
-        await FirebaseFirestore.instance.collection('chat_interactions').doc(chatId).delete();
-        Funciones.SeqLog('information', 'Chat con ID $chatId eliminado correctamente.');
+        await FirebaseFirestore.instance
+            .collection('chat_interactions')
+            .doc(chatId)
+            .delete();
+        Funciones.SeqLog(
+            'information', 'Chat con ID $chatId eliminado correctamente.');
       } else {
         // Si el documento no existe
-        Funciones.SeqLog('warning', 'No se encontró un chat con el ID $chatId para eliminar.');
+        Funciones.SeqLog('warning',
+            'No se encontró un chat con el ID $chatId para eliminar.');
       }
     } catch (e) {
       Funciones.SeqLog('error', 'Error al eliminar el chat: $e');
     }
   }
 
+  Future<String?> getUserProfileImage(String email) async {
+    try {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        String uid = user.uid;
+        // Ruta donde se almacena la imagen de perfil en Firebase Storage
+        Reference storageReference =
+            FirebaseStorage.instance.ref().child('profile_images/$uid.jpg');
+
+        // Obtener la URL de descarga de la imagen
+        String imageUrl = await storageReference.getDownloadURL();
+        return imageUrl; // Devuelve la URL de la imagen
+      } else {
+        throw ('No se ha autenticado ningún usuario');
+      }
+    } catch (e) {
+      print('Error al recuperar la imagen de perfil: $e');
+      return null; // Devuelve null si no hay imagen o si ocurre un error
+    }
+  }
+
+  Future<void> updateUserProfileImage(String correo, String downloadUrl) async {
+    try {
+      // Get the current user
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw 'No hay un usuario autenticado';
+      }
+
+      // Pick an image from the user's device
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile == null) {
+        throw 'No se seleccionó ninguna imagen';
+      }
+
+      File imageFile = File(pickedFile.path);
+
+      // Upload the image to Firebase Storage
+      String uid = user.uid;
+      Reference storageRef =
+          FirebaseStorage.instance.ref().child('profile_images/$uid.jpg');
+
+      UploadTask uploadTask = storageRef.putFile(imageFile);
+      TaskSnapshot snapshot = await uploadTask;
+
+      // Get the download URL of the uploaded image
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+
+      // Update the user's profile with the new image URL (if needed)
+      // Example: Save to Firestore or update Firebase Auth profile
+      print('Nueva URL de la imagen: $downloadUrl');
+
+      // Return success
+      print('Imagen de perfil actualizada correctamente');
+    } catch (e) {
+      print('Error al actualizar la imagen de perfil: $e');
+    }
+  }
 }
-
-

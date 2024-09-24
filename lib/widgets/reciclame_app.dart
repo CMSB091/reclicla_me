@@ -45,7 +45,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _startLoading() {
-    print('Checkpoint ');
     Timer.periodic(const Duration(milliseconds: 50), (Timer timer) {
       setState(() {
         if (_progress >= 1) {

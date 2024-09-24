@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,6 +8,7 @@ import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
@@ -25,7 +28,7 @@ class _MyInicioState extends State<MyInicio> {
   bool isLoading = true;
   final FirestoreService _firestoreService = FirestoreService();
   User? user = FirebaseAuth.instance.currentUser;
-  String? nombreUsuario; 
+  String? nombreUsuario;
 
   @override
   void initState() {
@@ -39,7 +42,8 @@ class _MyInicioState extends State<MyInicio> {
         isLoading = true;
       });
 
-      final nombre = await _firestoreService.getUserName(user!.email.toString());
+      final nombre =
+          await _firestoreService.getUserName(user!.email.toString());
       setState(() {
         nombreUsuario = nombre;
         isLoading = false;
@@ -81,7 +85,7 @@ class _MyInicioState extends State<MyInicio> {
       try {
         await FirebaseAuth.instance.signOut();
       } catch (e) {
-        Funciones.SeqLog('error','Error al cerrar sesión: $e');
+        Funciones.SeqLog('error', 'Error al cerrar sesión: $e');
       } finally {
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop();
@@ -113,45 +117,88 @@ class _MyInicioState extends State<MyInicio> {
                 'Bienvenido $nombreUsuario !!',
                 style: const TextStyle(
                   fontFamily: 'Artwork',
-                  fontSize: 18,
+                  fontSize: 24,
                 ),
               ),
         leading: IconButton(
           icon: Image.asset('assets/images/exitDoor.png'),
           onPressed: () => _simulateLogout(context),
         ),
+        actions: [
+          Builder(
+            builder: (context) {
+              return IconButton(
+                icon: const FaIcon(FontAwesomeIcons
+                    .bars), // Icono de menú hamburguesa de Font Awesome
+                onPressed: () {
+                  Scaffold.of(context)
+                      .openEndDrawer(); // Abre el drawer lateral
+                },
+              );
+            },
+          ),
+        ],
       ),
       endDrawer: _buildDrawer(context),
-      body: Center(
-        child: isLoading
-            ? buildLottieAnimation(
-                path: 'assets/animations/lotti-recycle.json',
-                width: 500, 
-                height: 500,
-              )
-            : Wrap(
-                spacing: 20.0,
-                runSpacing: 20.0,
-                children: List.generate(4, (index) {
-                  return _buildMenuCard(context, index);
-                }),
-              ),
+      body: BlurredBackground(
+        blurStrength: 20.0,
+        child: Center(
+          child: isLoading
+              ? buildLottieAnimation(
+                  path: 'assets/animations/lotti-recycle.json',
+                  width: 500,
+                  height: 500,
+                )
+              : Wrap(
+                  spacing: 20.0,
+                  runSpacing: 20.0,
+                  children: List.generate(4, (index) {
+                    return _buildMenuCard(context, index);
+                  }),
+                ),
+        ),
       ),
     );
   }
+
   Widget _buildDrawer(BuildContext context) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width * 0.50,
+      width: MediaQuery.of(context).size.width *
+          0.50, // Ajusta el ancho del Drawer
       child: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
-            _buildDrawerHeader(),
-            _buildDrawerItem(
-              context,
-              icon: FontAwesomeIcons.info,
-              text: 'Información',
-              page: DatosPersonales(correo: user!.email.toString(), desdeInicio: true, cameras: widget.cameras),
+        child: Column(
+          children: [
+            // Dejar espacio debajo del AppBar
+            Container(
+              height: kToolbarHeight, // La altura del AppBar
+              color: Colors.green.shade200, // Color de fondo del área superior
+              child: const Center(
+                child: Text(
+                  'Menú',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 18,
+                    fontFamily: 'Artwork',
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.info,
+                    text: 'Información',
+                    page: DatosPersonales(
+                        correo: user!.email.toString(),
+                        desdeInicio: true,
+                        cameras: widget.cameras),
+                  ),
+                  // Agrega más items al menú aquí
+                ],
+              ),
             ),
           ],
         ),
@@ -183,7 +230,7 @@ class _MyInicioState extends State<MyInicio> {
     required Widget page,
   }) {
     return ListTile(
-      leading: Icon(icon),
+      leading: const Icon(FontAwesomeIcons.info),
       title: Text(text),
       onTap: () {
         if (!_isCancelled && mounted) {
@@ -195,11 +242,12 @@ class _MyInicioState extends State<MyInicio> {
       },
     );
   }
+
   Widget _buildMenuCard(BuildContext context, int index) {
     final page = _getPageForIndex(index);
 
     return SizedBox(
-      width: 180.0, 
+      width: 180.0,
       height: 180.0,
       child: Card(
         color: Colors.green.shade100,
@@ -238,6 +286,7 @@ class _MyInicioState extends State<MyInicio> {
                           fontFamily: 'Artwork',
                           fontSize: 16,
                           color: Colors.black,
+                          fontWeight: FontWeight.bold
                         ),
                       ),
                     ],
@@ -254,8 +303,6 @@ class _MyInicioState extends State<MyInicio> {
       ),
     );
   }
-
-
 
   String _getMenuTitle(int index) {
     switch (index) {

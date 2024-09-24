@@ -5,6 +5,7 @@ import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/chatBuble.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart';
 
 class NoticiasChatGPT extends StatefulWidget {
   const NoticiasChatGPT({super.key});
@@ -23,12 +24,13 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   late String userEmail = 'Cargando...'; // valor por defecto
   final ScrollController _scrollController = ScrollController();
   bool isTyping = false;
-  String typingIndicator = 'Escribiendo'; // Texto inicial para el indicador de escritura
+  String typingIndicator =
+      'Escribiendo'; // Texto inicial para el indicador de escritura
   Timer? _typingTimer; // Timer para animación de "Escribiendo..."
 
   Future<void> _setUserEmail() async {
     String? email = await firestoreService.loadUserEmail();
-    if (email != null && email.isNotEmpty) {
+    if (email!.isNotEmpty) {
       setState(() {
         userEmail = email;
       });
@@ -49,13 +51,15 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     _typingTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       setState(() {
         dotCount = (dotCount + 1) % 4; // Ciclo entre 0, 1, 2, 3
-        typingIndicator = 'Escribiendo${'.' * dotCount}'; // Agrega puntos de manera cíclica
+        typingIndicator =
+            'Escribiendo${'.' * dotCount}'; // Agrega puntos de manera cíclica
       });
     });
   }
 
   bool _isRecyclingRelated(String prompt) {
-    return Funciones.recyclingKeywords.any((keyword) => prompt.toLowerCase().contains(keyword));
+    return Funciones.recyclingKeywords
+        .any((keyword) => prompt.toLowerCase().contains(keyword));
   }
 
   void _scrollToBottom() {
@@ -69,7 +73,8 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   Future<void> _fetchChatGPTResponse(String prompt) async {
     if (!_isRecyclingRelated(prompt)) {
       setState(() {
-        chatResponse = 'Lo siento, solo puedo responder a consultas relacionadas con el reciclaje de materiales comunes en el hogar y proporcionar ideas para reutilizarlos de manera creativa.';
+        chatResponse =
+            'Lo siento, solo puedo responder a consultas relacionadas con el reciclaje de materiales comunes en el hogar y proporcionar ideas para reutilizarlos de manera creativa.';
         chatHistory.add({'message': chatResponse, 'isUser': false});
         isTyping = false;
       });
@@ -87,9 +92,11 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     _startTypingAnimation();
 
     try {
-      String finalPrompt = 'Eres un experto en reciclaje de residuos comunes del hogar, incluyendo plásticos, metales, cartones, papeles, pilas y compostaje. Proporciona consejos prácticos y creativos sobre cómo reciclar o reutilizar estos materiales de manera sostenible en el hogar. Por favor, da la respuesta en no más de 200 palabras teniendo en cuenta lo siguiente: $prompt';
-      String response = await Funciones.fetchChatGPTResponse(finalPrompt, _isRecyclingRelated(prompt));
-      
+      String finalPrompt =
+          'Eres un experto en reciclaje de residuos comunes del hogar, incluyendo plásticos, metales, cartones, papeles, pilas y compostaje. Proporciona consejos prácticos y creativos sobre cómo reciclar o reutilizar estos materiales de manera sostenible en el hogar. Por favor, da la respuesta en no más de 200 palabras. Actua como si fueses una persona real y teniendo en cuenta lo siguiente: $prompt';
+      String response = await Funciones.fetchChatGPTResponse(
+          finalPrompt, _isRecyclingRelated(prompt));
+
       setState(() {
         isTyping = false;
         chatResponse = response;
@@ -100,9 +107,11 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     } catch (e) {
       setState(() {
         isTyping = false;
-        Funciones.SeqLog('error', e.toString().contains('insufficient_quota')
-            ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
-            : 'Error: $e');
+        Funciones.SeqLog(
+            'error',
+            e.toString().contains('insufficient_quota')
+                ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
+                : 'Error: $e');
       });
     } finally {
       setState(() {
@@ -120,102 +129,115 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
 
   void _loadSelectedChat(Map<String, dynamic> chat) {
     setState(() {
-      chatHistory.clear();
-      chatHistory.add({
-        'user': chat['userPrompt'],
-        'bot': chat['chatResponse'],
-      });
-      chatResponse = chat['chatResponse'];
+      chatHistory.clear(); // Limpiar el historial actual
+      if (chat['userPrompt'] != null && chat['chatResponse'] != null) {
+        chatHistory.add({'message': chat['userPrompt'], 'isUser': true});
+        chatHistory.add({'message': chat['chatResponse'], 'isUser': false});
+      } else {
+        Funciones.SeqLog(
+            'error', 'Datos del chat seleccionados están incompletos');
+      }
     });
   }
 
   Future<void> _showChatHistory() async {
-    List<Map<String, dynamic>> chatHistoryList = await firestoreService.  fetchChatHistoryByEmail(userEmail);
+    try {
+      List<Map<String, dynamic>> chatHistoryList =
+          await firestoreService.fetchChatHistoryByEmail(userEmail);
 
-    if (chatHistoryList.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se encontraron interacciones previas para este usuario.')),
-      );
-      return;
-    }
-
-    await showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder( 
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text('Chat History'),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: chatHistoryList.length,
-                  itemBuilder: (context, index) {
-                    final chat = chatHistoryList[index];
-                    return ListTile(
-                      title: Text(chat['timestamp'] ?? 'No Date'),
-                      subtitle: Text(
-                        chat['userPrompt'] ?? '',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(FontAwesomeIcons.trash, color: Colors.red),
-                        onPressed: () async {
-                          // Confirmar la eliminación del chat
-                          final confirmDelete = await showDialog<bool>(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: const Text('Confirmar eliminación'),
-                                content: const Text('¿Estás seguro de que quieres eliminar este chat?'),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(false),
-                                    child: const Text('Cancelar'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.of(context).pop(true),
-                                    child: const Text('Eliminar'),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-
-                          if (confirmDelete == true) {
-                            // Eliminar el chat de la base de datos
-                            await firestoreService.deleteChatById(chat['id']);
-
-                            // Remover el chat de la lista local y actualizar la UI
-                            setState(() {
-                              chatHistoryList.removeAt(index);
-                            });
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Chat eliminado.')),
-                            );
-                          }
-                        },
-                      ),
-                      onTap: () {
-                        Navigator.of(context).pop(); // Cerrar el diálogo
-                        setState(() {
-                          _loadSelectedChat(chat); // Cargar el chat seleccionado
-                        });
-                      },
-                    );
-                  },
-                ),
-              ),
-            );
-          },
+      if (chatHistoryList.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'No se encontraron interacciones previas para este usuario.')),
         );
-      },
-    );
-  }
+        return;
+      }
 
+      await showDialog(
+        context: context,
+        builder: (context) {
+          return StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: const Text('Historial de Chat'),
+                content: SizedBox(
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: chatHistoryList.length,
+                    itemBuilder: (context, index) {
+                      final chat = chatHistoryList[index];
+                      return ListTile(
+                        title: Text(chat['timestamp'] ?? 'Fecha no disponible'),
+                        subtitle: Text(
+                          chat['userPrompt'] ?? 'Prompt vacío',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(FontAwesomeIcons.trash,
+                              color: Colors.red),
+                          onPressed: () async {
+                            // Confirmar eliminación
+                            final confirmDelete = await showDialog<bool>(
+                              context: context,
+                              builder: (context) {
+                                return AlertDialog(
+                                  title: const Text('Confirmar eliminación'),
+                                  content: const Text(
+                                      '¿Estás seguro de que quieres eliminar este chat?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancelar'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text('Eliminar'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+
+                            if (confirmDelete == true) {
+                              await firestoreService.deleteChatById(chat['id']);
+                              setState(() {
+                                chatHistoryList.removeAt(
+                                    index); // Eliminar del historial local
+                              });
+
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text('Chat eliminado.')),
+                              );
+                            }
+                          },
+                        ),
+                        onTap: () {
+                          Navigator.of(context).pop(); // Cerrar el diálogo
+                          _loadSelectedChat(
+                              chat); // Cargar el chat seleccionado
+                        },
+                      );
+                    },
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+    } catch (e) {
+      Funciones.SeqLog('error', 'Error al recuperar el historial de chat: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al cargar el historial de chat.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -232,93 +254,108 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
           ],
         ),
         centerTitle: true,
+        leading: IconButton(
+          icon: const FaIcon(FontAwesomeIcons.arrowLeft, color: Colors.black),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.history, color: Colors.black),
+            icon: const FaIcon(FontAwesomeIcons.clockRotateLeft,
+                color: Colors.black),
             onPressed: () {
               _showChatHistory();
             },
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              reverse: true,
-              padding: const EdgeInsets.all(10),
-              itemCount: chatHistory.length + (isTyping ? 3 : 2), 
-              itemBuilder: (context, index) {
-                if (index == chatHistory.length + (isTyping ? 2 : 1)) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                    child: Text(
-                      '¡Hola, Mi nombre es Recyclops! Estoy aquí para ayudarte a encontrar formas creativas y sostenibles de reciclar.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'Artwork',
-                        fontSize: 22, color: Colors.black54),
-                    ),
-                  );
-                }
+      body: BlurredBackground(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                reverse: true,
+                padding: const EdgeInsets.all(10),
+                itemCount: chatHistory.length + (isTyping ? 3 : 2),
+                itemBuilder: (context, index) {
+                  if (index == chatHistory.length + (isTyping ? 2 : 1)) {
+                    return const Padding(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      child: Text(
+                        '¡Hola! Soy Recyclops, aquí para ayudarte a reciclar de manera creativa y sostenible.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontFamily: 'Artwork',
+                            fontSize: 22,
+                            color: Colors.black54,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    );
+                  }
 
-                if (index == chatHistory.length + (isTyping ? 1 : 0)) {
-                  return Center(
-                    child: Lottie.asset(
-                      'assets/animations/lottie-chat-bot.json', 
-                      width: 500,
-                      height: 500,
-                      repeat: true,
-                    ),
-                  );
-                }
+                  if (index == chatHistory.length + (isTyping ? 1 : 0)) {
+                    return Center(
+                      child: Lottie.asset(
+                        'assets/animations/lottie-chat-bot.json',
+                        width: 500,
+                        height: 500,
+                        repeat: true,
+                      ),
+                    );
+                  }
 
-                if (isTyping && index == 0) {
+                  if (isTyping && index == 0) {
+                    return ChatBubble(
+                      message: typingIndicator,
+                      isUser: false,
+                    );
+                  }
+
+                  final message = chatHistory[
+                      chatHistory.length - 1 - (isTyping ? index - 1 : index)];
                   return ChatBubble(
-                    message: typingIndicator,
-                    isUser: false,
+                    message: message['message'] ?? 'Mensaje vacío',
+                    isUser: message['isUser'] as bool,
                   );
-                }
-
-                final message = chatHistory[chatHistory.length - 1 - (isTyping ? index - 1 : index)];
-                return ChatBubble(
-                  message: message['message']!,
-                  isUser: message['isUser'] as bool,
-                );
-              },
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    decoration: InputDecoration(
-                      hintText: 'Escribe un mensaje...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      decoration: InputDecoration(
+                        hintText: 'Escribe un mensaje...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Colors.green),
-                  onPressed: () {
-                    final prompt = _controller.text;
-                    if (prompt.isNotEmpty) {
-                      setState(() {
-                        chatHistory.add({'message': prompt, 'isUser': true});
-                      });
-                      _fetchChatGPTResponse(prompt);
-                      _controller.clear();
-                    }
-                  },
-                ),
-              ],
+                  IconButton(
+                    icon: const Icon(FontAwesomeIcons.paperPlane,
+                        color: Colors.green),
+                    onPressed: () {
+                      final prompt = _controller.text;
+                      if (prompt.isNotEmpty) {
+                        setState(() {
+                          chatHistory.add({'message': prompt, 'isUser': true});
+                        });
+                        _fetchChatGPTResponse(prompt);
+                        _controller.clear();
+                      }
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

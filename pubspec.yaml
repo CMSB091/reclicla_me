@@ -55,6 +55,8 @@ dependencies:
   logging: ^1.2.0
   dart_seq: ^2.0.0
   path_provider: ^2.1.4
+  firebase_storage: ^12.3.1
+  image_picker: ^1.1.2
 
   
 dev_dependencies:
@@ -84,14 +86,17 @@ flutter:
     - assets/images/branches_border.png
     - assets/images/agregarUsuario.png
     - assets/images/exitDoor.png
+    - assets/images/perfil.png
     - assets/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-recycle.json
     - assets/animations/lotti-trash-2.json
-    - .env
+    - assets/animations/lottie-eva.json
     - assets/animations/lottie-dot.json
     - assets/animations/lottie-chat-bot.json 
     - assets/animations/lottie-recomendations.json
+    - assets/images/fondo.png
+    - .env
 
   fonts:
     - family: Artwork
