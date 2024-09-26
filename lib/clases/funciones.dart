@@ -1,15 +1,23 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:camera/camera.dart';
 import 'package:dart_seq/dart_seq.dart';
 import 'package:dart_seq_http_client/dart_seq_http_client.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http; 
 
 final FirestoreService firestoreService = FirestoreService();
 class Funciones {
+  final FirebaseStorage _storage = FirebaseStorage.instance;
+  final FirestoreService _firestoreService = FirestoreService();
+  final ImagePicker _picker = ImagePicker();
   // Palabras clave relacionadas con reciclaje.
   static final List<String> recyclingKeywords = [
   'reciclaje', 'reciclar', 'reutilizar', 'sostenible', 'casa', 'hogar', 
@@ -197,6 +205,149 @@ class Funciones {
     await logger.flush();
     }catch(e){
       print('Se produjo un error al intentar acceder al SEQ $e');
+    }
+  }
+
+  Future<void> cargarDatosUsuario({
+    required User? user,
+    required TextEditingController nombreController,
+    required TextEditingController apellidoController,
+    required TextEditingController edadController,
+    required TextEditingController direccionController,
+    required TextEditingController ciudadController,
+    required TextEditingController paisController,
+    required TextEditingController telefonoController,
+    required Function setLoadingState,
+  }) async {
+    setLoadingState(true);
+
+    try {
+      if (user != null) {
+        String correo = user.email.toString();
+        Map<String, dynamic>? userData = await _firestoreService.getUserData(correo);
+
+        nombreController.text = userData!['nombre'] ?? '';
+        apellidoController.text = userData['apellido'] ?? '';
+        edadController.text = (userData['edad'] ?? '').toString();
+        direccionController.text = userData['direccion'] ?? '';
+        ciudadController.text = userData['ciudad'] ?? '';
+        paisController.text = userData['pais'] ?? '';
+        telefonoController.text = userData['telefono'] ?? '';
+      }
+    } catch (e) {
+      SeqLog('error','Se ha producido un error al cargar los datos del usuario $e');
+    } finally {
+      setLoadingState(false);
+    }
+  }
+
+  Future<void> guardarDatos({
+    required String correo,
+    required TextEditingController nombreController,
+    required TextEditingController apellidoController,
+    required TextEditingController edadController,
+    required TextEditingController direccionController,
+    required TextEditingController ciudadController,
+    required TextEditingController paisController,
+    required TextEditingController telefonoController,
+    required Function setSavingState,
+    required BuildContext context,
+    required List<CameraDescription> cameras,
+  }) async {
+    if (nombreController.text.isNotEmpty && apellidoController.text.isNotEmpty) {
+      setSavingState(true);
+      try {
+        String nombre = nombreController.text;
+        String apellido = apellidoController.text;
+        int edad = int.parse(edadController.text);
+        String direccion = direccionController.text;
+        String ciudad = ciudadController.text;
+        String pais = paisController.text;
+        String telefono = telefonoController.text;
+
+        bool result = await _firestoreService.updateUser(
+          nombre,
+          apellido,
+          edad,
+          direccion,
+          ciudad,
+          pais,
+          telefono,
+          correo,
+        );
+
+        if (result) {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Datos Guardados'),
+                content: Text(
+                    'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono'),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MyInicio(
+                            cameras: cameras,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Error al guardar los datos.')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      } finally {
+        setSavingState(false);
+      }
+    }
+  }
+
+  Future<void> pickAndUploadImage({
+    required String correo,
+    required Function(String) onImageUploaded,
+    required BuildContext context,
+  }) async {
+    final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedImage != null) {
+      try {
+        // Subir la imagen a Firebase Storage
+        final ref = _storage.ref().child('user_images/$correo.jpg');
+        await ref.putFile(File(pickedImage.path));
+
+        // Obtener la URL de la imagen subida
+        final downloadUrl = await ref.getDownloadURL();
+
+        // Actualizar la imagen en Firestore o donde la almacenes
+        await _firestoreService.updateUserProfileImage(correo, downloadUrl);
+
+        // Callback para actualizar la URL de la imagen
+        onImageUploaded(downloadUrl);
+
+        // Mostrar éxito
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Imagen de perfil actualizada correctamente')),
+        );
+      } catch (e) {
+        // Mostrar error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al subir la imagen: $e')),
+        );
+      }
     }
   }
 

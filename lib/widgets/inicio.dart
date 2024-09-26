@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/MiniJuegoBasura.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/login.dart';
@@ -196,6 +196,12 @@ class _MyInicioState extends State<MyInicio> {
                         desdeInicio: true,
                         cameras: widget.cameras),
                   ),
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.gamepad,
+                    text: 'Mini Juegos',
+                    page: const MiniJuegoBasura(),
+                  ),
                   // Agrega más items al menú aquí
                 ],
               ),
@@ -230,7 +236,7 @@ class _MyInicioState extends State<MyInicio> {
     required Widget page,
   }) {
     return ListTile(
-      leading: const Icon(FontAwesomeIcons.info),
+      leading: Icon(icon),
       title: Text(text),
       onTap: () {
         if (!_isCancelled && mounted) {
