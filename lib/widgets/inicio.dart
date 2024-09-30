@@ -14,6 +14,7 @@ import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:recila_me/widgets/lottie_widget.dart';
 import 'package:recila_me/widgets/noticias.dart';
+import 'package:recila_me/widgets/redSocial.dart';
 
 class MyInicio extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -202,7 +203,13 @@ class _MyInicioState extends State<MyInicio> {
                     text: 'Mini Juegos',
                     page: const MiniJuegoBasura(),
                   ),
-                  // Agrega más items al menú aquí
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.heart,
+                    text: 'Donaciones',
+                    page: HomeScreen(),
+                  ),
+                  // Agregar mas items
                 ],
               ),
             ),

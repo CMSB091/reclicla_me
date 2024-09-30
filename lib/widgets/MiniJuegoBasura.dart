@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class MiniJuegoBasura extends StatefulWidget {
-  const MiniJuegoBasura({Key? key}) : super(key: key);
+  const MiniJuegoBasura({super.key});
 
   @override
   _MiniJuegoBasuraState createState() => _MiniJuegoBasuraState();
