@@ -1,8 +1,10 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:intl/intl.dart'; // Para formatear las fechas.
@@ -405,5 +407,82 @@ class FirestoreService {
     } catch (e) {
       print('Error al actualizar la imagen de perfil: $e');
     }
+  }
+
+  // Función para verificar conectividad a Internet
+  Future<bool> checkInternetConnection() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    return connectivityResult != ConnectivityResult.none;
+  }
+
+    // Función para subir la imagen a Firebase Storage y guardar la URL en Firestore
+  Future<void> uploadImageAndSaveToFirestore({
+    required File imageFile,
+    required String description,
+    required String contact,
+    required GlobalKey<ScaffoldState> scaffoldKey, // Para mostrar el SnackBar
+  }) async {
+    // Verificar conexión a Internet antes de subir la imagen
+    bool isConnected = await checkInternetConnection();
+    if (!isConnected) {
+      showSnackBar(scaffoldKey, 'No tienes conexión a Internet.');
+      return;
+    }
+
+    try {
+      // Verificar si el archivo existe
+      if (!await imageFile.exists()) {
+        showSnackBar(scaffoldKey, 'El archivo no existe en la ruta especificada.');
+        return;
+      }
+
+      print('Subiendo imagen, por favor espera...');
+
+      // Generar una referencia única para la imagen en Firebase Storage
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      // Subir la imagen a Firebase Storage
+      UploadTask uploadTask = ref.putFile(imageFile);
+
+      // Monitorear el progreso de la subida
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        print('Progreso: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100} %');
+      }, onError: (e) {
+        showSnackBar(scaffoldKey, 'Error durante la subida de la imagen.');
+        print('Error durante la subida: $e');
+      });
+
+      // Esperar hasta que la subida se complete
+      TaskSnapshot taskSnapshot = await uploadTask;
+      if (taskSnapshot.state == TaskState.success) {
+        // Obtener la URL de descarga solo si la subida fue exitosa
+        final imageUrl = await ref.getDownloadURL();
+        print('URL de la imagen subida: $imageUrl');
+
+        // Guardar los datos en Firestore, en la colección 'items'
+        await FirebaseFirestore.instance.collection('items').add({
+          'description': description,
+          'contact': contact,
+          'imageUrl': imageUrl, // Guardar la URL de la imagen
+          'timestamp': Timestamp.now(), // Añadir un timestamp
+        });
+
+        showSnackBar(scaffoldKey, 'Artículo guardado correctamente.');
+      } else {
+        showSnackBar(scaffoldKey, 'Error: La subida no fue exitosa.');
+      }
+    } catch (e) {
+      showSnackBar(scaffoldKey, 'Error al subir la imagen y guardar en Firestore.');
+      print('Error al subir la imagen y guardar en Firestore: $e');
+    }
+  }
+  // Mo
+  //strar mensajes usando SnackBar
+  void showSnackBar(GlobalKey<ScaffoldState> scaffoldKey, String message) {
+    ScaffoldMessenger.of(scaffoldKey.currentContext!).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }

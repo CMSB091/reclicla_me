@@ -207,7 +207,7 @@ class _MyInicioState extends State<MyInicio> {
                     context,
                     icon: FontAwesomeIcons.heart,
                     text: 'Donaciones',
-                    page: HomeScreen(),
+                    page: const HomeScreen(),
                   ),
                   // Agregar mas items
                 ],
