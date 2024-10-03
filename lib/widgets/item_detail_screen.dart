@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ItemDetailScreen extends StatelessWidget {
   final String imageUrl;
@@ -18,7 +19,17 @@ class ItemDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(title), // Título del artículo
+        leading: IconButton(
+          icon: const FaIcon(FontAwesomeIcons.arrowLeft),
+          onPressed: () {
+            Navigator.pop(context); // Acción de regresar
+          },
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontFamily: 'Artwork', fontSize: 30),
+        ), // Título del artículo
+        backgroundColor: Colors.green.shade200, // Color de fondo similar
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -32,17 +43,9 @@ class ItemDetailScreen extends StatelessWidget {
                 fit: BoxFit.contain, // Mostrar la imagen completa sin cortes
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
             const SizedBox(height: 10),
             Text(
-              description,
+              'Descripción: $description',
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 10),

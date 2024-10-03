@@ -13,7 +13,7 @@ import 'package:recila_me/widgets/login.dart';
 import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:recila_me/widgets/lottie_widget.dart';
-import 'package:recila_me/widgets/noticias.dart';
+import 'package:recila_me/widgets/my_splash_screen.dart';
 import 'package:recila_me/widgets/redSocial.dart';
 
 class MyInicio extends StatefulWidget {
@@ -342,7 +342,7 @@ class _MyInicioState extends State<MyInicio> {
         }
         return ObjectDetectionScreen(cameras: widget.cameras);
       case 1:
-        return const NoticiasChatGPT();
+        return const MySplash();
       case 2:
         return const Page3();
       case 3:

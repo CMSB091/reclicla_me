@@ -415,13 +415,14 @@ class FirestoreService {
     return connectivityResult != ConnectivityResult.none;
   }
 
-    // Función para subir la imagen a Firebase Storage y guardar la URL en Firestore
-  Future<void> uploadImageAndSaveToFirestore({
-    required File imageFile,
-    required String description,
-    required String contact,
-    required GlobalKey<ScaffoldState> scaffoldKey, // Para mostrar el SnackBar
-  }) async {
+  // Función para subir la imagen a Firebase Storage y guardar la URL en Firestore
+  Future<void> uploadImageAndSaveToFirestore(
+      {required File imageFile,
+      required String description,
+      required String contact,
+      required GlobalKey<ScaffoldState> scaffoldKey, // Para mostrar el SnackBar
+      required String email,
+      required String titulo}) async {
     // Verificar conexión a Internet antes de subir la imagen
     bool isConnected = await checkInternetConnection();
     if (!isConnected) {
@@ -432,7 +433,8 @@ class FirestoreService {
     try {
       // Verificar si el archivo existe
       if (!await imageFile.exists()) {
-        showSnackBar(scaffoldKey, 'El archivo no existe en la ruta especificada.');
+        showSnackBar(
+            scaffoldKey, 'El archivo no existe en la ruta especificada.');
         return;
       }
 
@@ -448,7 +450,8 @@ class FirestoreService {
 
       // Monitorear el progreso de la subida
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-        print('Progreso: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100} %');
+        print(
+            'Progreso: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100} %');
       }, onError: (e) {
         showSnackBar(scaffoldKey, 'Error durante la subida de la imagen.');
         print('Error durante la subida: $e');
@@ -467,6 +470,8 @@ class FirestoreService {
           'contact': contact,
           'imageUrl': imageUrl, // Guardar la URL de la imagen
           'timestamp': Timestamp.now(), // Añadir un timestamp
+          'email': email,
+          'titulo': titulo
         });
 
         showSnackBar(scaffoldKey, 'Artículo guardado correctamente.');
@@ -474,15 +479,43 @@ class FirestoreService {
         showSnackBar(scaffoldKey, 'Error: La subida no fue exitosa.');
       }
     } catch (e) {
-      showSnackBar(scaffoldKey, 'Error al subir la imagen y guardar en Firestore.');
+      showSnackBar(
+          scaffoldKey, 'Error al subir la imagen y guardar en Firestore.');
       print('Error al subir la imagen y guardar en Firestore: $e');
     }
   }
+
   // Mo
   //strar mensajes usando SnackBar
   void showSnackBar(GlobalKey<ScaffoldState> scaffoldKey, String message) {
     ScaffoldMessenger.of(scaffoldKey.currentContext!).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  Future<void> deletePost(BuildContext context, String postId,
+      {String? imageUrl}) async {
+    try {
+      // Elimina el documento del posteo en la colección 'items'
+      await FirebaseFirestore.instance.collection('items').doc(postId).delete();
+
+      // Si también quieres eliminar una imagen asociada en Firebase Storage, hazlo aquí
+      if (imageUrl != null) {
+        await FirebaseStorage.instance.refFromURL(imageUrl).delete();
+      }
+
+      // Antes de usar el context, verifica que el widget aún esté montado
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post eliminado exitosamente')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al eliminar el post: $e')),
+        );
+      }
+    }
   }
 }

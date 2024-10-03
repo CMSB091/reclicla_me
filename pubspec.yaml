@@ -28,6 +28,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  another_flutter_splash_screen: ^1.2.1
   google_fonts: ^6.2.1
   flutter:
     sdk: flutter
@@ -95,6 +96,7 @@ flutter:
     - assets/animations/lottie-eva.json
     - assets/animations/lottie-dot.json
     - assets/animations/lottie-chat-bot.json 
+    - assets/animations/lottie-robot.json
     - assets/animations/lottie-recomendations.json
     - assets/images/fondo.png
     - .env

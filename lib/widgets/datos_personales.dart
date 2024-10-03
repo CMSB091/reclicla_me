@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/build_text_field.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/login.dart';
@@ -388,58 +389,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
     }
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String labelText,
-    bool isNumber = false,
-    bool isReadOnly = false,
-    VoidCallback? onTap,
-  }) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.1), // Fondo oscuro con opacidad
-        borderRadius: BorderRadius.circular(10.0), // Bordes redondeados
-      ),
-      child: TextFormField(
-        controller: controller,
-        readOnly: isReadOnly,
-        onTap: onTap,
-        keyboardType: isNumber ? TextInputType.number : TextInputType.text,
-        decoration: InputDecoration(
-          labelText: labelText,
-          labelStyle: const TextStyle(
-            color: Colors.black, // Color oscuro para el label
-          ),
-          filled: true,
-          fillColor:
-              Colors.black.withOpacity(0.1), // Fondo oscuro para el campo
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-            borderSide: const BorderSide(
-              color: Colors.black, // Borde oscuro
-            ),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10.0),
-            borderSide: const BorderSide(
-              color: Colors.green, // Color del borde cuando está enfocado
-            ),
-          ),
-        ),
-        style: const TextStyle(
-          color: Colors.black, // Color del texto dentro del campo
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Por favor ingresa tu $labelText';
-          }
-          return null;
-        },
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -497,27 +446,27 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         ],
                       ),
                       const SizedBox(height: 20),
-                      _buildTextField(
+                      buildTextField(
                         controller: _nombreController,
                         labelText: 'Nombre',
                       ),
-                      _buildTextField(
+                      buildTextField(
                         controller: _apellidoController,
                         labelText: 'Apellido',
                       ),
-                      _buildTextField(
+                      buildTextField(
                         controller: _edadController,
                         labelText: 'Edad',
                         isNumber: true,
                       ),
-                      _buildTextField(
+                      buildTextField(
                         controller: _direccionController,
                         labelText: 'Dirección',
                       ),
                       GestureDetector(
                         onTap: _isLoading ? null : _mostrarSeleccionPais,
                         child: AbsorbPointer(
-                          child: _buildTextField(
+                          child: buildTextField(
                             controller: _paisController,
                             labelText: 'País',
                             isReadOnly: true,
@@ -537,14 +486,14 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                           }
                         },
                         child: AbsorbPointer(
-                          child: _buildTextField(
+                          child: buildTextField(
                             controller: _ciudadController,
                             labelText: 'Ciudad',
                             isReadOnly: true,
                           ),
                         ),
                       ),
-                      _buildTextField(
+                      buildTextField(
                         controller: _telefonoController,
                         labelText: 'Teléfono',
                         isNumber: true,
