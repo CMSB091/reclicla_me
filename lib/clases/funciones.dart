@@ -25,6 +25,14 @@ class Funciones {
   'lata', 'metal', 'residuos', 'desechos', 'decoración', 'manualidades', 
   'ecología', 'basura', 'compostaje','pila','pilas'
   ];
+
+  static final logger = SeqHttpLogger.create(
+        host: 'http://192.168.100.16:43674', //'http://10.0.2.2:43674'para el emulador
+        apiKey: dotenv.env['SEQ_LOGGER'],
+        globalContext: {
+          'App': 'ReciclaMe',
+        },
+  );
   // Función que prepara el prompt parala API de la IA
   String generateImagePromptFromResponse(String chatGPTResponse) {
     if (chatGPTResponse.contains('plástico')) {
@@ -155,55 +163,66 @@ class Funciones {
       return '';
     }
   }
+
+  static SeqLogger? _logger;
+
+  // Implementación del Singleton para el logger
+  static Future<void> _initializeLogger() async {
+    _logger ??= SeqHttpLogger.create(
+      host: 'http://192.168.100.16:43674', // 'http://10.0.2.2:43674' para el emulador
+      apiKey: dotenv.env['SEQ_LOGGER'],
+      globalContext: {
+        'App': 'ReciclaMe',
+      },
+    );
+  }
+
   // Función que registra los acontecimientos en el SEQ log
-  static Future<void> SeqLog(String status, message) async {
-    try{
-      final logger = SeqHttpLogger.create(
-        host: /*'http://192.168.100.16:43674'*/'http://10.0.2.2:43674', /*para el emulador*/
-        apiKey: dotenv.env['OPENAI_API_KEY'],
-        globalContext: {
-          'App': 'ReciclaMe',
-        },
-      );
-      if(status == 'information'){
-      await logger.log(
-        SeqLogLevel.information,
-        message,
-        null,
-        {
-          'Timestamp': DateTime.now().toUtc().toIso8601String(),
-        },
-      );
-    }else if (status == 'warning'){
-    await logger.log(
-        SeqLogLevel.warning,
-        message,
-        null,
-        {
-          'Timestamp': DateTime.now().toUtc().toIso8601String(),
-        },
-      );
-    }else if (status == 'error'){
-      await logger.log(
-        SeqLogLevel.error,
-        message,
-        null,
-        {
-          'Timestamp': DateTime.now().toUtc().toIso8601String(),
-        },
-      );
-    }else if(status == 'debug'){
-      await logger.log(
-        SeqLogLevel.debug,
-        message,
-        null,
-        {
-          'Timestamp': DateTime.now().toUtc().toIso8601String(),
-        },
-      );
-    }
-    await logger.flush();
-    }catch(e){
+  static Future<void> SeqLog(String status, String message) async {
+    try {
+      await _initializeLogger(); // Asegura que el logger se inicialice solo una vez
+
+      if (_logger == null) return;
+
+      switch (status) {
+        case 'information':
+          await _logger!.log(
+            SeqLogLevel.information,
+            message,
+            null,
+            {'Timestamp': DateTime.now().toUtc().toIso8601String()},
+          );
+          break;
+        case 'warning':
+          await _logger!.log(
+            SeqLogLevel.warning,
+            message,
+            null,
+            {'Timestamp': DateTime.now().toUtc().toIso8601String()},
+          );
+          break;
+        case 'error':
+          await _logger!.log(
+            SeqLogLevel.error,
+            message,
+            null,
+            {'Timestamp': DateTime.now().toUtc().toIso8601String()},
+          );
+          break;
+        case 'debug':
+          await _logger!.log(
+            SeqLogLevel.debug,
+            message,
+            null,
+            {'Timestamp': DateTime.now().toUtc().toIso8601String()},
+          );
+          break;
+        default:
+          print('Nivel de log no reconocido');
+      }
+
+      await _logger!.flush();
+    } catch (e) {
       print('Se produjo un error al intentar acceder al SEQ $e');
     }
   }
@@ -350,5 +369,7 @@ class Funciones {
       }
     }
   }
+
+  
 
 }

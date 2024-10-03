@@ -118,7 +118,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       List<String> paises = await _firestoreService.getPaises();
       setState(() {
         _paises = paises;
-        Funciones.SeqLog('information', paises);
+        Funciones.SeqLog('information', paises as String);
       });
     } catch (e) {
       Funciones.SeqLog('error', 'Error al cargar países: $e');

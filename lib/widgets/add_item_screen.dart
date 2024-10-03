@@ -87,7 +87,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
               contact: _contact!,
               scaffoldKey: _scaffoldKey,
               email: _userEmail!, // Solo usar si no es null
-              titulo: _titulo!)
+              titulo: _titulo)
           .then((_) {
         // Limpiar el formulario y la imagen seleccionada después de la subida
         setState(() {
@@ -139,7 +139,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         ),
         title: const Text(
           'Agregar Artículo',
-          style: TextStyle(fontFamily: 'Artwork', fontSize: 30),
+          style: TextStyle(fontFamily: 'Artwork', fontSize: 18),
         ),
         backgroundColor: Colors.green.shade200,
       ),
