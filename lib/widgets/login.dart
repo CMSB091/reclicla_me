@@ -91,6 +91,7 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _isLoading = true);
       try {
         Funciones.SeqLog('information','Iniciando sesión con el email: ${_emailController.text}');
+        // ignore: unused_local_variable
         UserCredential userCredential = await FirebaseAuth.instance
             .signInWithEmailAndPassword(
           email: _emailController.text,

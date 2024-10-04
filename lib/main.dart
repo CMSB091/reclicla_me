@@ -9,6 +9,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 List<CameraDescription>? cameras;
 void main() async {
+  // ignore: unused_label
   debugShowCheckedModeBanner: false;
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(

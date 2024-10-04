@@ -11,6 +11,7 @@ class NoticiasChatGPT extends StatefulWidget {
   const NoticiasChatGPT({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _MyChatWidgetState createState() => _MyChatWidgetState();
 }
 
@@ -26,6 +27,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   bool isTyping = false;
   String typingIndicator =
       'Escribiendo'; // Texto inicial para el indicador de escritura
+  // ignore: unused_field
   Timer? _typingTimer; // Timer para animación de "Escribiendo..."
 
   Future<void> _setUserEmail() async {
