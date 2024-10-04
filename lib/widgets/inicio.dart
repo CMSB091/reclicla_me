@@ -1,4 +1,3 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,25 +29,38 @@ class _MyInicioState extends State<MyInicio> {
   final FirestoreService _firestoreService = FirestoreService();
   User? user = FirebaseAuth.instance.currentUser;
   String? nombreUsuario;
+  String? emailUsuario;
 
   @override
   void initState() {
     super.initState();
-    _loadUserName();
+    if (user != null) {
+      emailUsuario = user!.email; // Guardamos el email una vez
+      _loadUserName();
+    }
   }
 
   Future<void> _loadUserName() async {
-    if (user != null) {
+    if (emailUsuario != null) {
       setState(() {
         isLoading = true;
       });
 
-      final nombre =
-          await _firestoreService.getUserName(user!.email.toString());
-      setState(() {
-        nombreUsuario = nombre;
-        isLoading = false;
-      });
+      try {
+        final nombre = await _firestoreService.getUserName(emailUsuario!);
+        if (mounted && !_isCancelled) {
+          setState(() {
+            nombreUsuario = nombre;
+            isLoading = false;
+          });
+        }
+      } catch (e) {
+        // Manejar el error aquí si ocurre un fallo al obtener el nombre
+        Funciones.SeqLog('error', 'Error al obtener nombre de usuario: $e');
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
@@ -81,7 +93,9 @@ class _MyInicioState extends State<MyInicio> {
         );
       },
     );
+
     await Future.delayed(const Duration(seconds: 3));
+
     if (!_isCancelled && mounted) {
       try {
         await FirebaseAuth.instance.signOut();
@@ -113,7 +127,7 @@ class _MyInicioState extends State<MyInicio> {
           fontSize: 18,
         ),
         title: isLoading
-            ? null // No mostrar título cuando se está cargando
+            ? null
             : Text(
                 'Bienvenido $nombreUsuario !!',
                 style: const TextStyle(
@@ -129,11 +143,9 @@ class _MyInicioState extends State<MyInicio> {
           Builder(
             builder: (context) {
               return IconButton(
-                icon: const FaIcon(FontAwesomeIcons
-                    .bars), // Icono de menú hamburguesa de Font Awesome
+                icon: const FaIcon(FontAwesomeIcons.bars),
                 onPressed: () {
-                  Scaffold.of(context)
-                      .openEndDrawer(); // Abre el drawer lateral
+                  Scaffold.of(context).openEndDrawer();
                 },
               );
             },
@@ -164,26 +176,11 @@ class _MyInicioState extends State<MyInicio> {
 
   Widget _buildDrawer(BuildContext context) {
     return SizedBox(
-      width: MediaQuery.of(context).size.width *
-          0.50, // Ajusta el ancho del Drawer
+      width: MediaQuery.of(context).size.width * 0.50,
       child: Drawer(
         child: Column(
           children: [
-            // Dejar espacio debajo del AppBar
-            Container(
-              height: kToolbarHeight, // La altura del AppBar
-              color: Colors.green.shade200, // Color de fondo del área superior
-              child: const Center(
-                child: Text(
-                  'Menú',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontFamily: 'Artwork',
-                  ),
-                ),
-              ),
-            ),
+            _buildDrawerHeader(),
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -193,9 +190,10 @@ class _MyInicioState extends State<MyInicio> {
                     icon: FontAwesomeIcons.info,
                     text: 'Información',
                     page: DatosPersonales(
-                        correo: user!.email.toString(),
-                        desdeInicio: true,
-                        cameras: widget.cameras),
+                      correo: emailUsuario!,
+                      desdeInicio: true,
+                      cameras: widget.cameras,
+                    ),
                   ),
                   _buildDrawerItem(
                     context,
@@ -209,7 +207,6 @@ class _MyInicioState extends State<MyInicio> {
                     text: 'Donaciones',
                     page: const HomeScreen(),
                   ),
-                  // Agregar mas items
                 ],
               ),
             ),
@@ -264,13 +261,13 @@ class _MyInicioState extends State<MyInicio> {
       height: 180.0,
       child: Card(
         color: Colors.green.shade100,
-        elevation: 5.0, // Agregar sombreado
-        shadowColor: Colors.black.withOpacity(0.5), // Color del sombreado
+        elevation: 5.0,
+        shadowColor: Colors.black.withOpacity(0.5),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0), // Bordes redondeados
+          borderRadius: BorderRadius.circular(10.0),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(10.0), //  radio de las esquinas
+          borderRadius: BorderRadius.circular(10.0),
           onTap: () {
             if (!_isCancelled && mounted) {
               Navigator.push(
@@ -287,8 +284,8 @@ class _MyInicioState extends State<MyInicio> {
                       Flexible(
                         child: Lottie.asset(
                           'assets/animations/lottie-recomendations.json',
-                          width: 100, // tamaño de la animación
-                          height: 100, // tamaño de la animación
+                          width: 100,
+                          height: 100,
                           repeat: true,
                         ),
                       ),
@@ -299,7 +296,7 @@ class _MyInicioState extends State<MyInicio> {
                           fontFamily: 'Artwork',
                           fontSize: 16,
                           color: Colors.black,
-                          fontWeight: FontWeight.bold
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ],
@@ -307,7 +304,7 @@ class _MyInicioState extends State<MyInicio> {
                 : Text(
                     _getMenuTitle(index),
                     style: const TextStyle(
-                      fontSize: 22, //tamaño de la fuente
+                      fontSize: 22,
                       color: Colors.black,
                     ),
                   ),

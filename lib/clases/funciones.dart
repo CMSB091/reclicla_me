@@ -23,7 +23,7 @@ class Funciones {
   'reciclaje', 'reciclar', 'reutilizar', 'sostenible', 'casa', 'hogar', 
   'materiales', 'botella', 'plástico', 'papel', 'cartón', 'vidrio', 
   'lata', 'metal', 'residuos', 'desechos', 'decoración', 'manualidades', 
-  'ecología', 'basura', 'compostaje','pila','pilas'
+  'ecología', 'basura', 'compostaje','pila','pilas, Gracias, gracias'
   ];
 
   static final logger = SeqHttpLogger.create(
@@ -169,7 +169,7 @@ class Funciones {
   // Implementación del Singleton para el logger
   static Future<void> _initializeLogger() async {
     _logger ??= SeqHttpLogger.create(
-      host: 'http://192.168.100.16:43674', // 'http://10.0.2.2:43674' para el emulador
+      host: /*'http://192.168.100.16:43674',*/  'http://10.0.2.2:43674', /*para el emulador*/
       apiKey: dotenv.env['SEQ_LOGGER'],
       globalContext: {
         'App': 'ReciclaMe',

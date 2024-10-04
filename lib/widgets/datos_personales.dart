@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -103,13 +104,31 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
   Future<void> _loadUserProfileImage() async {
     try {
       String? email = widget.correo;
-      final String? userImage =
-          await _firestoreService.getUserProfileImage(email);
-      setState(() {
-        imageUrl = userImage;
-      });
+      // Obtener el documento de usuario desde Firebase
+      final usuarioSnapshot = await _firestoreService.getUserDocument(email);
+
+      if (usuarioSnapshot.exists) {
+        // Convertir los datos a Map<String, dynamic>
+        final data = usuarioSnapshot.data() as Map<String, dynamic>?;
+        final String? userImage =
+            data?['imageUrl']; // Acceder al campo imageUrl
+
+        setState(() {
+          imageUrl = userImage ??
+              'assets/images/perfil.png'; // Si es nulo, cargar imagen por defecto
+        });
+      } else {
+        // Si no existe el documento del usuario, cargar la imagen por defecto
+        setState(() {
+          imageUrl = 'assets/images/perfil.png';
+        });
+      }
     } catch (e) {
       Funciones.SeqLog('error', 'Error al cargar la imagen del perfil: $e');
+      setState(() {
+        imageUrl =
+            'assets/images/perfil.png'; // En caso de error, cargar la imagen por defecto
+      });
     }
   }
 
@@ -301,7 +320,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
     );
 
     if (confirmarEliminar == true) {
-      if(mounted){
+      if (mounted) {
         showDialog(
           context: context,
           barrierDismissible: false,

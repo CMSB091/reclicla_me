@@ -518,4 +518,11 @@ class FirestoreService {
       }
     }
   }
+
+  Future<DocumentSnapshot> getUserDocument(String email) async {
+    return await FirebaseFirestore.instance
+      .collection('usuario')
+      .doc(email)
+      .get();
+  }
 }
