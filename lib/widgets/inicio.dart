@@ -157,9 +157,9 @@ class _MyInicioState extends State<MyInicio> {
         child: Center(
           child: isLoading
               ? buildLottieAnimation(
-                  path: 'assets/animations/lotti-trash.json',
-                  width: 300,
-                  height: 300,
+                  path: 'assets/animations/lotti-recycle.json',
+                  width: 500,
+                  height: 500,
                 )
               : Wrap(
                   spacing: 20.0,

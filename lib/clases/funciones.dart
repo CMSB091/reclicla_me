@@ -261,7 +261,7 @@ class Funciones {
         }
 
         await _logger!.flush();
-      }).timeout(const Duration(seconds: 10)); // Timeout de 10 segundos
+      }).timeout(const Duration(seconds: 3)); // Timeout de 3 segundos
     } catch (e) {
       if (e is TimeoutException) {
         print(
