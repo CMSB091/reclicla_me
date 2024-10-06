@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:camera/camera.dart';
@@ -11,27 +12,48 @@ import 'package:image_picker/image_picker.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/login.dart';
-import 'package:http/http.dart' as http; 
+import 'package:http/http.dart' as http;
 
 final FirestoreService firestoreService = FirestoreService();
+
 class Funciones {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirestoreService _firestoreService = FirestoreService();
   final ImagePicker _picker = ImagePicker();
   // Palabras clave relacionadas con reciclaje.
   static final List<String> recyclingKeywords = [
-  'reciclaje', 'reciclar', 'reutilizar', 'sostenible', 'casa', 'hogar', 
-  'materiales', 'botella', 'plástico', 'papel', 'cartón', 'vidrio', 
-  'lata', 'metal', 'residuos', 'desechos', 'decoración', 'manualidades', 
-  'ecología', 'basura', 'compostaje','pila','pilas, Gracias, gracias'
+    'reciclaje',
+    'reciclar',
+    'reutilizar',
+    'sostenible',
+    'casa',
+    'hogar',
+    'materiales',
+    'botella',
+    'plástico',
+    'papel',
+    'cartón',
+    'vidrio',
+    'lata',
+    'metal',
+    'residuos',
+    'desechos',
+    'decoración',
+    'manualidades',
+    'ecología',
+    'basura',
+    'compostaje',
+    'pila',
+    'pilas, Gracias, gracias'
   ];
 
   static final logger = SeqHttpLogger.create(
-        host: 'http://192.168.100.16:43674', //'http://10.0.2.2:43674'para el emulador
-        apiKey: dotenv.env['SEQ_LOGGER'],
-        globalContext: {
-          'App': 'ReciclaMe',
-        },
+    host:
+        'http://192.168.100.16:43674', //'http://10.0.2.2:43674'para el emulador
+    apiKey: dotenv.env['SEQ_LOGGER'],
+    globalContext: {
+      'App': 'ReciclaMe',
+    },
   );
   // Función que prepara el prompt parala API de la IA
   String generateImagePromptFromResponse(String chatGPTResponse) {
@@ -78,7 +100,7 @@ class Funciones {
       // Cierra la sesión del usuario
       await FirebaseAuth.instance.signOut();
     } catch (e) {
-      await SeqLog('error','Error al cerrar sesión: $e');
+      await SeqLog('error', 'Error al cerrar sesión: $e');
     } finally {
       // Cierra el diálogo
       Navigator.of(context, rootNavigator: true).pop();
@@ -88,8 +110,9 @@ class Funciones {
           builder: (context) => const LoginApp(),
         ),
       );
-    }  
+    }
   }
+
   // Función que retorna la respuesta de la API
   static Future<String> getChatGPTResponse(String prompt) async {
     final apiKey = dotenv.env['OPENAI_API_KEY'];
@@ -112,31 +135,35 @@ class Funciones {
     );
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+      final Map<String, dynamic> data =
+          jsonDecode(utf8.decode(response.bodyBytes));
       return data['choices'][0]['message']['content'];
     } else {
-      await SeqLog('error','Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
+      await SeqLog('error',
+          'Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
       throw Exception('Failed to load ChatGPT response');
     }
   }
 
-  static Future<String> fetchChatGPTResponse(String prompt, bool isRecyclingRelated) async {
-    List<Map<String, String>> recentInteractions = await firestoreService.fetchInteractionsFromFirestore();
+  static Future<String> fetchChatGPTResponse(
+      String prompt, bool isRecyclingRelated) async {
+    List<Map<String, String>> recentInteractions =
+        await firestoreService.fetchInteractionsFromFirestore();
     String context = recentInteractions.map((interaction) {
       return 'User: ${interaction['userPrompt']}\nBot: ${interaction['chatResponse']}';
     }).join('\n\n');
 
     String finalPrompt = '$context\n\nUser: $prompt\nBot:';
 
-    if(isRecyclingRelated){
-          String response = await getChatGPTResponse(finalPrompt);
+    if (isRecyclingRelated) {
+      String response = await getChatGPTResponse(finalPrompt);
       return response;
-    }else{
+    } else {
       return 'Por favor, realiza una consulta relacionada con el reciclaje de materiales en el hogar y cómo reutilizarlos de manera creativa.';
     }
-
   }
-    // Genera imagenes con la ayuda de la IA
+
+  // Genera imagenes con la ayuda de la IA
   static Future<String> fetchGeneratedImage(String prompt) async {
     final apiKey = dotenv.env['OPENAI_API_KEY'];
     const apiUrl = 'https://api.openai.com/v1/images/generations';
@@ -159,7 +186,8 @@ class Funciones {
       final imageUrlGenerated = data['data'][0]['url'];
       return imageUrlGenerated;
     } else {
-      await SeqLog('error','Error al generar la imagen: ${response.statusCode}');
+      await SeqLog(
+          'error', 'Error al generar la imagen: ${response.statusCode}');
       return '';
     }
   }
@@ -169,7 +197,8 @@ class Funciones {
   // Implementación del Singleton para el logger
   static Future<void> _initializeLogger() async {
     _logger ??= SeqHttpLogger.create(
-      host: /*'http://192.168.100.16:43674',*/  'http://10.0.2.2:43674', /*para el emulador*/
+      host: /*'http://192.168.100.16:43674',*/ 'http://10.0.2.2:43674',
+      /*para el emulador*/
       apiKey: dotenv.env['SEQ_LOGGER'],
       globalContext: {
         'App': 'ReciclaMe',
@@ -184,46 +213,63 @@ class Funciones {
 
       if (_logger == null) return;
 
-      switch (status) {
-        case 'information':
-          await _logger!.log(
-            SeqLogLevel.information,
-            message,
-            null,
-            {'Timestamp': DateTime.now().toUtc().toIso8601String()},
-          );
-          break;
-        case 'warning':
-          await _logger!.log(
-            SeqLogLevel.warning,
-            message,
-            null,
-            {'Timestamp': DateTime.now().toUtc().toIso8601String()},
-          );
-          break;
-        case 'error':
-          await _logger!.log(
-            SeqLogLevel.error,
-            message,
-            null,
-            {'Timestamp': DateTime.now().toUtc().toIso8601String()},
-          );
-          break;
-        case 'debug':
-          await _logger!.log(
-            SeqLogLevel.debug,
-            message,
-            null,
-            {'Timestamp': DateTime.now().toUtc().toIso8601String()},
-          );
-          break;
-        default:
-          print('Nivel de log no reconocido');
-      }
-
-      await _logger!.flush();
+      // Ejecutar la operación con timeout de 10 segundos
+      await _logWithTimeout(status, message);
     } catch (e) {
       print('Se produjo un error al intentar acceder al SEQ $e');
+    }
+  }
+
+// Función auxiliar que maneja el timeout
+  static Future<void> _logWithTimeout(String status, String message) async {
+    try {
+      await Future(() async {
+        switch (status) {
+          case 'information':
+            await _logger!.log(
+              SeqLogLevel.information,
+              message,
+              null,
+              {'Timestamp': DateTime.now().toUtc().toIso8601String()},
+            );
+            break;
+          case 'warning':
+            await _logger!.log(
+              SeqLogLevel.warning,
+              message,
+              null,
+              {'Timestamp': DateTime.now().toUtc().toIso8601String()},
+            );
+            break;
+          case 'error':
+            await _logger!.log(
+              SeqLogLevel.error,
+              message,
+              null,
+              {'Timestamp': DateTime.now().toUtc().toIso8601String()},
+            );
+            break;
+          case 'debug':
+            await _logger!.log(
+              SeqLogLevel.debug,
+              message,
+              null,
+              {'Timestamp': DateTime.now().toUtc().toIso8601String()},
+            );
+            break;
+          default:
+            print('Nivel de log no reconocido');
+        }
+
+        await _logger!.flush();
+      }).timeout(const Duration(seconds: 10)); // Timeout de 10 segundos
+    } catch (e) {
+      if (e is TimeoutException) {
+        print(
+            'El log de SEQ excedió el tiempo límite de 10 segundos y se abortó.');
+      } else {
+        print('Se produjo un error al registrar el log en SEQ: $e');
+      }
     }
   }
 
@@ -243,7 +289,8 @@ class Funciones {
     try {
       if (user != null) {
         String correo = user.email.toString();
-        Map<String, dynamic>? userData = await _firestoreService.getUserData(correo);
+        Map<String, dynamic>? userData =
+            await _firestoreService.getUserData(correo);
 
         nombreController.text = userData!['nombre'] ?? '';
         apellidoController.text = userData['apellido'] ?? '';
@@ -254,7 +301,8 @@ class Funciones {
         telefonoController.text = userData['telefono'] ?? '';
       }
     } catch (e) {
-      SeqLog('error','Se ha producido un error al cargar los datos del usuario $e');
+      SeqLog('error',
+          'Se ha producido un error al cargar los datos del usuario $e');
     } finally {
       setLoadingState(false);
     }
@@ -273,7 +321,8 @@ class Funciones {
     required BuildContext context,
     required List<CameraDescription> cameras,
   }) async {
-    if (nombreController.text.isNotEmpty && apellidoController.text.isNotEmpty) {
+    if (nombreController.text.isNotEmpty &&
+        apellidoController.text.isNotEmpty) {
       setSavingState(true);
       try {
         String nombre = nombreController.text;
@@ -341,7 +390,8 @@ class Funciones {
     required Function(String) onImageUploaded,
     required BuildContext context,
   }) async {
-    final XFile? pickedImage = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedImage =
+        await _picker.pickImage(source: ImageSource.gallery);
     if (pickedImage != null) {
       try {
         // Subir la imagen a Firebase Storage
@@ -359,7 +409,8 @@ class Funciones {
 
         // Mostrar éxito
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Imagen de perfil actualizada correctamente')),
+          const SnackBar(
+              content: Text('Imagen de perfil actualizada correctamente')),
         );
       } catch (e) {
         // Mostrar error
@@ -369,7 +420,4 @@ class Funciones {
       }
     }
   }
-
-  
-
 }

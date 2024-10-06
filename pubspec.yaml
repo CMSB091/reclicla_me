@@ -28,8 +28,6 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  another_flutter_splash_screen: ^1.2.1
-  google_fonts: ^6.2.1
   flutter:
     sdk: flutter
   camera: ^0.11.0+1
@@ -48,6 +46,8 @@ dependencies:
   dart_seq_http_client: ^1.0.0
   intl: ^0.18.0
   font_awesome_flutter: ^10.0.0
+  another_flutter_splash_screen: ^1.2.1
+  google_fonts: ^6.2.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

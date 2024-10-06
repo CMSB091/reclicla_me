@@ -87,7 +87,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
               contact: _contact!,
               scaffoldKey: _scaffoldKey,
               email: _userEmail!, // Solo usar si no es null
-              titulo: _titulo)
+              titulo: _titulo,
+              estado: false)
           .then((_) {
         // Limpiar el formulario y la imagen seleccionada después de la subida
         setState(() {

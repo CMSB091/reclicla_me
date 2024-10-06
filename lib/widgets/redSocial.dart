@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _HomeScreenState createState() => _HomeScreenState();
 }
 
@@ -30,6 +31,13 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       userEmail = user.email;
       nombreUsuario = nombre;
+    });
+  }
+
+  // Función para actualizar el estado "isDonated" en Firestore
+  Future<void> updateDonationStatus(String itemId, bool isDonated) async {
+    await FirebaseFirestore.instance.collection('items').doc(itemId).update({
+      'estado': isDonated,
     });
   }
 
@@ -74,6 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: items.length,
             itemBuilder: (context, index) {
               var item = items[index];
+              bool isDonated = item['estado'] ?? false;
 
               return Card(
                 margin: const EdgeInsets.all(8),
@@ -153,6 +162,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                     );
                                   },
                                 );
+                              },
+                            ),
+                            Switch(
+                              value: isDonated,
+                              onChanged: (value) {
+                                setState(() {
+                                  isDonated = value;
+                                });
+                                updateDonationStatus(item.id, isDonated);
                               },
                             ),
                           ],

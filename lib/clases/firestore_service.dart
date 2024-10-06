@@ -1,3 +1,4 @@
+import 'dart:ffi';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -422,7 +423,8 @@ class FirestoreService {
       required String contact,
       required GlobalKey<ScaffoldState> scaffoldKey, // Para mostrar el SnackBar
       required String email,
-      required String titulo}) async {
+      required String titulo,
+      required bool estado}) async {
     // Verificar conexión a Internet antes de subir la imagen
     bool isConnected = await checkInternetConnection();
     if (!isConnected) {
@@ -471,7 +473,8 @@ class FirestoreService {
           'imageUrl': imageUrl, // Guardar la URL de la imagen
           'timestamp': Timestamp.now(), // Añadir un timestamp
           'email': email,
-          'titulo': titulo
+          'titulo': titulo,
+          'estado': estado
         });
 
         showSnackBar(scaffoldKey, 'Artículo guardado correctamente.');
