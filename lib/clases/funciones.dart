@@ -212,7 +212,6 @@ class Funciones {
       await _initializeLogger(); // Asegura que el logger se inicialice solo una vez
 
       if (_logger == null) return;
-
       // Ejecutar la operación con timeout de 10 segundos
       await _logWithTimeout(status, message);
     } catch (e) {

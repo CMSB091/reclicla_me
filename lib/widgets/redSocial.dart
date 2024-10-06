@@ -1,4 +1,3 @@
-// ignore: file_names
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,7 +10,6 @@ class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomeScreenState createState() => _HomeScreenState();
 }
 
@@ -34,18 +32,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // Función para actualizar el estado "isDonated" en Firestore
-  Future<void> updateDonationStatus(String itemId, bool isDonated) async {
-    await FirebaseFirestore.instance.collection('items').doc(itemId).update({
-      'estado': isDonated,
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // Estilo similar al de la página DatosPersonales
         leading: IconButton(
           icon: const FaIcon(FontAwesomeIcons.arrowLeft),
           onPressed: () {
@@ -56,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
           'Artículos en Donación',
           style: TextStyle(fontFamily: 'Artwork', fontSize: 20),
         ),
-        backgroundColor: Colors.green.shade200, // Color de fondo similar
+        backgroundColor: Colors.green.shade200,
         actions: [
           IconButton(
             icon: const FaIcon(FontAwesomeIcons.plus),
@@ -83,37 +73,20 @@ class _HomeScreenState extends State<HomeScreen> {
             itemBuilder: (context, index) {
               var item = items[index];
               bool isDonated = item['estado'] ?? false;
+              String itemEmail = item['email'] ?? '';
 
               return Card(
                 margin: const EdgeInsets.all(8),
                 child: ListTile(
-                  leading: GestureDetector(
-                    onTap: () {
-                      _navigateToItemDetail(
-                        context,
-                        item['imageUrl'],
-                        item['titulo'] ?? 'Sin título',
-                        item['description'] ?? 'Sin descripción',
-                        item['contact'] ?? 'Sin contacto',
-                      );
-                    },
-                    child: Image.network(
-                      item['imageUrl'],
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.contain,
-                    ),
+                  leading: Image.network(
+                    item['imageUrl'], // Previsualización de la imagen
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.contain,
                   ),
-                  title: Text(item['titulo'] ?? 'Sin título'),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(item['description'] ?? 'Sin descripción'),
-                      Text('Contacto: ${item['contact'] ?? 'Sin contacto'}'),
-                      Text('Usuario: $nombreUsuario'),
-                    ],
-                  ),
-                  trailing: userEmail == item['email']
+                  title: Text(
+                      item['titulo'] ?? 'Sin título'), // Mostrar solo el título
+                  trailing: userEmail == itemEmail
                       ? Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -147,8 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                           onPressed: () {
                                             Navigator.of(context)
                                                 .pop(); // Cerrar diálogo
-
-                                            // Eliminar el post, pero no cerrar la página
+                                            // Eliminar el post
                                             firestoreService.deletePost(
                                               context,
                                               item.id, // Pasar el ID del post
@@ -164,18 +136,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                               },
                             ),
-                            Switch(
-                              value: isDonated,
-                              onChanged: (value) {
-                                setState(() {
-                                  isDonated = value;
-                                });
-                                updateDonationStatus(item.id, isDonated);
-                              },
+                            // Mostrar el checkbox solo si el email coincide
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: isDonated,
+                                  onChanged: (value) {
+                                    _showConfirmationDialog(context, item.id, value!);
+                                  },
+                                ),
+                                const Text("Concretado"),
+                              ],
                             ),
                           ],
                         )
-                      : null,
+                      : null, // No mostrar nada si el email no coincide
                   onTap: () {
                     _navigateToItemDetail(
                       context,
@@ -183,6 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       item['titulo'] ?? 'Sin título',
                       item['description'] ?? 'Sin descripción',
                       item['contact'] ?? 'Sin contacto',
+                      nombreUsuario!, // Nombre del usuario
+                      item['estado'] ?? false, // Estado de donación
                     );
                   },
                 ),
@@ -194,18 +171,50 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Función para mostrar el modal de confirmación
+  void _showConfirmationDialog(BuildContext context, String itemId, bool newState) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar acción'),
+          content: Text(newState
+              ? '¿Estás seguro de que deseas marcar la publicación como concretada?'
+              : '¿Estás seguro de que deseas marcar la publicación como no concretada?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cerrar el diálogo
+              },
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Actualizar el estado en Firestore según el valor del checkbox
+                firestoreService.updateDonationStatus(itemId, newState);
+                Navigator.of(context).pop(); // Cerrar el diálogo
+              },
+              child: const Text('Sí'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // Función para navegar a la página de detalles del artículo
   void _navigateToItemDetail(BuildContext context, String imageUrl,
-      String title, String description, String contact) {
+      String title, String description, String contact, String username, bool estado) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => ItemDetailScreen(
-          imageUrl: imageUrl,
-          title: title,
-          description: description,
-          contact: contact,
-        ),
+            imageUrl: imageUrl,
+            title: title,
+            description: description,
+            contact: contact,
+            userName: username,
+            estado: estado),
       ),
     );
   }

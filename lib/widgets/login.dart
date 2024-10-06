@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/servicios/dynamicLinkService.dart';
+import 'package:recila_me/widgets/lottie_widget.dart';
 import 'register_page.dart';
 import '../clases/firestore_service.dart';
 import 'inicio.dart';
@@ -52,11 +53,10 @@ class AuthenticationWrapper extends StatelessWidget {
           }
         }
         return Center(
-          child: Image.asset(
-            'assets/animations/lotti-recycle.json',
-            width: 200,
-            height: 200,
-            fit: BoxFit.cover,
+          child: buildLottieAnimation(
+            path: 'assets/animations/lottie-recycle.json',
+            width: 500,
+            height: 500,
           ),
         );
       },
@@ -90,16 +90,19 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
       try {
-        Funciones.SeqLog('information','Iniciando sesión con el email: ${_emailController.text}');
+        Funciones.SeqLog('information',
+            'Iniciando sesión con el email: ${_emailController.text}');
         // ignore: unused_local_variable
-        UserCredential userCredential = await FirebaseAuth.instance
-            .signInWithEmailAndPassword(
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
 
-        final nombreUsuario = await _firestoreService.getUserName(_emailController.text);
-        Funciones.SeqLog('information','Sesión iniciada correctamente para el usuario: $nombreUsuario');
+        final nombreUsuario =
+            await _firestoreService.getUserName(_emailController.text);
+        Funciones.SeqLog('information',
+            'Sesión iniciada correctamente para el usuario: $nombreUsuario');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -114,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
             : e.code == 'wrong-password'
                 ? 'Contraseña incorrecta.'
                 : 'Error en la autenticación.';
-        Funciones.SeqLog('error','Error en la autenticación: $message');
+        Funciones.SeqLog('error', 'Error en la autenticación: $message');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -196,13 +199,16 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(height: 20.0),
           TextFormField(
             controller: _passwordController,
-            obscureText: _obscurePassword, // Controlar visibilidad de la contraseña
+            obscureText:
+                _obscurePassword, // Controlar visibilidad de la contraseña
             decoration: InputDecoration(
               labelText: 'Contraseña',
               border: const OutlineInputBorder(),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword ? FontAwesomeIcons.eye : FontAwesomeIcons.eyeSlash,
+                  _obscurePassword
+                      ? FontAwesomeIcons.eye
+                      : FontAwesomeIcons.eyeSlash,
                 ),
                 onPressed: () {
                   setState(() {

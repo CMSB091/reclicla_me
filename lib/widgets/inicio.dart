@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/MiniJuegoBasura.dart';
@@ -158,9 +157,9 @@ class _MyInicioState extends State<MyInicio> {
         child: Center(
           child: isLoading
               ? buildLottieAnimation(
-                  path: 'assets/animations/lotti-recycle.json',
-                  width: 500,
-                  height: 500,
+                  path: 'assets/animations/lotti-trash.json',
+                  width: 300,
+                  height: 300,
                 )
               : Wrap(
                   spacing: 20.0,
@@ -282,11 +281,10 @@ class _MyInicioState extends State<MyInicio> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Flexible(
-                        child: Lottie.asset(
-                          'assets/animations/lottie-recomendations.json',
+                        child: buildLottieAnimation(
+                          path:'assets/animations/lottie-recomendations.json',
                           width: 100,
                           height: 100,
-                          repeat: true,
                         ),
                       ),
                       const SizedBox(height: 10),

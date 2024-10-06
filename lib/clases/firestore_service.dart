@@ -528,4 +528,11 @@ class FirestoreService {
       .doc(email)
       .get();
   }
+
+    // Función para actualizar el estado de la publicacion en Firestore
+  Future<void> updateDonationStatus(String itemId, bool isDonated) async {
+    await FirebaseFirestore.instance.collection('items').doc(itemId).update({
+      'estado': isDonated,
+    });
+  }
 }

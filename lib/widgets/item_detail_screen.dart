@@ -6,6 +6,8 @@ class ItemDetailScreen extends StatelessWidget {
   final String title;
   final String description;
   final String contact;
+  final String userName; // Nombre del usuario que publicó el artículo
+  final bool estado; // Estado de disponibilidad del artículo
 
   const ItemDetailScreen({
     super.key,
@@ -13,6 +15,8 @@ class ItemDetailScreen extends StatelessWidget {
     required this.title,
     required this.description,
     required this.contact,
+    required this.userName, // Recibir nombre de usuario
+    required this.estado, // Recibir estado del artículo
   });
 
   @override
@@ -52,6 +56,20 @@ class ItemDetailScreen extends StatelessWidget {
             Text(
               'Contacto: $contact',
               style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Publicado por: $userName',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              estado ? 'No disponible' : 'Disponible',
+              style: TextStyle(
+                fontSize: 16,
+                color: estado ? Colors.red : Colors.green, // Color basado en el estado
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
