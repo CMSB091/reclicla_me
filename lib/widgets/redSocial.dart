@@ -80,14 +80,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        item['titulo'] ?? 'Sin título',
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      ), // Mostrar el título arriba
-                    ),
+                    // Si los correos coinciden, mostrar el título arriba de la imagen
+                    if (userEmail == itemEmail)
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          item['titulo'] ?? 'Sin título',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
@@ -100,7 +104,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               item['description'] ?? 'Sin descripción',
                               item['contact'] ?? 'Sin contacto',
                               nombreUsuario!, // Nombre del usuario
-                              item['estado'] ?? false, // Estado de donación
+                              item['estado'] ?? false,
+                              userEmail!, // Estado de donación
                             );
                           },
                           child: Image.network(
@@ -111,7 +116,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 10), // Espacio entre imagen y botones
-                        if (userEmail == itemEmail) // Mostrar los botones solo si el email coincide
+
+                        // Si los correos coinciden, mostrar los botones debajo de la imagen
+                        if (userEmail == itemEmail)
                           Expanded(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -175,6 +182,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ],
                             ),
+                          )
+                        else
+                          // Si los correos no coinciden, mostrar el título donde estarían los botones
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                item['titulo'] ?? 'Sin título',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
                       ],
                     ),
@@ -228,7 +249,8 @@ class _HomeScreenState extends State<HomeScreen> {
       String description,
       String contact,
       String username,
-      bool estado) {
+      bool estado,
+      String email) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -238,7 +260,8 @@ class _HomeScreenState extends State<HomeScreen> {
             description: description,
             contact: contact,
             userName: username,
-            estado: estado),
+            estado: estado,
+            email: email),
       ),
     );
   }

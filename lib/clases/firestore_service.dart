@@ -1,4 +1,3 @@
-import 'dart:ffi';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -534,5 +533,43 @@ class FirestoreService {
     await FirebaseFirestore.instance.collection('items').doc(itemId).update({
       'estado': isDonated,
     });
+  }
+
+  // Función para agregar un comentario a la colección 'comentarios' en Firestore
+  Future<void> addComment({
+    required String imageUrl,
+    required String comentario,
+    required String correo,
+  }) async {
+    try {
+      await FirebaseFirestore.instance.collection('comentarios').add({
+        'imageUrl': imageUrl, // Asociar comentario con la imagen
+        'comentario': comentario,
+        'correo': correo,
+        'timestamp': Timestamp.now(), // Agregar marca de tiempo
+      });
+    } catch (e) {
+      print('Error al agregar comentario: $e');
+    }
+  }
+
+    // Función para recuperar la imageUrl del usuario a partir del correo
+  Future<String?> getUserImageUrl(String correo) async {
+    try {
+      final QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('usuario')
+          .where('correo', isEqualTo: correo)
+          .limit(1)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.first['imageUrl']; // Devolver la imageUrl si existe
+      } else {
+        return null; // Si no se encuentra el usuario
+      }
+    } catch (e) {
+      print('Error al obtener la imagen del usuario: $e');
+      return null;
+    }
   }
 }
