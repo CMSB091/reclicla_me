@@ -3,13 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:logging/logging.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/servicios/dynamicLinkService.dart';
+import 'package:recila_me/widgets/lottie_widget.dart';
 import 'register_page.dart';
 import '../clases/firestore_service.dart';
 import 'inicio.dart';
 import 'package:camera/camera.dart';
 import 'recuperoPassword.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,9 +21,7 @@ void main() async {
 
 class LoginApp extends StatelessWidget {
   final List<CameraDescription>? cameras;
-
-  const LoginApp({Key? key, this.cameras}) : super(key: key);
-
+  const LoginApp({super.key, this.cameras});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -53,11 +53,10 @@ class AuthenticationWrapper extends StatelessWidget {
           }
         }
         return Center(
-          child: Image.asset(
-            'assets/animations/lotti-recycle.json', // Ruta de tu archivo Lottie
-            width: 200,
-            height: 200,
-            fit: BoxFit.cover,
+          child: buildLottieAnimation(
+            path: 'assets/animations/lottie-recycle.json',
+            width: 500,
+            height: 500,
           ),
         );
       },
@@ -79,7 +78,6 @@ class _LoginPageState extends State<LoginPage> {
   final FirestoreService _firestoreService = FirestoreService();
   bool _isLoading = false;
   bool _obscurePassword = true; // Estado para mostrar/ocultar contraseña
-  final Logger _logger = Logger('LoginPageLogger');  // Logger para esta página
 
   @override
   void dispose() {
@@ -92,16 +90,19 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
       try {
-        _logger.warning('Iniciando sesión con el email: ${_emailController.text}');
-        UserCredential userCredential = await FirebaseAuth.instance
-            .signInWithEmailAndPassword(
+        Funciones.SeqLog('information',
+            'Iniciando sesión con el email: ${_emailController.text}');
+        // ignore: unused_local_variable
+        UserCredential userCredential =
+            await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
 
-        final nombreUsuario = await _firestoreService.getUserName(_emailController.text);
-        _logger.info('Sesión iniciada correctamente para el usuario: $nombreUsuario');
-
+        final nombreUsuario =
+            await _firestoreService.getUserName(_emailController.text);
+        Funciones.SeqLog('information',
+            'Sesión iniciada correctamente para el usuario: $nombreUsuario');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -116,8 +117,7 @@ class _LoginPageState extends State<LoginPage> {
             : e.code == 'wrong-password'
                 ? 'Contraseña incorrecta.'
                 : 'Error en la autenticación.';
-
-        _logger.severe('Error en la autenticación: $message', e);
+        Funciones.SeqLog('error', 'Error en la autenticación: $message');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(message)),
         );
@@ -199,13 +199,16 @@ class _LoginPageState extends State<LoginPage> {
           const SizedBox(height: 20.0),
           TextFormField(
             controller: _passwordController,
-            obscureText: _obscurePassword, // Controlar visibilidad de la contraseña
+            obscureText:
+                _obscurePassword, // Controlar visibilidad de la contraseña
             decoration: InputDecoration(
               labelText: 'Contraseña',
               border: const OutlineInputBorder(),
               suffixIcon: IconButton(
                 icon: Icon(
-                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  _obscurePassword
+                      ? FontAwesomeIcons.eye
+                      : FontAwesomeIcons.eyeSlash,
                 ),
                 onPressed: () {
                   setState(() {
@@ -256,7 +259,7 @@ class _LoginPageState extends State<LoginPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => RecuperoPassword(),
+                builder: (context) => const RecuperoPassword(),
               ),
             );
           },

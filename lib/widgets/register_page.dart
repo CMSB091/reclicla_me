@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({Key? key}) : super(key: key);
+  const RegisterPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _RegisterPageState createState() => _RegisterPageState();
 }
 
@@ -13,15 +14,15 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
-  bool _isWaitingForVerification = false;
-  bool _isSubmitting = false;
+  final bool _isWaitingForVerification = false;
+  final bool _isSubmitting = false;
   
   // Variable para controlar la visibilidad de la contraseña
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
   void _register() async {
-    // Código de registro...
+    null;
   }
 
   @override

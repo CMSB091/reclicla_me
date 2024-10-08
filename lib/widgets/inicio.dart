@@ -1,13 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/MiniJuegoBasura.dart';
 import 'package:recila_me/widgets/datos_personales.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:recila_me/widgets/lottie_widget.dart';
-import 'package:seq_logger/seq_logger.dart';
+import 'package:recila_me/widgets/my_splash_screen.dart';
+import 'package:recila_me/widgets/redSocial.dart';
 
 class MyInicio extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -22,43 +27,41 @@ class _MyInicioState extends State<MyInicio> {
   bool isLoading = true;
   final FirestoreService _firestoreService = FirestoreService();
   User? user = FirebaseAuth.instance.currentUser;
-  String? nombreUsuario; 
+  String? nombreUsuario;
+  String? emailUsuario;
 
   @override
   void initState() {
     super.initState();
-    _loadUserName();
+    if (user != null) {
+      emailUsuario = user!.email; // Guardamos el email una vez
+      _loadUserName();
+    }
   }
 
   Future<void> _loadUserName() async {
-  if (user != null) {
-    setState(() {
-      isLoading = true;
-    });
+    if (emailUsuario != null) {
+      setState(() {
+        isLoading = true;
+      });
 
-    final nombre = await _firestoreService.getUserName(user!.email.toString());
-    SeqLogger.addLogToDb(
-      message: "APP my foo is {foo}, my boolean is {b}",
-      data: {
-        "foo": "bar",
-        "b": true,
-        "additional": [
-          {"complexObject": 1},
-          {"complexObject": 2, "hello": "world"},
-        ]
-      },
-      level: LogLevel.info,
-    );
-    SeqLogger.sendLogs();
-    int count = await SeqLogger.getRecordCount();
-    print('LOGS: ${count}');
-    
-    setState(() {
-      nombreUsuario = nombre;
-      isLoading = false;
-    });
+      try {
+        final nombre = await _firestoreService.getUserName(emailUsuario!);
+        if (mounted && !_isCancelled) {
+          setState(() {
+            nombreUsuario = nombre;
+            isLoading = false;
+          });
+        }
+      } catch (e) {
+        // Manejar el error aquí si ocurre un fallo al obtener el nombre
+        Funciones.SeqLog('error', 'Error al obtener nombre de usuario: $e');
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
-}
 
   @override
   void dispose() {
@@ -89,12 +92,14 @@ class _MyInicioState extends State<MyInicio> {
         );
       },
     );
+
     await Future.delayed(const Duration(seconds: 3));
+
     if (!_isCancelled && mounted) {
       try {
         await FirebaseAuth.instance.signOut();
       } catch (e) {
-        print('Error al cerrar sesión: $e');
+        Funciones.SeqLog('error', 'Error al cerrar sesión: $e');
       } finally {
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop();
@@ -121,50 +126,88 @@ class _MyInicioState extends State<MyInicio> {
           fontSize: 18,
         ),
         title: isLoading
-            ? null // No mostrar título cuando se está cargando
+            ? null
             : Text(
                 'Bienvenido $nombreUsuario !!',
                 style: const TextStyle(
                   fontFamily: 'Artwork',
-                  fontSize: 18,
+                  fontSize: 24,
                 ),
               ),
         leading: IconButton(
           icon: Image.asset('assets/images/exitDoor.png'),
           onPressed: () => _simulateLogout(context),
         ),
+        actions: [
+          Builder(
+            builder: (context) {
+              return IconButton(
+                icon: const FaIcon(FontAwesomeIcons.bars),
+                onPressed: () {
+                  Scaffold.of(context).openEndDrawer();
+                },
+              );
+            },
+          ),
+        ],
       ),
       endDrawer: _buildDrawer(context),
-      body: Center(
-        child: isLoading
-            ? buildLottieAnimation(
-                path: 'assets/animations/lotti-recycle.json', // Ruta de tu archivo Lottie
-                width: 500, // Ajusta el tamaño según tus necesidades
-                height: 500, // Ajusta el tamaño según tus necesidades
-              )
-            : Wrap(
-                spacing: 20.0,
-                runSpacing: 20.0,
-                children: List.generate(4, (index) {
-                  return _buildMenuCard(context, index);
-                }),
-              ),
+      body: BlurredBackground(
+        blurStrength: 20.0,
+        child: Center(
+          child: isLoading
+              ? buildLottieAnimation(
+                  path: 'assets/animations/lotti-recycle.json',
+                  width: 500,
+                  height: 500,
+                )
+              : Wrap(
+                  spacing: 20.0,
+                  runSpacing: 20.0,
+                  children: List.generate(4, (index) {
+                    return _buildMenuCard(context, index);
+                  }),
+                ),
+        ),
       ),
     );
   }
+
   Widget _buildDrawer(BuildContext context) {
     return SizedBox(
       width: MediaQuery.of(context).size.width * 0.50,
       child: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: <Widget>[
+        child: Column(
+          children: [
             _buildDrawerHeader(),
-            _buildDrawerItem(
-              context,
-              icon: Icons.info,
-              text: 'Información',
-              page: DatosPersonales(correo: user!.email.toString(), desdeInicio: true, cameras: widget.cameras),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: <Widget>[
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.info,
+                    text: 'Información',
+                    page: DatosPersonales(
+                      correo: emailUsuario!,
+                      desdeInicio: true,
+                      cameras: widget.cameras,
+                    ),
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.gamepad,
+                    text: 'Mini Juegos',
+                    page: const MiniJuegoBasura(),
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.heart,
+                    text: 'Donaciones',
+                    page: const HomeScreen(),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -211,28 +254,58 @@ class _MyInicioState extends State<MyInicio> {
 
   Widget _buildMenuCard(BuildContext context, int index) {
     final page = _getPageForIndex(index);
-    return GestureDetector(
-      onTap: () {
-        if (!_isCancelled && mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => page),
-          );
-        }
-      },
-      child: SizedBox(
-        width: 150.0,
-        height: 150.0,
-        child: Card(
-          color: Colors.green.shade100,
+
+    return SizedBox(
+      width: 180.0,
+      height: 180.0,
+      child: Card(
+        color: Colors.green.shade100,
+        elevation: 5.0,
+        shadowColor: Colors.black.withOpacity(0.5),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10.0),
+          onTap: () {
+            if (!_isCancelled && mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => page),
+              );
+            }
+          },
           child: Center(
-            child: Text(
-              _getMenuTitle(index),
-              style: const TextStyle(
-                fontSize: 20,
-                color: Colors.black,
-              ),
-            ),
+            child: index == 1
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: buildLottieAnimation(
+                          path:'assets/animations/lottie-recomendations.json',
+                          width: 100,
+                          height: 100,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      const Text(
+                        'Recomendaciones',
+                        style: TextStyle(
+                          fontFamily: 'Artwork',
+                          fontSize: 16,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  )
+                : Text(
+                    _getMenuTitle(index),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      color: Colors.black,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -244,7 +317,7 @@ class _MyInicioState extends State<MyInicio> {
       case 0:
         return 'Detección de objetos';
       case 1:
-        return 'Página 2';
+        return 'ChatGpt';
       case 2:
         return 'Página 3';
       case 3:
@@ -264,7 +337,7 @@ class _MyInicioState extends State<MyInicio> {
         }
         return ObjectDetectionScreen(cameras: widget.cameras);
       case 1:
-        return const Page2();
+        return const MySplash();
       case 2:
         return const Page3();
       case 3:

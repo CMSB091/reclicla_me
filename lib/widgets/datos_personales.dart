@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; 
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/build_text_field.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/login.dart';
-import 'package:camera/camera.dart';  
+import 'package:camera/camera.dart';
 
 class DatosPersonales extends StatelessWidget {
   final String correo;
@@ -46,6 +50,7 @@ class DatosPersonalesPage extends StatefulWidget {
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _DatosPersonalesPageState createState() => _DatosPersonalesPageState();
 }
 
@@ -58,19 +63,72 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
   final TextEditingController _ciudadController = TextEditingController();
   final TextEditingController _paisController = TextEditingController();
   final TextEditingController _telefonoController = TextEditingController();
-  bool _isLoading = false;
-  bool _isLoadingData = false;
-  String _loadingMessage = '';
-  final FirestoreService _firestoreService = FirestoreService(); 
+  final FirestoreService _firestoreService = FirestoreService();
   User? user = FirebaseAuth.instance.currentUser;
   List<String> _paises = [];
   List<String> ciudades = [];
+  String? imageUrl;
+  late bool _isLoading = true;
+  late bool _isSaving = false;
+  final Funciones funciones = Funciones();
 
   @override
   void initState() {
     super.initState();
-    _cargarDatosUsuario(); 
-    _cargarPaises();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await funciones.cargarDatosUsuario(
+      user: FirebaseAuth.instance.currentUser,
+      nombreController: _nombreController,
+      apellidoController: _apellidoController,
+      edadController: _edadController,
+      direccionController: _direccionController,
+      ciudadController: _ciudadController,
+      paisController: _paisController,
+      telefonoController: _telefonoController,
+      setLoadingState: _setLoadingState,
+    );
+    await _cargarPaises();
+    await _loadUserProfileImage();
+  }
+
+  void _setLoadingState(bool value) {
+    setState(() {
+      _isLoading = value;
+    });
+  }
+
+  Future<void> _loadUserProfileImage() async {
+    try {
+      String? email = widget.correo;
+      // Obtener el documento de usuario desde Firebase
+      final usuarioSnapshot = await _firestoreService.getUserDocument(email);
+
+      if (usuarioSnapshot.exists) {
+        // Convertir los datos a Map<String, dynamic>
+        final data = usuarioSnapshot.data() as Map<String, dynamic>?;
+        final String? userImage =
+            data?['imageUrl']; // Acceder al campo imageUrl
+
+        setState(() {
+          imageUrl = userImage ??
+              'assets/images/perfil.png'; // Si es nulo, cargar imagen por defecto
+        });
+      } else {
+        // Si no existe el documento del usuario, cargar la imagen por defecto
+        setState(() {
+          imageUrl = 'assets/images/perfil.png';
+        });
+      }
+    } catch (e) {
+      Funciones.SeqLog('error', 'Error al cargar la imagen del perfil: $e');
+      setState(() {
+        imageUrl =
+            'assets/images/perfil.png'; // En caso de error, cargar la imagen por defecto
+      });
+    }
   }
 
   Future<void> _cargarPaises() async {
@@ -78,72 +136,58 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       List<String> paises = await _firestoreService.getPaises();
       setState(() {
         _paises = paises;
-        print(paises);
+        Funciones.SeqLog('information', paises as String);
       });
     } catch (e) {
-      print('Error al cargar países: $e');
+      Funciones.SeqLog('error', 'Error al cargar países: $e');
     }
   }
 
   void _mostrarSeleccionPais() async {
-    String? selectedPais = await showDialog<String>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Selecciona tu país'),
-          content: SizedBox(
-            width: 100,
-            height: 300,
-            child: ListView(
-              children: _paises.map((pais) {
-                return ListTile(
-                  title: Text(pais),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 1.0),
-                  onTap: () {
-                    Navigator.of(context).pop(pais);
-                  },
-                );
-              }).toList(),
-            ),
-          ),
-        );
-      },
+    String? selectedPais = await _mostrarDialogoSeleccion(
+      'Selecciona tu país',
+      _paises,
     );
-
     if (selectedPais != null) {
       setState(() {
         _paisController.text = selectedPais;
-        // Establecer el campo de ciudad en nulo o vacío cuando se selecciona un nuevo país
-      _ciudadController.text = '';  // Aquí puedes usar '' si prefieres mostrarlo vacío en lugar de null
+        _ciudadController
+            .clear(); // Limpia el campo de ciudad al cambiar el país
       });
-
-      // Cargar ciudades para el país seleccionado
-      try {
-        ciudades = await _firestoreService.getCiudadesPorPais(selectedPais);
-        print('Ciudades cargadas: $ciudades');  // Verifica el contenido
-        _mostrarSeleccionCiudad(ciudades);  // Muestra la lista de ciudades
-      } catch (e) {
-        print('Error al cargar ciudades: $e');
-      }
+      _mostrarCiudades(selectedPais);
     }
   }
 
-  void _mostrarSeleccionCiudad(List<String> ciudades) async {
-    String? selectedCiudad = await showDialog<String>(
+  Future<void> _mostrarCiudades(String pais) async {
+    try {
+      List<String> ciudades = await _firestoreService.getCiudadesPorPais(pais);
+      String? selectedCiudad =
+          await _mostrarDialogoSeleccion('Selecciona tu ciudad', ciudades);
+      if (selectedCiudad != null) {
+        setState(() {
+          _ciudadController.text = selectedCiudad;
+        });
+      }
+    } catch (e) {
+      Funciones.SeqLog('error', 'Error al cargar ciudades: $e');
+    }
+  }
+
+  Future<String?> _mostrarDialogoSeleccion(
+      String titulo, List<String> items) async {
+    return await showDialog<String>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Selecciona tu ciudad'),
+          title: Text(titulo),
           content: SizedBox(
             width: 100,
             height: 300,
             child: ListView(
-              children: ciudades.map((ciudad) {
+              children: items.map((item) {
                 return ListTile(
-                  title: Text(ciudad),
-                  onTap: () {
-                    Navigator.of(context).pop(ciudad);
-                  },
+                  title: Text(item),
+                  onTap: () => Navigator.of(context).pop(item),
                 );
               }).toList(),
             ),
@@ -151,91 +195,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
         );
       },
     );
-
-    if (selectedCiudad != null) {
-      setState(() {
-        _ciudadController.text = selectedCiudad;
-      });
-    }
-  }
-
-
-
-  void _guardarDatos() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      setState(() {
-        _isLoading = true;
-        _loadingMessage = 'Guardando datos...';
-      });
-
-      try {
-        String nombre = _nombreController.text;
-        String apellido = _apellidoController.text;
-        int edad = int.parse(_edadController.text);
-        String direccion = _direccionController.text;
-        String ciudad = _ciudadController.text;
-        String pais = _paisController.text;
-        String telefono = _telefonoController.text;
-        bool result = await _firestoreService.updateUser(
-          nombre,
-          apellido,
-          edad,
-          direccion,
-          ciudad,
-          pais,
-          telefono,
-          widget.correo
-        );
-
-        if (result /*&& mounted*/) {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('Datos Guardados'),
-                content: Text(
-                    'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MyInicio(
-                            cameras: widget.cameras,
-                          ),
-                        ),
-                      );
-                    },
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al guardar los datos.')),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-
-        _nombreController.clear();
-        _apellidoController.clear();
-        _edadController.clear();
-        _direccionController.clear();
-        _ciudadController.clear();
-        _paisController.clear();
-        _telefonoController.clear();
-      }
-    }
   }
 
   void _eliminarDatos() async {
@@ -244,11 +203,12 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Confirmar Eliminación'),
-          content: const Text('¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.'),
+          content: const Text(
+              '¿Estás seguro de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.'),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); 
+                Navigator.of(context).pop(false);
               },
               child: const Text('Cancelar'),
             ),
@@ -282,7 +242,8 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
         builder: (context) {
           return AlertDialog(
             title: const Text('Datos sin guardar'),
-            content: const Text('Hay datos sin guardar. ¿Desea salir de todas formas?'),
+            content: const Text(
+                'Hay datos sin guardar. ¿Desea salir de todas formas?'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -320,43 +281,8 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
     }
   }
 
-  Future<void> _cargarDatosUsuario() async {
-    setState(() {
-      _isLoadingData = true;
-      _loadingMessage = 'Cargando datos...';
-    });
-
-    try {
-      if (user != null) {
-        String correo = user!.email.toString();
-        Map<String, dynamic>? userData = await _firestoreService.getUserData(correo);
-
-        if (userData != null) {
-          _nombreController.text = userData['nombre'] ?? '';
-          _apellidoController.text = userData['apellido'] ?? '';
-          _edadController.text = (userData['edad'] ?? '').toString();
-          _direccionController.text = userData['direccion'] ?? '';
-          _ciudadController.text = userData['ciudad'] ?? '';
-          _paisController.text = userData['pais'] ?? '';
-          _telefonoController.text = userData['telefono'] ?? '';
-          ciudades = await _firestoreService.getCiudadesPorPais(_paisController.text);
-        } else {
-          print('No se encontraron datos para el usuario con correo $correo');
-        }
-      } else {
-        print('No hay un usuario autenticado');
-      }
-    } catch (e) {
-      print('Error al cargar datos del usuario: $e');
-    } finally {
-      setState(() {
-        _isLoadingData = false;
-      });
-    }
-  }
-
   Future<void> _pedirContrasenaYEliminarCuenta() async {
-    final TextEditingController _contrasenaController = TextEditingController();
+    final TextEditingController contrasenaController = TextEditingController();
     bool? confirmarEliminar = await showDialog(
       context: context,
       builder: (context) {
@@ -367,7 +293,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
             children: [
               const Text('Para eliminar tu cuenta, ingresa tu contraseña:'),
               TextField(
-                controller: _contrasenaController,
+                controller: contrasenaController,
                 obscureText: true,
                 decoration: const InputDecoration(labelText: 'Contraseña'),
               ),
@@ -380,48 +306,50 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
               },
               child: const Text('Cancelar'),
             ),
-            if(widget.desdeInicio)
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(true); 
-              },
-              child: const Text('Eliminar'),
-            ),
+            if (widget.desdeInicio)
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: const Text('Eliminar'),
+              ),
           ],
         );
       },
     );
 
     if (confirmarEliminar == true) {
-      showDialog(
-        context: context,
-        barrierDismissible: false, 
-        builder: (context) {
-          return const AlertDialog(
-            content: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(width: 16),
-                Text('Eliminando cuenta...',
-                  style: TextStyle(
-                      fontFamily: 'Artwork',
-                      fontSize: 18
-                  ),),
-              ],
-            ),
-          );
-        },
-      );
+      if (mounted) {
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return const AlertDialog(
+              content: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(width: 16),
+                  Text(
+                    'Eliminando cuenta...',
+                    style: TextStyle(fontFamily: 'Artwork', fontSize: 18),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }
 
       try {
         User? user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          bool result = await _firestoreService.deleteUser(user.email ?? 'No disponible');
-          if(result){
+          bool result =
+              await _firestoreService.deleteUser(user.email ?? 'No disponible');
+          if (result) {
             AuthCredential credential = EmailAuthProvider.credential(
               email: user.email!,
-              password: _contrasenaController.text,
+              password: contrasenaController.text,
             );
             await user.reauthenticateWithCredential(credential);
             await user.delete();
@@ -432,14 +360,16 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                 builder: (context) {
                   return AlertDialog(
                     title: const Text('Cuenta Eliminada'),
-                    content: const Text('Tu cuenta ha sido eliminada correctamente.'),
+                    content: const Text(
+                        'Tu cuenta ha sido eliminada correctamente.'),
                     actions: [
                       TextButton(
                         onPressed: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(builder: (context) => const LoginApp()), 
-                            (route) => false, 
+                            MaterialPageRoute(
+                                builder: (context) => const LoginApp()),
+                            (route) => false,
                           );
                         },
                         child: const Text('OK'),
@@ -459,7 +389,8 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
             builder: (context) {
               return AlertDialog(
                 title: const Text('Error'),
-                content: Text('Ocurrió un error al intentar eliminar la cuenta: $e'),
+                content:
+                    Text('Ocurrió un error al intentar eliminar la cuenta: $e'),
                 actions: [
                   TextButton(
                     onPressed: () {
@@ -478,201 +409,182 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('Desde Inicio: ${widget.desdeInicio}'); // Añadir esto para depurar
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Image.asset('assets/images/exitDoor.png'),
+          icon: const FaIcon(FontAwesomeIcons.arrowLeft),
           onPressed: _intentarSalir,
         ),
-        title: const Text(
-          'Datos Personales',
-          style: TextStyle(
-            fontFamily: 'Artwork',
-            fontSize: 30,
-          ),
-        ),
+        title: const Text('Datos Personales',
+            style: TextStyle(fontFamily: 'Artwork', fontSize: 30)),
         backgroundColor: Colors.green.shade200,
       ),
       body: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextFormField(
-                      controller: _nombreController,
-                      decoration: const InputDecoration(
+          BlurredBackground(
+            blurStrength: 20.0,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundImage: imageUrl != null
+                                ? NetworkImage(imageUrl!)
+                                : const AssetImage('assets/images/perfil.png')
+                                    as ImageProvider,
+                            backgroundColor: Colors.grey.shade200,
+                          ),
+                          IconButton(
+                            icon: const FaIcon(FontAwesomeIcons.circlePlus,
+                                color: Colors.green),
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    funciones.pickAndUploadImage(
+                                      correo: widget.correo,
+                                      onImageUploaded:
+                                          (String uploadedImageUrl) {
+                                        setState(() {
+                                          imageUrl = uploadedImageUrl;
+                                        });
+                                      },
+                                      context: context,
+                                    );
+                                  },
+                          ),
+                          //),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      buildTextField(
+                        controller: _nombreController,
                         labelText: 'Nombre',
-                        border: OutlineInputBorder(),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu nombre';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _apellidoController,
-                      decoration: const InputDecoration(
+                      buildTextField(
+                        controller: _apellidoController,
                         labelText: 'Apellido',
-                        border: OutlineInputBorder(),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu apellido';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _edadController,
-                      decoration: const InputDecoration(
+                      buildTextField(
+                        controller: _edadController,
                         labelText: 'Edad',
-                        border: OutlineInputBorder(),
+                        isNumber: true,
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu edad';
-                        }
-                        int? edad = int.tryParse(value);
-                        if (edad == null || edad < 1 || edad > 99) {
-                          return 'Por favor ingresa un número entre 1 y 99';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _direccionController,
-                      decoration: const InputDecoration(
+                      buildTextField(
+                        controller: _direccionController,
                         labelText: 'Dirección',
-                        border: OutlineInputBorder(),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu dirección';
-                        }
-                        return null;
-                      },
-                    ),
-                    
-                    const SizedBox(height: 16),
-                    GestureDetector(
-                      onTap: _mostrarSeleccionPais,
-                      child: AbsorbPointer(
-                        child: TextFormField(
-                          controller: _paisController,
-                          decoration: const InputDecoration(
+                      GestureDetector(
+                        onTap: _isLoading ? null : _mostrarSeleccionPais,
+                        child: AbsorbPointer(
+                          child: buildTextField(
+                            controller: _paisController,
                             labelText: 'País',
-                            suffixIcon: Icon(Icons.arrow_drop_down), // Icono de flecha hacia abajo
-                            border: OutlineInputBorder(),
+                            isReadOnly: true,
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Por favor ingresa tu país';
-                            }
-                            return null;
-                          },
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 16),
-                    GestureDetector(
-                      onTap: () {
-                        if (_paisController.text.isNotEmpty) {
-                          _mostrarSeleccionCiudad(ciudades);
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Selecciona un país primero.')),
-                          );
-                        }
-                      },
-                      child: AbsorbPointer(
-                        child: TextFormField(
-                          controller: _ciudadController,
-                          decoration: const InputDecoration(
+                      GestureDetector(
+                        onTap: () {
+                          if (!_isLoading && _paisController.text.isNotEmpty) {
+                            _mostrarDialogoSeleccion(
+                                'Selecciona tu Ciudad', ciudades);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Selecciona un país primero.')),
+                            );
+                          }
+                        },
+                        child: AbsorbPointer(
+                          child: buildTextField(
+                            controller: _ciudadController,
                             labelText: 'Ciudad',
-                            suffixIcon: Icon(Icons.arrow_drop_down), // Icono de flecha hacia abajo
-                            border: OutlineInputBorder(),
+                            isReadOnly: true,
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Por favor ingresa tu ciudad';
-                            }
-                            return null;
-                          },
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _telefonoController,
-                      decoration: const InputDecoration(
+                      buildTextField(
+                        controller: _telefonoController,
                         labelText: 'Teléfono',
-                        border: OutlineInputBorder(),
+                        isNumber: true,
                       ),
-                      keyboardType: TextInputType.number,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa tu teléfono';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        ElevatedButton(
-                          onPressed: _guardarDatos,
-                          child: const Text('Guardar'),
-                        ),
-                        if(widget.desdeInicio)
-                        ElevatedButton(
-                          onPressed: _eliminarDatos,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          child: const Text('Eliminar'),
-                        ),
-                      ],
-                    ),
-                  ],
+                      const SizedBox(height: 100),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
-          if (_isLoading || _isLoadingData)
-            ModalBarrier(
-              dismissible: false,
-              color: Colors.black.withOpacity(0.5),
-            ),
-          if (_isLoading || _isLoadingData)
-            Center(
+          if (_isLoading)
+            const Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(
-                    _loadingMessage,
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
-                  ),
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('Cargando datos...'),
                 ],
               ),
             ),
+          if (_isSaving)
+            const Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('Guardando datos...'),
+                ],
+              ),
+            )
         ],
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            ElevatedButton.icon(
+              onPressed: _isLoading || _isSaving
+                  ? null
+                  : () {
+                      funciones.guardarDatos(
+                        correo: widget.correo,
+                        nombreController: _nombreController,
+                        apellidoController: _apellidoController,
+                        edadController: _edadController,
+                        direccionController: _direccionController,
+                        ciudadController: _ciudadController,
+                        paisController: _paisController,
+                        telefonoController: _telefonoController,
+                        setSavingState: (bool value) {
+                          setState(() {
+                            _isSaving = value;
+                          });
+                        },
+                        context: context,
+                        cameras: widget.cameras,
+                      );
+                    },
+              icon: const FaIcon(FontAwesomeIcons.floppyDisk),
+              label: const Text('Guardar'),
+            ),
+            if (widget.desdeInicio)
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : _eliminarDatos,
+                icon: const FaIcon(FontAwesomeIcons.trash),
+                label: const Text('Eliminar'),
+              ),
+          ],
+        ),
       ),
     );
   }

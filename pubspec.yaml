@@ -28,7 +28,6 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
-  google_fonts: ^6.2.1
   flutter:
     sdk: flutter
   camera: ^0.11.0+1
@@ -43,12 +42,24 @@ dependencies:
   lottie: ^2.0.0
   firebase_dynamic_links: ^6.0.4
   seq_logger: ^1.0.6
+  flutter_dotenv: ^5.0.2
+  dart_seq_http_client: ^1.0.0
+  intl: ^0.18.0
+  font_awesome_flutter: ^10.0.0
+  another_flutter_splash_screen: ^1.2.1
+  google_fonts: ^6.2.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
   dart_jsonwebtoken: ^2.14.0
   logging: ^1.2.0
+  dart_seq: ^2.0.0
+  path_provider: ^2.1.4
+  firebase_storage: ^12.3.1
+  image_picker: ^1.1.2
+  connectivity_plus: ^6.0.5
+
   
 dev_dependencies:
   flutter_test:
@@ -77,9 +88,19 @@ flutter:
     - assets/images/branches_border.png
     - assets/images/agregarUsuario.png
     - assets/images/exitDoor.png
+    - assets/images/perfil.png
     - assets/recycling_tips.json
     - assets/tflite/model.tflite
+    - assets/animations/lotti-trash.json
     - assets/animations/lotti-recycle.json
+    - assets/animations/lotti-trash-2.json
+    - assets/animations/lottie-eva.json
+    - assets/animations/lottie-dot.json
+    - assets/animations/lottie-chat-bot.json 
+    - assets/animations/lottie-robot.json
+    - assets/animations/lottie-recomendations.json
+    - assets/images/fondo.png
+    - .env
 
   fonts:
     - family: Artwork

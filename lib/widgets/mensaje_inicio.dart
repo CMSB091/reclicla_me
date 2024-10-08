@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:recila_me/widgets/login.dart';
@@ -7,9 +8,7 @@ import 'package:camera/camera.dart';
 // ignore: camel_case_types
 class mensajeInicio extends StatelessWidget {
   final List<CameraDescription>? cameras;
-
-  const mensajeInicio({Key? key, this.cameras}) : super(key: key);
-
+  const mensajeInicio(camera, {super.key, this.cameras});
   @override
   Widget build(BuildContext context) {
     return SplashScreen(cameras: cameras);
@@ -18,7 +17,6 @@ class mensajeInicio extends StatelessWidget {
 
 class RecyclingTip {
   final String message;
-
   RecyclingTip({required this.message});
 
   factory RecyclingTip.fromJson(Map<String, dynamic> json) {
@@ -31,7 +29,7 @@ class RecyclingTip {
 class SplashScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
 
-  const SplashScreen({Key? key, this.cameras}) : super(key: key);
+  const SplashScreen({super.key, this.cameras});
 
   @override
   _SplashScreenState createState() => _SplashScreenState();
@@ -52,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
       final jsonData = json.decode(data);
       _tips = List<RecyclingTip>.from(jsonData.map((x) => RecyclingTip.fromJson(x)));
     } catch (e) {
-      print("Error al cargar los consejos de reciclaje: $e");
+      Funciones.SeqLog('error','Error al cargar los consejos de reciclaje: $e');
     } finally {
       _showWelcomeDialog();
     }
@@ -67,7 +65,7 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     showDialog(
-      context: context,  // Usar directamente el contexto actual
+      context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Center(

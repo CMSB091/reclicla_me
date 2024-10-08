@@ -1,6 +1,7 @@
 import 'dart:typed_data';  // Para Uint8List
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as image_lib;
 import 'package:path_provider/path_provider.dart';
@@ -9,7 +10,7 @@ import 'dart:io';
 class ObjectDetectionScreen extends StatefulWidget {
   final List<CameraDescription> cameras;
 
-  const ObjectDetectionScreen({Key? key, required this.cameras}) : super(key: key);
+  const ObjectDetectionScreen({super.key, required this.cameras});
 
   @override
   _ObjectDetectionScreenState createState() => _ObjectDetectionScreenState();
@@ -60,9 +61,9 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
 
   Future<void> _loadModel() async {
     try {
-      print("Intentando cargar el modelo...");
+      Funciones.SeqLog('information',"Intentando cargar el modelo...");
       _interpreter = await Interpreter.fromAsset('assets/tflite/model.tflite');
-      print("Modelo cargado correctamente");
+      Funciones.SeqLog("information","Modelo cargado correctamente");
       if (mounted) {
         setState(() {
           _modelStatus = "Modelo cargado correctamente";
@@ -70,7 +71,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
         });
       }
     } catch (e) {
-      print("Error al cargar el modelo: $e");
+      Funciones.SeqLog("error","Error al cargar el modelo: $e");
       if (mounted) {
         setState(() {
           _modelStatus = "Error al cargar el modelo.";
@@ -89,15 +90,6 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
 
     // Preprocesamos la imagen.
     final input = _preprocessImage(img);
-    
-    // Verificamos que la entrada sea válida.
-    if (input == null) {
-      setState(() {
-        _detectionResult = "Error: la imagen no se procesó correctamente.";
-      });
-      _isDetecting = false;
-      return;
-    }
 
     // Definimos la salida del modelo.
     final output = List.filled(1 * 10 * 4, 0.0).reshape([1, 10, 4]);
@@ -110,7 +102,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
       _saveImage(input);  // Guarda la imagen procesada
     });
   } catch (e) {
-    print("Error durante la detección: $e");
+    Funciones.SeqLog("error","Error durante la detección: $e");
     setState(() {
       _detectionResult = "Error durante la detección: $e";
     });
@@ -179,9 +171,9 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
       final imagePath = '${directory.path}/detected_image.png';
       final file = File(imagePath);
       await file.writeAsBytes(input);
-      print("Imagen guardada en: $imagePath");
+      Funciones.SeqLog('information',"Imagen guardada en: $imagePath");
     } catch (e) {
-      print("Error al guardar la imagen: $e");
+      Funciones.SeqLog("error","Error al guardar la imagen: $e");
     }
   }
 
@@ -206,19 +198,19 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
             bottom: 16,
             left: 16,
             child: Container(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               color: Colors.white,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     _detectionResult,
-                    style: TextStyle(color: Colors.black),
+                    style: const TextStyle(color: Colors.black),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     _modelStatus,
-                    style: TextStyle(color: Colors.red),
+                    style: const TextStyle(color: Colors.red),
                   ),
                 ],
               ),
