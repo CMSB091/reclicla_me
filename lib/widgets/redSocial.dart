@@ -21,7 +21,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    //loadUserEmail(); // Cargar el email del usuario logueado
+    loadUserEmail(userEmail!); // Cargar el email del usuario logueado
   }
 
   Future<void> loadUserEmail(String email) async {
