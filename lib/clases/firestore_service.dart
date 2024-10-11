@@ -419,15 +419,15 @@ class FirestoreService {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  // Función para subir la imagen a Firebase Storage y guardar la URL en Firestore
-  Future<void> uploadImageAndSaveToFirestore(
-      {required File imageFile,
-      required String description,
-      required String contact,
-      required GlobalKey<ScaffoldState> scaffoldKey, // Para mostrar el SnackBar
-      required String email,
-      required String titulo,
-      required bool estado}) async {
+  Future<void> uploadImageAndSaveToFirestore({
+    required File imageFile,
+    required String description,
+    required String contact,
+    required GlobalKey<ScaffoldState> scaffoldKey, // Para mostrar el SnackBar
+    required String email,
+    required String titulo,
+    required bool estado,
+  }) async {
     // Verificar conexión a Internet antes de subir la imagen
     bool isConnected = await checkInternetConnection();
     if (!isConnected) {
@@ -467,13 +467,17 @@ class FirestoreService {
       if (taskSnapshot.state == TaskState.success) {
         // Obtener la URL de descarga solo si la subida fue exitosa
         final imageUrl = await ref.getDownloadURL();
+        final storagePath = ref.fullPath; // Obtener el storagePath
+
         print('URL de la imagen subida: $imageUrl');
+        print('Storage path de la imagen subida: $storagePath');
 
         // Guardar los datos en Firestore, en la colección 'items'
         await FirebaseFirestore.instance.collection('items').add({
           'description': description,
           'contact': contact,
           'imageUrl': imageUrl, // Guardar la URL de la imagen
+          'storagePath': storagePath, // Guardar el storagePath
           'timestamp': Timestamp.now(), // Añadir un timestamp
           'email': email,
           'titulo': titulo,
@@ -504,7 +508,6 @@ class FirestoreService {
     try {
       // Eliminar el post de la colección "items"
       await FirebaseFirestore.instance.collection('items').doc(itemId).delete();
-
       print('Post eliminado, intentando eliminar los comentarios...');
       print('imageUrl $imageUrl');
 
@@ -525,11 +528,36 @@ class FirestoreService {
         print('No se encontraron comentarios asociados a la imagen: $imageUrl');
       }
 
+      // Eliminar la imagen de Firebase Storage
+      try {
+        // Parsear el storage path desde el imageUrl
+        // Ejemplo imageUrl: https://firebasestorage.googleapis.com/v0/b/tu-app.appspot.com/o/images%2Fitem1.jpg?alt=media&token=...
+        Uri uri = Uri.parse(imageUrl);
+        String? fullPath = uri.pathSegments
+            .skipWhile((segment) => segment != 'o')
+            .skip(1)
+            .join('/')
+            .split('?')
+            .first;
+        String storagePath = Uri.decodeFull(fullPath);
+
+        print('Storage path: $storagePath');
+
+        Reference storageRef =
+            FirebaseStorage.instance.ref().child(storagePath);
+        await storageRef.delete();
+        print('Imagen eliminada de Firebase Storage');
+      } catch (e) {
+        print('Error al eliminar la imagen de Firebase Storage: $e');
+        // Opcional: Mostrar un mensaje al usuario o manejar el error según sea necesario
+      }
+
       // Mostrar un mensaje de éxito
-      print('Post y comentarios eliminados correctamente');
+      print('Post, comentarios y imagen eliminados correctamente');
     } catch (e) {
-      // Mostrar un mensaje de error
+      // Manejar errores generales
       print('Error al eliminar el post o los comentarios: $e');
+      // Opcional: Mostrar un mensaje al usuario
     }
   }
 

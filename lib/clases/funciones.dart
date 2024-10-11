@@ -11,6 +11,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/inicio.dart';
+import 'package:recila_me/widgets/item_detail_screen.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http;
 
@@ -424,5 +425,30 @@ class Funciones {
         );
       }
     }
+  }
+
+  //Función para navegar a la página de detalles del artículo
+  void navigateToItemDetail(
+      BuildContext context,
+      String imageUrl,
+      String title,
+      String description,
+      String contact,
+      String username,
+      bool estado,
+      String email) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ItemDetailScreen(
+            imageUrl: imageUrl,
+            title: title,
+            description: description,
+            contact: contact,
+            userName: username,
+            estado: estado,
+            email: email),
+      ),
+    );
   }
 }

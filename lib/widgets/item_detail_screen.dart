@@ -70,89 +70,97 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         ), // Título del artículo
         backgroundColor: Colors.green.shade200, // Color de fondo similar
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Image.network(
-                widget.imageUrl,
-                height: 250,
-                fit: BoxFit.contain, // Mostrar la imagen completa sin cortes
-                errorBuilder: (context, error, stackTrace) {
-                  return const Image(
-                    image: AssetImage('assets/images/default_image.png'),
-                    height: 250,
-                    fit: BoxFit.contain, // Mostrar imagen por defecto
-                  );
-                },
+      // Ajustar automáticamente cuando aparece el teclado
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
+        // Permitir desplazamiento cuando el teclado está visible
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Image.network(
+                  widget.imageUrl,
+                  height: 250,
+                  fit: BoxFit.contain, // Mostrar la imagen completa sin cortes
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Image(
+                      image: AssetImage('assets/images/default_image.png'),
+                      height: 250,
+                      fit: BoxFit.contain, // Mostrar imagen por defecto
+                    );
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Descripción: ${widget.description}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Contacto: ${widget.contact}',
-              style: const TextStyle(fontSize: 16),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              'Publicado por: ${widget.userName}',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              widget.estado ? 'No disponible' : 'Disponible',
-              style: TextStyle(
-                fontSize: 16,
-                color: widget.estado ? Colors.red : Colors.green, // Color basado en el estado
-                fontWeight: FontWeight.bold,
+              const SizedBox(height: 10),
+              Text(
+                'Descripción: ${widget.description}',
+                style: const TextStyle(fontSize: 16),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 10),
+              Text(
+                'Contacto: ${widget.contact}',
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Publicado por: ${widget.userName}',
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                widget.estado ? 'No disponible' : 'Disponible',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: widget.estado
+                      ? Colors.red
+                      : Colors.green, // Color basado en el estado
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
 
-            // Título de sección para comentarios
-            const Text(
-              'Comentarios:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
+              // Título de sección para comentarios
+              const Text(
+                'Comentarios:',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
 
-            // Input para agregar un comentario
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _commentController,
-                    decoration: InputDecoration(
-                      hintText: 'Agrega un comentario...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+              // Input para agregar un comentario
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _commentController,
+                      decoration: InputDecoration(
+                        hintText: 'Agrega un comentario...',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade200, // Fondo del input
                       ),
-                      filled: true,
-                      fillColor: Colors.grey.shade200, // Fondo del input
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                  color: Colors.green.shade600,
-                  onPressed: _handleAddComment, // Llamar a la función del servicio
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
+                  IconButton(
+                    icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
+                    color: Colors.green.shade600,
+                    onPressed:
+                        _handleAddComment, // Llamar a la función del servicio
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
 
-            // Mostrar comentarios desde Firestore
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
+              // Mostrar comentarios desde Firestore
+              StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('comentarios')
-                    .where('imageUrl', isEqualTo: widget.imageUrl) // Filtrar por imageUrl
+                    .where('imageUrl',
+                        isEqualTo: widget.imageUrl) // Filtrar por imageUrl
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -164,13 +172,17 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   final comentarios = snapshot.data!.docs;
 
                   return ListView.builder(
+                    physics:
+                        const NeverScrollableScrollPhysics(), // Desactivar el scroll interno
+                    shrinkWrap: true, // Ajustar el ListView a su contenido
                     itemCount: comentarios.length,
                     itemBuilder: (context, index) {
                       var comentario = comentarios[index];
                       Timestamp timestamp = comentario['timestamp'];
 
                       return FutureBuilder<String?>(
-                        future: _firestoreService.getUserImageUrl(comentario['correo']),
+                        future: _firestoreService
+                            .getUserImageUrl(comentario['correo']),
                         builder: (context, snapshot) {
                           String? imageUrl = snapshot.data;
 
@@ -178,14 +190,18 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                             margin: const EdgeInsets.symmetric(vertical: 8.0),
                             padding: const EdgeInsets.all(12.0),
                             decoration: BoxDecoration(
-                              color: const Color.fromARGB(255, 238, 238, 238), // Tono más oscuro que el fondo
-                              borderRadius: BorderRadius.circular(12), // Bordes redondeados
+                              color: const Color.fromARGB(255, 238, 238,
+                                  238), // Tono más oscuro que el fondo
+                              borderRadius: BorderRadius.circular(
+                                  12), // Bordes redondeados
                             ),
                             child: ListTile(
                               leading: CircleAvatar(
-                                backgroundImage: imageUrl != null && imageUrl.isNotEmpty
+                                backgroundImage: imageUrl != null &&
+                                        imageUrl.isNotEmpty
                                     ? NetworkImage(imageUrl)
-                                    : const AssetImage('assets/images/perfil.png')
+                                    : const AssetImage(
+                                            'assets/images/perfil.png')
                                         as ImageProvider, // Imagen por defecto si no hay imageUrl
                                 radius: 20,
                               ),
@@ -193,7 +209,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                               subtitle: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('Publicado por: ${comentario['correo']}'),
+                                  Text(
+                                      'Publicado por: ${comentario['correo']}'),
                                   const SizedBox(height: 4),
                                   Text('Fecha: ${formatTimestamp(timestamp)}'),
                                 ],
@@ -206,8 +223,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   );
                 },
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

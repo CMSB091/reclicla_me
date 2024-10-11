@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/funciones.dart';
-import 'package:recila_me/widgets/item_detail_screen.dart';
 import 'add_item_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,19 +16,21 @@ class _HomeScreenState extends State<HomeScreen> {
   String? userEmail;
   String? nombreUsuario;
   bool _isLoading = false;
+  final Funciones _funciones = new Funciones();
 
   @override
   void initState() {
     super.initState();
-    loadUserEmail(userEmail!); // Cargar el email del usuario logueado
+    userEmail = FirebaseAuth.instance.currentUser?.email;
+    if (userEmail != null) {
+      loadUserEmail(userEmail!); // Cargar el email del usuario logueado
+    }
   }
 
   Future<void> loadUserEmail(String email) async {
     print('email $email');
-    User? user = FirebaseAuth.instance.currentUser;
     final nombre = await firestoreService.getUserName(email);
     setState(() {
-      userEmail = user?.email;
       print('nombre $nombre');
       nombreUsuario = nombre;
     });
@@ -110,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                               // Verificar que nombreUsuario y userEmail no sean nulos antes de navegar
                               if (nombreUsuario != null && userEmail != null) {
-                                _navigateToItemDetail(
+                                _funciones.navigateToItemDetail(
                                   context,
                                   item['imageUrl'],
                                   item['titulo'] ?? 'Sin título',
@@ -276,28 +277,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Función para navegar a la página de detalles del artículo
-  void _navigateToItemDetail(
-      BuildContext context,
-      String imageUrl,
-      String title,
-      String description,
-      String contact,
-      String username,
-      bool estado,
-      String email) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ItemDetailScreen(
-            imageUrl: imageUrl,
-            title: title,
-            description: description,
-            contact: contact,
-            userName: username,
-            estado: estado,
-            email: email),
-      ),
-    );
-  }
 }
