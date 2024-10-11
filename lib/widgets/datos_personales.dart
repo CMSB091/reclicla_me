@@ -565,6 +565,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         ciudadController: _ciudadController,
                         paisController: _paisController,
                         telefonoController: _telefonoController,
+                        imageUrl: imageUrl, // Pasar imageUrl aquí
                         setSavingState: (bool value) {
                           setState(() {
                             _isSaving = value;

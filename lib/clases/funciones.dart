@@ -316,6 +316,7 @@ class Funciones {
     required TextEditingController ciudadController,
     required TextEditingController paisController,
     required TextEditingController telefonoController,
+    required String? imageUrl, // Agregamos imageUrl como parámetro requerido
     required Function setSavingState,
     required BuildContext context,
     required List<CameraDescription> cameras,
@@ -332,6 +333,10 @@ class Funciones {
         String pais = paisController.text;
         String telefono = telefonoController.text;
 
+        // Asegurarse de que el imageUrl no sea nulo
+        String finalImageUrl = imageUrl ?? 'assets/images/perfil.png';
+
+        // Actualizar los datos del usuario incluyendo imageUrl
         bool result = await _firestoreService.updateUser(
           nombre,
           apellido,
@@ -341,6 +346,7 @@ class Funciones {
           pais,
           telefono,
           correo,
+          finalImageUrl, // Pasamos la URL de la imagen aquí
         );
 
         if (result) {
@@ -350,7 +356,7 @@ class Funciones {
               return AlertDialog(
                 title: const Text('Datos Guardados'),
                 content: Text(
-                    'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono'),
+                    'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono\nImagen: $finalImageUrl'),
                 actions: [
                   TextButton(
                     onPressed: () {

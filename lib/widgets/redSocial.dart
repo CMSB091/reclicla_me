@@ -16,18 +16,21 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String? userEmail;
   String? nombreUsuario;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    loadUserEmail(); // Cargar el email del usuario logueado
+    //loadUserEmail(); // Cargar el email del usuario logueado
   }
 
-  Future<void> loadUserEmail() async {
+  Future<void> loadUserEmail(String email) async {
+    print('email $email');
     User? user = FirebaseAuth.instance.currentUser;
-    final nombre = await firestoreService.getUserName(user!.email.toString());
+    final nombre = await firestoreService.getUserName(email);
     setState(() {
-      userEmail = user.email;
+      userEmail = user?.email;
+      print('nombre $nombre');
       nombreUsuario = nombre;
     });
   }
@@ -96,26 +99,59 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         GestureDetector(
-                          onTap: () {
-                            _navigateToItemDetail(
-                              context,
-                              item['imageUrl'],
-                              item['titulo'] ?? 'Sin título',
-                              item['description'] ?? 'Sin descripción',
-                              item['contact'] ?? 'Sin contacto',
-                              nombreUsuario!, // Nombre del usuario
-                              item['estado'] ?? false,
-                              userEmail!, // Estado de donación
-                            );
+                          onTap: () async {
+                            setState(() {
+                              _isLoading = true; // Mostrar el spinner
+                            });
+
+                            try {
+                              // Asegurarse de que la función loadUserEmail se complete antes de continuar
+                              await loadUserEmail(item['email']);
+
+                              // Verificar que nombreUsuario y userEmail no sean nulos antes de navegar
+                              if (nombreUsuario != null && userEmail != null) {
+                                _navigateToItemDetail(
+                                  context,
+                                  item['imageUrl'],
+                                  item['titulo'] ?? 'Sin título',
+                                  item['description'] ?? 'Sin descripción',
+                                  item['contact'] ?? 'Sin contacto',
+                                  nombreUsuario!, // Nombre del usuario recuperado
+                                  item['estado'] ?? false,
+                                  userEmail!, // Email recuperado
+                                );
+                              } else {
+                                // Manejar el caso de que no se haya podido recuperar el nombre o email
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Error al recuperar los datos del usuario')),
+                                );
+                              }
+                            } finally {
+                              setState(() {
+                                _isLoading =
+                                    false; // Ocultar el spinner cuando finalice la operación
+                              });
+                            }
                           },
-                          child: Image.network(
-                            item['imageUrl'], // Previsualización de la imagen
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.contain,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Image.network(
+                                item['imageUrl'], // Previsualización de la imagen
+                                width: 80,
+                                height: 80,
+                                fit: BoxFit.contain,
+                              ),
+                              if (_isLoading)
+                                const CircularProgressIndicator(),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 10), // Espacio entre imagen y botones
+
+                        const SizedBox(
+                            width: 10), // Espacio entre imagen y botones
 
                         // Si los correos coinciden, mostrar los botones debajo de la imagen
                         if (userEmail == itemEmail)
@@ -137,7 +173,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       context: context,
                                       builder: (BuildContext context) {
                                         return AlertDialog(
-                                          title: const Text('Confirmar eliminación'),
+                                          title: const Text(
+                                              'Confirmar eliminación'),
                                           content: const Text(
                                               '¿Estás seguro de que deseas eliminar este post? Esta acción no se puede deshacer.'),
                                           actions: [
@@ -151,13 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                             TextButton(
                                               onPressed: () {
                                                 Navigator.of(context)
-                                                    .pop(); // Cerrar diálogo
-                                                // Eliminar el post
+                                                    .pop(); 
                                                 firestoreService.deletePost(
                                                   context,
-                                                  item.id, // Pasar el ID del post
-                                                  imageUrl: item[
-                                                      'imageUrl'], // Pasar la URL de la imagen si existe
+                                                  item.id,
+                                                  imageUrl: item['imageUrl'],
                                                 );
                                               },
                                               child: const Text('Eliminar'),

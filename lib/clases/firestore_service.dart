@@ -45,14 +45,16 @@ class FirestoreService {
 
   // Método para actualizar los datos del usuario
   Future<bool> updateUser(
-      String nombre,
-      String apellido,
-      int edad,
-      String direccion,
-      String ciudad,
-      String pais,
-      String telefono,
-      String correo) async {
+    String nombre,
+    String apellido,
+    int edad,
+    String direccion,
+    String ciudad,
+    String pais,
+    String telefono,
+    String correo,
+    String? imageUrl, // Agregar imageUrl como parámetro opcional
+  ) async {
     try {
       // Consulta el documento basado en el correo electrónico
       QuerySnapshot querySnapshot = await _db
@@ -72,6 +74,8 @@ class FirestoreService {
           'ciudad': ciudad,
           'pais': pais,
           'telefono': telefono,
+          'imageUrl':
+              imageUrl ?? 'assets/images/perfil.png', // Actualiza imageUrl
         });
         return true;
       } else {
@@ -495,40 +499,48 @@ class FirestoreService {
     );
   }
 
-  Future<void> deletePost(BuildContext context, String postId,
-      {String? imageUrl}) async {
+  Future<void> deletePost(BuildContext context, String itemId,
+      {required String imageUrl}) async {
     try {
-      // Elimina el documento del posteo en la colección 'items'
-      await FirebaseFirestore.instance.collection('items').doc(postId).delete();
+      // Eliminar el post de la colección "items"
+      await FirebaseFirestore.instance.collection('items').doc(itemId).delete();
 
-      // Si también quieres eliminar una imagen asociada en Firebase Storage, hazlo aquí
-      if (imageUrl != null) {
-        await FirebaseStorage.instance.refFromURL(imageUrl).delete();
+      print('Post eliminado, intentando eliminar los comentarios...');
+      print('imageUrl $imageUrl');
+
+      // Eliminar los comentarios asociados al post (filtrados por imageUrl)
+      QuerySnapshot comentariosSnapshot = await FirebaseFirestore.instance
+          .collection('comentarios')
+          .where('imageUrl', isEqualTo: imageUrl)
+          .get();
+
+      print('Comentarios recuperados: ${comentariosSnapshot.docs.length}');
+
+      if (comentariosSnapshot.docs.isNotEmpty) {
+        for (var doc in comentariosSnapshot.docs) {
+          print('Eliminando comentario con ID: ${doc.id}');
+          await doc.reference.delete(); // Eliminar cada comentario
+        }
+      } else {
+        print('No se encontraron comentarios asociados a la imagen: $imageUrl');
       }
 
-      // Antes de usar el context, verifica que el widget aún esté montado
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Post eliminado exitosamente')),
-        );
-      }
+      // Mostrar un mensaje de éxito
+      print('Post y comentarios eliminados correctamente');
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar el post: $e')),
-        );
-      }
+      // Mostrar un mensaje de error
+      print('Error al eliminar el post o los comentarios: $e');
     }
   }
 
   Future<DocumentSnapshot> getUserDocument(String email) async {
     return await FirebaseFirestore.instance
-      .collection('usuario')
-      .doc(email)
-      .get();
+        .collection('usuario')
+        .doc(email)
+        .get();
   }
 
-    // Función para actualizar el estado de la publicacion en Firestore
+  // Función para actualizar el estado de la publicacion en Firestore
   Future<void> updateDonationStatus(String itemId, bool isDonated) async {
     await FirebaseFirestore.instance.collection('items').doc(itemId).update({
       'estado': isDonated,
@@ -553,7 +565,7 @@ class FirestoreService {
     }
   }
 
-    // Función para recuperar la imageUrl del usuario a partir del correo
+  // Función para recuperar la imageUrl del usuario a partir del correo
   Future<String?> getUserImageUrl(String correo) async {
     try {
       final QuerySnapshot snapshot = await FirebaseFirestore.instance
@@ -563,7 +575,8 @@ class FirestoreService {
           .get();
 
       if (snapshot.docs.isNotEmpty) {
-        return snapshot.docs.first['imageUrl']; // Devolver la imageUrl si existe
+        return snapshot
+            .docs.first['imageUrl']; // Devolver la imageUrl si existe
       } else {
         return null; // Si no se encuentra el usuario
       }
