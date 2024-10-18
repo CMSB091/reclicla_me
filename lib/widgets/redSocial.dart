@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         title: const Text(
           'Artículos en Donación',
-          style: TextStyle(fontFamily: 'Artwork', fontSize: 20),
+          style: TextStyle(fontFamily: 'Artwork', fontSize: 25),
         ),
         backgroundColor: Colors.green.shade200,
         actions: [

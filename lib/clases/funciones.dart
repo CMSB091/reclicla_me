@@ -399,8 +399,8 @@ class Funciones {
         await _picker.pickImage(source: ImageSource.gallery);
     if (pickedImage != null) {
       try {
-        // Subir la imagen a Firebase Storage
-        final ref = _storage.ref().child('user_images/$correo.jpg');
+        // Subir la imagen a Firebase Storage en la carpeta 'profile_images'
+        final ref = _storage.ref().child('profile_images/$correo.jpg');
         await ref.putFile(File(pickedImage.path));
 
         // Obtener la URL de la imagen subida
