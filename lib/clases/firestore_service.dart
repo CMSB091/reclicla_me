@@ -53,7 +53,7 @@ class FirestoreService {
     String pais,
     String telefono,
     String correo,
-    String? imageUrl, // Agregar imageUrl como parámetro opcional
+    String? imageUrl,
   ) async {
     try {
       // Consulta el documento basado en el correo electrónico

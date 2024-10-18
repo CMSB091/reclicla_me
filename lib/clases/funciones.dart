@@ -134,7 +134,6 @@ class Funciones {
         'max_tokens': 1000,
       })),
     );
-
     if (response.statusCode == 200) {
       final Map<String, dynamic> data =
           jsonDecode(utf8.decode(response.bodyBytes));
