@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_seq/dart_seq.dart';
 import 'package:dart_seq_http_client/dart_seq_http_client.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,11 +10,13 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/item_detail_screen.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 final FirestoreService firestoreService = FirestoreService();
 
@@ -435,7 +438,8 @@ class Funciones {
       String contact,
       String username,
       bool estado,
-      String email) {
+      String email,
+      String pais) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -446,8 +450,65 @@ class Funciones {
             contact: contact,
             userName: username,
             estado: estado,
-            email: email),
+            email: email,
+            pais : pais),
       ),
     );
+  }
+
+  // Función para formatear el Timestamp de Firestore a una fecha legible
+  String formatTimestamp(Timestamp timestamp) {
+    DateTime date = timestamp.toDate();
+    return DateFormat('dd/MM/yyyy HH:mm').format(date);
+  }
+
+  void launchWhatsApp(String contact, String country, BuildContext context) async {
+    try {
+      // Eliminar caracteres no numéricos y formatear el número
+      String phoneNumber = contact.replaceAll(RegExp(r'[^\d+]'), '');
+      print(country);
+      // Mapa de códigos de país según el país
+      Map<String, String> countryCodes = {
+        'Chile': '56',
+        'Argentina': '54',
+        'Uruguay': '598',
+        'Brasil': '55',
+        'Paraguay' : '595',
+      };
+
+      // Verificar si el país está en la lista de códigos y agregar el código de país si no está presente
+      if (!countryCodes.containsKey(country)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('El país no está soportado para WhatsApp')),
+        );
+        return; // Si no hay código para el país, salir de la función
+      }
+
+      // Si el número no empieza con el código de país, agregarlo
+      if (!phoneNumber.startsWith(countryCodes[country]!)) {
+        phoneNumber = '${countryCodes[country]}${phoneNumber.substring(1)}';
+      }
+
+      // URL usando el esquema `https://wa.me/`
+      final Uri whatsappWebUri = Uri.parse('https://wa.me/$phoneNumber');
+
+      // Verificar si se puede abrir WhatsApp mediante este esquema alternativo
+      if (await canLaunchUrl(whatsappWebUri)) {
+        await launchUrl(whatsappWebUri, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'No se pudo abrir WhatsApp con el esquema web. Asegúrate de que está instalado.')),
+        );
+      }
+    } catch (e) {
+      // Manejo de errores
+      debugPrint('Error al intentar abrir WhatsApp: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al intentar abrir WhatsApp: $e')),
+      );
+    }
   }
 }

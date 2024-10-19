@@ -594,23 +594,52 @@ class FirestoreService {
   }
 
   // Función para recuperar la imageUrl del usuario a partir del correo
-  Future<String?> getUserImageUrl(String correo) async {
+  Future<String?> getUserImageUrl(String email) async {
     try {
-      final QuerySnapshot snapshot = await FirebaseFirestore.instance
+      // Obtener la referencia a la imagen desde la carpeta profile_images en Firebase Storage
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('profile_images/$email.jpg'); // Cambiar a profile_images
+
+      // Obtener la URL de descarga de la imagen
+      final url = await ref.getDownloadURL();
+      return url;
+    } catch (e) {
+      // Si ocurre un error, retornar null y manejar la imagen predeterminada en el UI
+      debugPrint('Error al obtener la URL de la imagen: $e');
+      return null;
+    }
+  }
+
+  // Función para eliminar un comentario
+  Future<void> deleteComment(String commentId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection('comentarios')
+          .doc(commentId)
+          .delete();
+      print('Comentario eliminado con éxito.');
+    } catch (e) {
+      print('Error al eliminar el comentario: $e');
+    }
+  }
+
+  Future<String> getPaisFromUsuario(String email) async {
+    // Realiza la consulta en la colección 'usuario' para obtener el campo 'pais'
+    try {
+      final usuarioSnapshot = await FirebaseFirestore.instance
           .collection('usuario')
-          .where('correo', isEqualTo: correo)
+          .where('correo', isEqualTo: email)
           .limit(1)
           .get();
 
-      if (snapshot.docs.isNotEmpty) {
-        return snapshot
-            .docs.first['imageUrl']; // Devolver la imageUrl si existe
-      } else {
-        return null; // Si no se encuentra el usuario
+      if (usuarioSnapshot.docs.isNotEmpty) {
+        final usuarioData = usuarioSnapshot.docs.first.data();
+        return usuarioData['pais'] ?? 'Desconocido'; // Recuperar el campo 'pais'
       }
     } catch (e) {
-      print('Error al obtener la imagen del usuario: $e');
-      return null;
+      print('Error al obtener el país del usuario: $e');
     }
+    return 'Desconocido'; // Devolver 'Desconocido' en caso de error
   }
 }

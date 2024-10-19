@@ -1,10 +1,14 @@
-version: '3.9'
+version: '3.9' # Define la versión de Docker Compose que estás utilizando
 
 services:
-  seq:
-    image: datalust/seq:latest
+  seq:  # Definición del servicio llamado 'seq'
+    image: datalust/seq:latest # Imagen oficial de Seq desde Docker Hub
     ports:
-      - '80:80'
-      - '5341:5341'
+      - '80:80' # Exposición del puerto 80 del contenedor al host (acceso a la interfaz web de Seq)
+      - '5341:5341'  # Exposición del puerto 5341 para que las aplicaciones puedan enviar logs
     environment:
-      ACCEPT_EULA: Y
+      ACCEPT_EULA: Y # Variable de entorno para aceptar el acuerdo de licencia de usuario final de Seq
+
+#Este archivo docker-compose.yml sirve para levantar un servicio Seq dentro de un contenedor Docker, exponiendo los puertos 80 y 5341 para que puedas acceder a la interfaz web de Seq y enviar logs a través del puerto 5341. Seq es una herramienta que te permite visualizar y analizar los logs de tus aplicaciones de manera centralizada.
+
+#Si estás usando Seq en tu proyecto de reciclaje, probablemente lo estés utilizando para registrar y analizar eventos generados por la aplicación, como errores, solicitudes, interacciones del usuario, etc*/

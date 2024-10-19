@@ -1,8 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Importar Firestore
-import 'package:intl/intl.dart'; // Para formatear el timestamp
+// Para formatear el timestamp
 import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/clases/utilities.dart';
+import 'package:url_launcher/url_launcher.dart';
+// Importar permisos
 
 class ItemDetailScreen extends StatefulWidget {
   final String imageUrl;
@@ -11,7 +16,8 @@ class ItemDetailScreen extends StatefulWidget {
   final String contact;
   final String userName; // Nombre del usuario que publicó el artículo
   final bool estado;
-  final String email; // Estado de disponibilidad del artículo
+  final String email;
+  final String pais; // Estado de disponibilidad del artículo
 
   const ItemDetailScreen({
     super.key,
@@ -21,7 +27,8 @@ class ItemDetailScreen extends StatefulWidget {
     required this.contact,
     required this.userName, // Recibir nombre de usuario
     required this.estado,
-    required this.email, // Recibir estado del artículo
+    required this.email,
+    required this.pais,
   });
 
   @override
@@ -31,31 +38,58 @@ class ItemDetailScreen extends StatefulWidget {
 class _ItemDetailScreenState extends State<ItemDetailScreen> {
   final TextEditingController _commentController = TextEditingController();
   final FirestoreService _firestoreService = FirestoreService();
+  final Utilidades utilidades = Utilidades();
+  final Funciones funciones = Funciones();
 
   // Llamar a la función addComment desde el servicio
   void _handleAddComment() {
     final String newComment = _commentController.text.trim();
-
     if (newComment.isNotEmpty) {
       _firestoreService.addComment(
         imageUrl: widget.imageUrl,
         comentario: newComment,
         correo: widget.email, // Sustituir por el correo del usuario logueado
       );
-
       // Limpiar el input después de enviar el comentario
       _commentController.clear();
     }
   }
-
-  // Función para formatear el Timestamp de Firestore a una fecha legible
-  String formatTimestamp(Timestamp timestamp) {
-    DateTime date = timestamp.toDate();
-    return DateFormat('dd/MM/yyyy HH:mm').format(date);
+  // Función para mostrar el modal de confirmación
+  void _showConfirmationDialog(BuildContext context, String commentId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar eliminación'),
+          content: const Text(
+              '¿Estás seguro de que deseas eliminar este comentario?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cerrar el diálogo
+              },
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                _firestoreService.deleteComment(commentId); // Eliminar el comentario
+                Navigator.of(context)
+                    .pop(); // Cerrar el diálogo después de eliminar
+              },
+              child: const Text('Eliminar'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final User? user =
+        FirebaseAuth.instance.currentUser; // Obtener el usuario logueado
+    final String? loggedInEmail = user?.email; // Email del usuario logueado
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -94,20 +128,97 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Text(
-                'Descripción: ${widget.description}',
-                style: const TextStyle(fontSize: 16),
+              // Actualizamos aquí la sección "Descripción"
+              RichText(
+                text: TextSpan(
+                  children: [
+                    const TextSpan(
+                      text:
+                          'Descripción: ', // El texto "Descripción:" en negrita
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color:
+                            Colors.black, // Asegurarse que sea de color negro
+                      ),
+                    ),
+                    TextSpan(
+                      text:
+                          widget.description, // El contenido de la descripción
+                      style: const TextStyle(
+                        fontWeight: FontWeight.normal,
+                        fontSize: 16,
+                        color:
+                            Colors.black, // Asegurarse que sea de color negro
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                'Contacto: ${widget.contact}',
-                style: const TextStyle(fontSize: 16),
+              // Sección de contacto con ícono de WhatsApp en la misma línea
+              Row(
+                children: [
+                  Expanded(
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          const TextSpan(
+                            text:
+                                'Contacto: ', // El texto "Contacto" en negrita
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          ),
+                          TextSpan(
+                            text: widget.contact, // El contacto
+                            style: const TextStyle(
+                              fontWeight: FontWeight.normal,
+                              fontSize: 16,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const FaIcon(FontAwesomeIcons.whatsapp),
+                    color: Colors.green,
+                    onPressed: () {
+                      utilidades.checkIfAppIsInstalled(); // eliminar al finalizar
+                      utilidades.listInstalledApps(); // eliminar al finalizar
+                      funciones.launchWhatsApp(
+                          widget.contact, widget.pais,context); // Abrir WhatsApp
+                    },
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              Text(
-                'Publicado por: ${widget.userName}',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              RichText(
+                text: TextSpan(
+                  children: [
+                    const TextSpan(
+                      text:
+                          'Publicado por: ', // El texto "Descripción:" en negrita
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color:
+                            Colors.black, // Asegurarse que sea de color negro
+                      ),
+                    ),
+                    TextSpan(
+                      text: widget.userName, // El contenido del usuario
+                      style: const TextStyle(
+                        fontWeight: FontWeight.normal,
+                        fontSize: 16,
+                        color:
+                            Colors.black, // Asegurarse que sea de color negro
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 10),
               Text(
@@ -120,21 +231,19 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 20),
-
+              const SizedBox(height: 10),
               // Título de sección para comentarios
               const Text(
                 'Comentarios:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 10),
-
               // Input para agregar un comentario
               Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _commentController,
+                      maxLength: 250, // Restricción de 250 caracteres
                       decoration: InputDecoration(
                         hintText: 'Agrega un comentario...',
                         border: OutlineInputBorder(
@@ -159,9 +268,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('comentarios')
-                    .where('imageUrl',
-                        isEqualTo: widget.imageUrl) // Filtrar por imageUrl
-                    .snapshots(),
+                    .where('imageUrl', isEqualTo: widget.imageUrl)
+                    .orderBy('timestamp',
+                        descending: true) // Filtrar por imageUrl
+                    .snapshots(), // Se agrega un indice en firestore
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -179,6 +289,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     itemBuilder: (context, index) {
                       var comentario = comentarios[index];
                       Timestamp timestamp = comentario['timestamp'];
+                      String commentId = comentario.id;
 
                       return FutureBuilder<String?>(
                         future: _firestoreService
@@ -212,7 +323,23 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                   Text(
                                       'Publicado por: ${comentario['correo']}'),
                                   const SizedBox(height: 4),
-                                  Text('Fecha: ${formatTimestamp(timestamp)}'),
+                                  Text('Fecha: ${funciones.formatTimestamp(timestamp)}'),
+                                  const SizedBox(height: 4),
+                                  // Mostrar "Eliminar" solo si el usuario logueado es el autor del comentario
+                                  if (loggedInEmail == comentario['correo'])
+                                    GestureDetector(
+                                      onTap: () {
+                                        _showConfirmationDialog(
+                                            context, commentId);
+                                      },
+                                      child: const Text(
+                                        'Eliminar',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
