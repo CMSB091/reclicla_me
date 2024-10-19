@@ -16,7 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? userEmail;
   String? nombreUsuario;
   bool _isLoading = false;
-  final Funciones _funciones = new Funciones();
+  final Funciones _funciones = Funciones();
 
   @override
   void initState() {
@@ -106,6 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             });
 
                             try {
+                              // Obtener el país del usuario publicador desde la colección 'usuario'
+                              String pais = await firestoreService.getPaisFromUsuario(itemEmail);
                               // Asegurarse de que la función loadUserEmail se complete antes de continuar
                               await loadUserEmail(item['email']);
 
@@ -120,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   nombreUsuario!, // Nombre del usuario recuperado
                                   item['estado'] ?? false,
                                   userEmail!, // Email recuperado
+                                  pais
                                 );
                               } else {
                                 // Manejar el caso de que no se haya podido recuperar el nombre o email

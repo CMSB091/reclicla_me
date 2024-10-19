@@ -48,6 +48,8 @@ dependencies:
   font_awesome_flutter: ^10.0.0
   another_flutter_splash_screen: ^1.2.1
   google_fonts: ^6.2.1
+  url_launcher: ^6.0.20 # Para levantar Whatsapp
+  device_apps: ^2.0.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
