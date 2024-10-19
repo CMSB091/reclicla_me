@@ -32,3 +32,17 @@ class DynamicLinkService {
     }
   }
 }
+
+/* Este código pertenece a un servicio en Flutter llamado DynamicLinkService, cuya función es gestionar los enlaces dinámicos utilizando la biblioteca de Firebase Dynamic Links.
+
+Descripción de la funcionalidad:
+initDynamicLinks(BuildContext context):
+
+Esta función inicializa la escucha de enlaces dinámicos en la aplicación.
+Utiliza FirebaseDynamicLinks.instance.getInitialLink() para obtener el enlace dinámico inicial, cuando la aplicación se abre desde un enlace profundo.
+Luego escucha los enlaces dinámicos a través de FirebaseDynamicLinks.instance.onLink.listen(...) para manejar enlaces que lleguen mientras la aplicación ya está abierta.
+Los enlaces son manejados por la función _handleDeepLink.
+_handleDeepLink(PendingDynamicLinkData? dynamicLinkData, BuildContext context):
+
+Esta función se encarga de manejar el enlace profundo cuando la app recibe un enlace dinámico.
+Si hay un enlace presente, se navega a la pantalla de DatosPersonales, pasando como parámetro el correo que se extrae de los parámetros de la URL.*/
