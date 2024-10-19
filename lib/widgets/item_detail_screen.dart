@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart'; // Importar Firestore
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/clases/utilities.dart';
-import 'package:url_launcher/url_launcher.dart';
 // Importar permisos
 
 class ItemDetailScreen extends StatefulWidget {
