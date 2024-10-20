@@ -511,4 +511,26 @@ class Funciones {
       );
     }
   }
+
+  static Future<File?> pickImageFromGallery(BuildContext context) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedImage = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      SeqLog('information', 'Imagen seleccionada: ${pickedImage.path}');
+      return File(pickedImage.path); // Devolver el archivo seleccionado
+    } else {
+      // Mostrar SnackBar si no se selecciona imagen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se seleccionó ninguna imagen.')),
+      );
+      return null; // Devolver null si no se seleccionó ninguna imagen
+    }
+  }
+
+  static void showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 }

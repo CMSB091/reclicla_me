@@ -53,6 +53,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       _commentController.clear();
     }
   }
+
   // Función para mostrar el modal de confirmación
   void _showConfirmationDialog(BuildContext context, String commentId) {
     showDialog(
@@ -71,7 +72,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             ),
             TextButton(
               onPressed: () {
-                _firestoreService.deleteComment(commentId); // Eliminar el comentario
+                _firestoreService
+                    .deleteComment(commentId); // Eliminar el comentario
                 Navigator.of(context)
                     .pop(); // Cerrar el diálogo después de eliminar
               },
@@ -186,10 +188,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                     icon: const FaIcon(FontAwesomeIcons.whatsapp),
                     color: Colors.green,
                     onPressed: () {
-                      utilidades.checkIfAppIsInstalled(); // eliminar al finalizar
+                      utilidades
+                          .checkIfAppIsInstalled(); // eliminar al finalizar
                       utilidades.listInstalledApps(); // eliminar al finalizar
-                      funciones.launchWhatsApp(
-                          widget.contact, widget.pais,context); // Abrir WhatsApp
+                      funciones.launchWhatsApp(widget.contact, widget.pais,
+                          context); // Abrir WhatsApp
                     },
                   ),
                 ],
@@ -253,12 +256,18 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       ),
                     ),
                   ),
-                  IconButton(
-                    icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
-                    color: Colors.green.shade600,
-                    onPressed:
-                        _handleAddComment, // Llamar a la función del servicio
-                  ),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 30.0),
+                      child: IconButton(
+                        icon: const FaIcon(FontAwesomeIcons.solidPaperPlane),
+                        color: Colors.green.shade600,
+                        onPressed:
+                            _handleAddComment, // Llamar a la función del servicio
+                      ),
+                    ),
+                  )
                 ],
               ),
               const SizedBox(height: 10),
@@ -322,7 +331,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                   Text(
                                       'Publicado por: ${comentario['correo']}'),
                                   const SizedBox(height: 4),
-                                  Text('Fecha: ${funciones.formatTimestamp(timestamp)}'),
+                                  Text(
+                                      'Fecha: ${funciones.formatTimestamp(timestamp)}'),
                                   const SizedBox(height: 4),
                                   // Mostrar "Eliminar" solo si el usuario logueado es el autor del comentario
                                   if (loggedInEmail == comentario['correo'])

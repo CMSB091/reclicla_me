@@ -1,9 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:recila_me/clases/firestore_service.dart';
-import 'package:recila_me/clases/funciones.dart'; // Para seleccionar imagen desde la galería
+import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/build_text_field.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart'; // Para seleccionar imagen desde la galería
 
 class AddItemScreen extends StatefulWidget {
   const AddItemScreen({super.key});
@@ -14,128 +17,173 @@ class AddItemScreen extends StatefulWidget {
 
 class _AddItemScreenState extends State<AddItemScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _scaffoldKey = GlobalKey<ScaffoldState>(); // Para usar en los SnackBar
-  String? _description;
-  String? _contact;
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  // Controladores para los campos de texto
+  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _tituloController = TextEditingController();
+  final TextEditingController _contactController = TextEditingController();
   File? _imageFile;
-  String? _userEmail; // Permite que sea null hasta que se cargue el email
-  late String _titulo;
+  String? _userEmail;
+  bool _isLoading = false;
   FirestoreService firestoreService = FirestoreService();
 
-    @override
+  @override
   void initState() {
     super.initState();
-    loadEmail(); // Cargar el email del usuario logueado
+    _loadEmail();
+    _setupTextListeners();
   }
 
-  void loadEmail() async {
+  // Cargar el email del usuario
+  void _loadEmail() async {
     String? email = await firestoreService.loadUserEmail();
-    if (email != null) {
-      setState(() {
-        _userEmail = email;
-      });
-    } else {
-      // Manejo del caso cuando el email es null
-      print('No se pudo cargar el email del usuario.');
-    }
+    setState(() {
+      _userEmail = email;
+    });
   }
 
-  // Función para seleccionar una imagen de la galería
+  // Configurar los listeners para los controladores de texto
+  void _setupTextListeners() {
+    _tituloController.addListener(() => setState(() {}));
+    _descriptionController.addListener(() => setState(() {}));
+    _contactController.addListener(() => setState(() {}));
+  }
+
   Future<void> _pickImageFromGallery() async {
+    File? selectedImage = await Funciones.pickImageFromGallery(context);
+    setState(() {
+      _imageFile = selectedImage;
+    });
+  }
+
+  // Función para tomar una foto desde la cámara
+  Future<void> _takePhoto() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? pickedImage =
-        await picker.pickImage(source: ImageSource.gallery);
+    final XFile? photo = await picker.pickImage(source: ImageSource.camera);
 
-    if (pickedImage != null) {
+    if (photo != null) {
       setState(() {
-        _imageFile = File(pickedImage.path); // Asignar el archivo seleccionado
+        _imageFile = File(photo.path);
       });
-      Funciones.SeqLog(
-          'information', 'Imagen seleccionada: ${_imageFile!.path}');
+      Funciones.SeqLog('information', 'Foto tomada: ${_imageFile!.path}');
     } else {
-      showSnackBar('No se seleccionó ninguna imagen.');
+      _showSnackBar('No se tomó ninguna foto.');
     }
   }
 
-  // Función para mostrar SnackBar
-  void showSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+  // Mostrar SnackBar
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // Función para manejar la subida de la imagen
-  void _handleUpload() {
-    if (_formKey.currentState?.validate() != true) {
-      showSnackBar('Por favor, completa los campos correctamente.');
-      return;
-    }
+  Future<void> _handleUpload() async {
+    // Mostrar el spinner
+    setState(() {
+      _isLoading = true;
+    });
 
-    if (_imageFile == null) {
-      showSnackBar('Por favor, selecciona una imagen primero.');
-      return;
-    }
-
-    _formKey.currentState?.save();
-
-    // Llamar a la función de subir imagen que está en el archivo separado
-    if (_userEmail != null) {
-      firestoreService
-          .uploadImageAndSaveToFirestore(
-              imageFile: _imageFile!,
-              description: _description!,
-              contact: _contact!,
-              scaffoldKey: _scaffoldKey,
-              email: _userEmail!, // Solo usar si no es null
-              titulo: _titulo,
-              estado: false)
-          .then((_) {
-        // Limpiar el formulario y la imagen seleccionada después de la subida
+    try {
+      if (!_formKey.currentState!.validate()) {
+        Funciones.showSnackBar(
+            context, 'Por favor, completa los campos correctamente.');
         setState(() {
-          _description = null;
-          _contact = null;
-          _imageFile = null;
+          _isLoading = false;
         });
-        _formKey.currentState?.reset();
+        return;
+      }
+
+      if (_imageFile == null) {
+        Funciones.showSnackBar(
+            context, 'Por favor, selecciona una imagen primero.');
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      _formKey.currentState!.save();
+
+      if (_userEmail != null) {
+        await firestoreService.uploadImageAndSaveToFirestore(
+          imageFile: _imageFile!,
+          description: _descriptionController.text,
+          contact: _contactController.text,
+          scaffoldKey: _scaffoldKey,
+          email: _userEmail!,
+          titulo: _tituloController.text,
+          estado: false,
+        );
+        _resetForm();
+      } else {
+        Funciones.showSnackBar(
+            context, 'No se pudo cargar el email del usuario.');
+      }
+    } catch (e) {
+      print('Error $e');
+    } finally {
+      // Ocultar el spinner después de que la operación termine
+      setState(() {
+        _isLoading = false;
       });
-    } else {
-      showSnackBar('No se pudo cargar el email del usuario.');
     }
   }
 
-  // Función reutilizable para InputDecoration
-  InputDecoration buildInputDecoration(String labelText) {
-    return InputDecoration(
-      labelText: labelText,
-      labelStyle: const TextStyle(
-        color: Colors.black, // Color oscuro para el label
-      ),
-      filled: true,
-      fillColor: Colors.black.withOpacity(0.1), // Fondo oscuro para el campo
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10.0),
-        borderSide: const BorderSide(
-          color: Colors.black, // Borde oscuro
+  // Resetear el formulario después de la subida exitosa
+  void _resetForm() {
+    setState(() {
+      _descriptionController.clear();
+      _contactController.clear();
+      _tituloController.clear();
+      _imageFile = null;
+    });
+    _formKey.currentState!.reset();
+  }
+
+  // Campo de texto reutilizable
+  Widget _buildTextField({
+    required String labelText,
+    required TextEditingController controller,
+    required int maxLength,
+    required String? Function(String?)? validator,
+    TextInputType keyboardType = TextInputType.text,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    return Column(
+      children: [
+        TextFormField(
+          controller: controller,
+          decoration: buildInputDecoration(labelText),
+          validator: validator,
+          maxLines: null,
+          keyboardType: keyboardType,
+          inputFormatters:
+              inputFormatters ?? [LengthLimitingTextInputFormatter(maxLength)],
         ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10.0),
-        borderSide: const BorderSide(
-          color: Colors.green, // Color del borde cuando está enfocado
+        Align(
+          alignment: Alignment.centerRight,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 8.0),
+            child: Text(
+              '${controller.text.length}/$maxLength',
+              style: const TextStyle(color: Colors.grey),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey, // Clave para mostrar los SnackBars
+      key: _scaffoldKey,
       appBar: AppBar(
         leading: IconButton(
           icon: const FaIcon(FontAwesomeIcons.arrowLeft),
           onPressed: () {
-            Navigator.pop(context); // Acción de regresar
+            Navigator.pop(context);
           },
         ),
         title: const Text(
@@ -144,50 +192,67 @@ class _AddItemScreenState extends State<AddItemScreen> {
         ),
         backgroundColor: Colors.green.shade200,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                decoration: buildInputDecoration('Título'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Ingrese un encabezado' : null,
-                onSaved: (value) => _titulo = value!,
-                keyboardType: TextInputType.multiline,
-                maxLines: null,
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                decoration: buildInputDecoration('Descripción'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Ingrese una descripción' : null,
-                onSaved: (value) => _description = value,
-                keyboardType: TextInputType.multiline,
-                maxLines: null,
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                decoration: buildInputDecoration('Contacto'), // Usar función
-                validator: (value) =>
-                    value!.isEmpty ? 'Ingrese un contacto' : null,
-                onSaved: (value) => _contact = value,
-              ),
-              const SizedBox(height: 20),
-              _imageFile == null
-                  ? const Text('No se ha seleccionado ninguna imagen.')
-                  : Image.file(_imageFile!, height: 200),
-              ElevatedButton(
-                onPressed: _pickImageFromGallery,
-                child: const Text('Seleccionar Imagen desde Galería'),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _handleUpload,
-                child: const Text('Subir Imagen y Guardar en Firestore'),
-              ),
-            ],
+      body: BlurredBackground(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                _buildTextField(
+                  labelText: 'Título',
+                  controller: _tituloController,
+                  maxLength: 20,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Ingrese un título' : null,
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  labelText: 'Descripción',
+                  controller: _descriptionController,
+                  maxLength: 100,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Ingrese una descripción' : null,
+                ),
+                const SizedBox(height: 20),
+                _buildTextField(
+                  labelText: 'Contacto',
+                  controller: _contactController,
+                  maxLength: 15,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (value) =>
+                      value!.isEmpty ? 'Ingrese un contacto' : null,
+                ),
+                const SizedBox(height: 20),
+                _imageFile == null
+                    ? const Text('No se ha seleccionado ninguna imagen.')
+                    : Image.file(_imageFile!, height: 200),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _pickImageFromGallery,
+                      icon: const FaIcon(FontAwesomeIcons.image),
+                      label: const Text('Desde Galería'),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _takePhoto,
+                      icon: const FaIcon(FontAwesomeIcons.camera),
+                      label: const Text('Tomar Foto'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                _isLoading
+                    ? const CircularProgressIndicator()
+                    : ElevatedButton.icon(
+                        onPressed: _handleUpload,
+                        icon: const FaIcon(FontAwesomeIcons.upload),
+                        label: const Text('Subir Imagen'),
+                      ),
+              ],
+            ),
           ),
         ),
       ),

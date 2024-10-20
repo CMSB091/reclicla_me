@@ -64,7 +64,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance.collection('items').snapshots(),
+        stream: FirebaseFirestore.instance.collection('items')
+        .orderBy('timestamp', descending: true) 
+        .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());

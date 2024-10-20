@@ -429,12 +429,13 @@ class FirestoreService {
     required bool estado,
   }) async {
     // Verificar conexión a Internet antes de subir la imagen
+    print('Paso 1');
     bool isConnected = await checkInternetConnection();
     if (!isConnected) {
       showSnackBar(scaffoldKey, 'No tienes conexión a Internet.');
       return;
     }
-
+    print('Paso 2');
     try {
       // Verificar si el archivo existe
       if (!await imageFile.exists()) {
@@ -442,7 +443,7 @@ class FirestoreService {
             scaffoldKey, 'El archivo no existe en la ruta especificada.');
         return;
       }
-
+      print('Paso 3');
       print('Subiendo imagen, por favor espera...');
 
       // Generar una referencia única para la imagen en Firebase Storage
