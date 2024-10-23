@@ -13,7 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/inicio.dart';
-import 'package:recila_me/widgets/item_detail_screen.dart';
+import 'package:recila_me/widgets/itemDetailScreen.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';

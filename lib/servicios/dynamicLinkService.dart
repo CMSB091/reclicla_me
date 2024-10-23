@@ -1,6 +1,6 @@
 import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
 import 'package:flutter/material.dart';
-import 'package:recila_me/widgets/datos_personales.dart';
+import 'package:recila_me/widgets/datosPersonales.dart';
 
 class DynamicLinkService {
   Future<void> initDynamicLinks(BuildContext context) async {

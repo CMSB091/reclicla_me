@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:path/path.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -642,5 +642,70 @@ class FirestoreService {
       print('Error al obtener el país del usuario: $e');
     }
     return 'Desconocido'; // Devolver 'Desconocido' en caso de error
+  }
+
+  Future<void> updatePost(
+    String itemId,
+    String titulo,
+    String description,
+    String contact,
+    String? imageFilePath, // Path del archivo local si se seleccionó uno
+    String? oldImageUrl,   // URL de la imagen anterior
+  ) async {
+    try {
+      Map<String, dynamic> dataToUpdate = {
+        'titulo': titulo,
+        'description': description,
+        'contact': contact,
+        'updatedAt': FieldValue.serverTimestamp(), // Timestamp de actualización
+      };
+
+      // Si se seleccionó un nuevo archivo de imagen, súbelo a Firebase Storage
+      if (imageFilePath != null) {
+        // Eliminar la imagen anterior de Firebase Storage si existe
+        if (oldImageUrl != null && oldImageUrl.isNotEmpty) {
+          await _deleteImageFromFirebase(oldImageUrl);
+        }
+
+        // Subir la nueva imagen a Firebase Storage
+        String downloadUrl = await _uploadImageToFirebase(imageFilePath);
+        dataToUpdate['imageUrl'] = downloadUrl; // Actualizar el campo imageUrl
+      }
+
+      // Actualizar los datos en Firestore
+      await _db.collection('items').doc(itemId).update(dataToUpdate);
+
+      print("Publicación actualizada con éxito");
+    } catch (e) {
+      print("Error al actualizar la publicación: $e");
+    }
+  }
+
+  Future<void> _deleteImageFromFirebase(String imageUrl) async {
+    try {
+      // Obtener la referencia de la imagen en Firebase Storage
+      await FirebaseStorage.instance.refFromURL(imageUrl).delete();
+      print("Imagen anterior eliminada con éxito.");
+    } catch (e) {
+      print("Error al eliminar la imagen anterior: $e");
+    }
+  }
+
+  Future<String> _uploadImageToFirebase(String imageFilePath) async {
+    try {
+      File file = File(imageFilePath);
+      String fileName = basename(imageFilePath);
+
+      // Subir a la carpeta 'images' en Firebase Storage
+      UploadTask task = FirebaseStorage.instance
+          .ref('images/$fileName')
+          .putFile(file);
+
+      TaskSnapshot snapshot = await task;
+      String downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      throw Exception('Error al subir la imagen: $e');
+    }
   }
 }

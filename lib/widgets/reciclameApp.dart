@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:recila_me/widgets/mensaje_inicio.dart';
+import 'package:recila_me/widgets/mensajeInicio.dart';
 
 class ReciclaMeApp extends StatelessWidget {
   final List<CameraDescription>? cameras;

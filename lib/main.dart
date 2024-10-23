@@ -3,7 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:recila_me/clases/funciones.dart';
-import 'package:recila_me/widgets/reciclame_app.dart';
+import 'package:recila_me/widgets/reciclameApp.dart';
 import 'clases/firebase_options.dart';
 import 'package:permission_handler/permission_handler.dart';
 

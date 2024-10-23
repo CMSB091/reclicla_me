@@ -5,13 +5,13 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/MiniJuegoBasura.dart';
-import 'package:recila_me/widgets/datos_personales.dart';
+import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
-import 'package:recila_me/widgets/lottie_widget.dart';
-import 'package:recila_me/widgets/my_splash_screen.dart';
+import 'package:recila_me/widgets/lottieWidget.dart';
+import 'package:recila_me/widgets/mySplashScreen.dart';
 import 'package:recila_me/widgets/redSocial.dart';
 
 class MyInicio extends StatefulWidget {
