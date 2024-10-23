@@ -193,21 +193,124 @@ class FirestoreService {
     }
   }
 
-  //Método para eliminar usuario
+  Future<void> _deleteUserImages(String correo) async {
+    try {
+      // Eliminar imagen de perfil desde la colección 'usuario'
+      QuerySnapshot userSnapshot = await _db
+          .collection('usuario')
+          .where('correo', isEqualTo: correo)
+          .get();
+
+      if (userSnapshot.docs.isNotEmpty) {
+        DocumentSnapshot userDoc = userSnapshot.docs.first;
+        String? imageUrl = userDoc['imageUrl'];
+        print('imageUrl $imageUrl');
+
+        if (imageUrl != null &&
+            imageUrl.startsWith('https://firebasestorage.googleapis.com')) {
+          try {
+            // Crear una referencia a partir de la URL
+            Reference storageRef =
+                FirebaseStorage.instance.refFromURL(imageUrl);
+            await storageRef.delete();
+            print('Imagen de perfil eliminada: $imageUrl');
+          } catch (e) {
+            print('Error al eliminar la imagen de perfil: $e');
+          }
+        } else {
+          print('URL de imagen de perfil no válida o no presente');
+        }
+      } else {
+        print('Usuario no encontrado para el correo proporcionado');
+      }
+
+      // Eliminar imágenes relacionadas con el usuario desde la colección 'items'
+      QuerySnapshot itemsSnapshot = await _db
+          .collection('items')
+          .where('email', isEqualTo: correo)
+          .get();
+
+      for (DocumentSnapshot itemDoc in itemsSnapshot.docs) {
+        String? storagePath = itemDoc['storagePath'];
+        print('storagePath $storagePath');
+
+        if (storagePath != null && storagePath.isNotEmpty) {
+          try {
+            // Crear una referencia a partir del storagePath
+            Reference storageRef = FirebaseStorage.instance.ref(storagePath);
+            await storageRef.delete();
+            print('Imagen del item eliminada: $storagePath');
+          } catch (e) {
+            print('Error al eliminar la imagen del item: $e');
+          }
+        } else {
+          print(
+              'No se encontró storagePath para el item con ID: ${itemDoc.id}');
+        }
+      }
+    } catch (e) {
+      print('Error al eliminar las imágenes de Firebase Storage: $e');
+    }
+  }
+
+  // Funcion para eliminar los datos relacionados del socio
+  Future<void> _deleteUserRelatedData(String correo) async {
+    try {
+      // Eliminar 'posts'
+      QuerySnapshot postsSnapshot =
+          await _db.collection('items').where('email', isEqualTo: correo).get();
+
+      // Eliminar 'comments'
+      QuerySnapshot commentsSnapshot = await _db
+          .collection('comentarios')
+          .where('correo', isEqualTo: correo)
+          .get();
+
+      // Eliminar 'likes'
+      QuerySnapshot chatsSnapshot = await _db
+          .collection('chat_interactions')
+          .where('email', isEqualTo: correo)
+          .get();
+
+      // Eliminar todos los documentos en paralelo
+      await Future.wait([
+        ...postsSnapshot.docs.map((doc) => doc.reference.delete()),
+        ...commentsSnapshot.docs.map((doc) => doc.reference.delete()),
+        ...chatsSnapshot.docs.map((doc) => doc.reference.delete()),
+      ]);
+
+      // Añadir otras colecciones según sea necesario
+    } catch (e) {
+      print('Error al eliminar los datos relacionados: $e');
+    }
+  }
+
   Future<bool> deleteUser(String correo) async {
     try {
+      // Obtener el usuario
       QuerySnapshot snapshot = await _db
           .collection('usuario')
           .where('correo', isEqualTo: correo)
           .get();
+
       if (snapshot.docs.isNotEmpty) {
-        await snapshot.docs.first.reference.delete();
+        DocumentReference userRef = snapshot.docs.first.reference;
+
+        // Paso 1: Eliminar imágenes asociadas (perfil e items)
+        await _deleteUserImages(correo);
+
+        // Paso 2: Borrar documentos relacionados en otras colecciones
+        await _deleteUserRelatedData(correo);
+
+        // Paso 3: Eliminar el documento principal del usuario
+        await userRef.delete();
+
         return true;
       } else {
         return false; // No se encontró el usuario con el correo especificado
       }
     } catch (e) {
-      await Funciones.SeqLog('error', 'Error al eliminar el usuario: $e');
+      print('Error al eliminar el usuario: $e');
       return false;
     }
   }
@@ -218,7 +321,8 @@ class FirestoreService {
       final snapshot = await _db.collection('paises').get();
       return snapshot.docs.map((doc) => doc['nombre'] as String).toList();
     } catch (e) {
-      await Funciones.SeqLog('error', 'Error al obtener países: $e');
+      //await Funciones.SeqLog('error', 'Error al obtener países: $e');
+      print('Error al obtener países: $e');
       return [];
     }
   }
@@ -237,7 +341,8 @@ class FirestoreService {
 
       return ciudades;
     } catch (e) {
-      await Funciones.SeqLog('error', 'Error al cargar las ciudades: $e');
+      //await Funciones.SeqLog('error', 'Error al cargar las ciudades: $e');
+      print('Error al cargar las ciudades: $e');
       throw Exception('Error al cargar las ciudades: $e');
     }
   }
@@ -484,10 +589,8 @@ class FirestoreService {
           'titulo': titulo,
           'estado': estado
         });
-
-        showSnackBar(scaffoldKey, 'Artículo guardado correctamente.');
       } else {
-        showSnackBar(scaffoldKey, 'Error: La subida no fue exitosa.');
+        print('Error: La subida no fue exitosa.');
       }
     } catch (e) {
       showSnackBar(
@@ -552,7 +655,6 @@ class FirestoreService {
         print('Error al eliminar la imagen de Firebase Storage: $e');
         // Opcional: Mostrar un mensaje al usuario o manejar el error según sea necesario
       }
-
       // Mostrar un mensaje de éxito
       print('Post, comentarios y imagen eliminados correctamente');
     } catch (e) {
@@ -562,11 +664,13 @@ class FirestoreService {
     }
   }
 
+  // Cargar el documento del usuario desde Firestore
   Future<DocumentSnapshot> getUserDocument(String email) async {
-    return await FirebaseFirestore.instance
-        .collection('usuario')
-        .doc(email)
-        .get();
+    try {
+      return await _db.collection('usuarios').doc(email).get();
+    } catch (e) {
+      rethrow;
+    }
   }
 
   // Función para actualizar el estado de la publicacion en Firestore
@@ -636,7 +740,8 @@ class FirestoreService {
 
       if (usuarioSnapshot.docs.isNotEmpty) {
         final usuarioData = usuarioSnapshot.docs.first.data();
-        return usuarioData['pais'] ?? 'Desconocido'; // Recuperar el campo 'pais'
+        return usuarioData['pais'] ??
+            'Desconocido'; // Recuperar el campo 'pais'
       }
     } catch (e) {
       print('Error al obtener el país del usuario: $e');
@@ -650,7 +755,7 @@ class FirestoreService {
     String description,
     String contact,
     String? imageFilePath, // Path del archivo local si se seleccionó uno
-    String? oldImageUrl,   // URL de la imagen anterior
+    String? oldImageUrl, // URL de la imagen anterior
   ) async {
     try {
       Map<String, dynamic> dataToUpdate = {
@@ -668,7 +773,7 @@ class FirestoreService {
         }
 
         // Subir la nueva imagen a Firebase Storage
-        String downloadUrl = await _uploadImageToFirebase(imageFilePath);
+        String downloadUrl = await uploadImageToFirebase(imageFilePath);
         dataToUpdate['imageUrl'] = downloadUrl; // Actualizar el campo imageUrl
       }
 
@@ -691,21 +796,55 @@ class FirestoreService {
     }
   }
 
-  Future<String> _uploadImageToFirebase(String imageFilePath) async {
+  // Función que carga la lista de paises
+  Future<String> uploadImageToFirebase(String imageFilePath) async {
     try {
       File file = File(imageFilePath);
       String fileName = basename(imageFilePath);
 
       // Subir a la carpeta 'images' en Firebase Storage
-      UploadTask task = FirebaseStorage.instance
-          .ref('images/$fileName')
-          .putFile(file);
+      UploadTask task =
+          FirebaseStorage.instance.ref('images/$fileName').putFile(file);
 
       TaskSnapshot snapshot = await task;
       String downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
     } catch (e) {
       throw Exception('Error al subir la imagen: $e');
+    }
+  }
+
+  // Función para obtener la URL de la imagen desde la colección 'usuarios'
+  Future<String?> loadUserProfileImage(String email) async {
+    try {
+      // Obtener el documento del usuario desde Firestore
+      DocumentSnapshot snapshot =
+          await _db.collection('usuario').doc(email).get();
+      if (snapshot.exists) {
+        // Convertir los datos a un Map<String, dynamic>
+        final data = snapshot.data() as Map<String, dynamic>?;
+
+        // Retornar la URL de la imagen si existe, o una imagen predeterminada
+        return data?['imageUrl'] ?? 'assets/images/perfil.png';
+      } else {
+        // Si el documento no existe, retornar la imagen predeterminada
+        return 'assets/images/perfil.png';
+      }
+    } catch (e) {
+      print('Error al cargar la imagen de perfil: $e');
+      return 'assets/images/perfil.png'; // En caso de error, usar imagen por defecto
+    }
+  }
+
+  // Función que carga la lista de paises
+  Future<List<String>> cargarPaises() async {
+    try {
+      List<String> paises = await getPaises();
+      Funciones.SeqLog('information', paises.toString());
+      return paises;
+    } catch (e) {
+      Funciones.SeqLog('error', 'Error al cargar países: $e');
+      return [];
     }
   }
 }

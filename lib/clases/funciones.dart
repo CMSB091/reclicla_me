@@ -359,7 +359,7 @@ class Funciones {
               return AlertDialog(
                 title: const Text('Datos Guardados'),
                 content: Text(
-                    'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono\nImagen: $finalImageUrl'),
+                    'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono'),
                 actions: [
                   TextButton(
                     onPressed: () {
