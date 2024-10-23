@@ -158,8 +158,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
         });
       }
     } catch (e) {
-      //Funciones.SeqLog('error', 'Error al cargar ciudades: $e');
-      print('Error al cargar ciudades: $e');
+      Funciones.SeqLog('error', 'Error al cargar ciudades: $e');
     }
   }
 

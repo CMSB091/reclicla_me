@@ -224,7 +224,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         ),
         title: Text(
           widget.isEdit ? 'Editar publicación' : 'Añadir publicación',
-          style: const TextStyle(fontFamily: 'Artwork', fontSize: 25),
+          style: const TextStyle(fontFamily: 'Artwork', fontSize: 22),
         ),
         backgroundColor: Colors.green.shade200,
       ),

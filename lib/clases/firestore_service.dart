@@ -11,6 +11,7 @@ import 'package:intl/intl.dart'; // Para formatear las fechas.
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final User? user = FirebaseAuth.instance.currentUser;
   Future<bool> authenticateUser(String correo, String contrasena) async {
     try {
       QuerySnapshot querySnapshot = await _db
@@ -360,7 +361,6 @@ class FirestoreService {
 
   // Metodo para recuperar el email del usuario
   Future<String?> loadUserEmail() async {
-    User? user = FirebaseAuth.instance.currentUser;
     return user?.email;
   }
 
@@ -847,4 +847,50 @@ class FirestoreService {
       return [];
     }
   }
+
+  // Función para guardar o actualizar el puntaje en Firestore
+  Future<void> saveOrUpdateScore(BuildContext context, int puntos) async {
+    if (user != null) {
+      try {
+        // Verificar si el usuario ya tiene un puntaje registrado
+        final QuerySnapshot existingScore = await _db
+            .collection('puntajes')
+            .where('email', isEqualTo: user!.email)
+            .get();
+
+        if (existingScore.docs.isNotEmpty) {
+          // Si ya existe un registro para el usuario, actualizar el puntaje y la fecha
+          await _db
+              .collection('puntajes')
+              .doc(existingScore.docs.first.id)
+              .update({
+            'puntos': puntos,
+            'fecha': DateTime.now(),
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('¡Puntaje actualizado correctamente!')),
+          );
+        } else {
+          // Si no existe un registro, crear uno nuevo
+          await _db.collection('puntajes').add({
+            'email': user!.email,
+            'puntos': puntos,
+            'fecha': DateTime.now(),
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('¡Puntaje guardado correctamente!')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al guardar puntaje: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Usuario no logueado')),
+      );
+    }
+  }
+  
 }

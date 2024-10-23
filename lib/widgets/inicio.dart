@@ -131,7 +131,7 @@ class _MyInicioState extends State<MyInicio> {
                 'Bienvenido $nombreUsuario !!',
                 style: const TextStyle(
                   fontFamily: 'Artwork',
-                  fontSize: 24,
+                  fontSize: 20,
                 ),
               ),
         leading: IconButton(

@@ -211,20 +211,27 @@ class Funciones {
 
   // Función que registra los acontecimientos en el SEQ log
   static Future<void> SeqLog(String status, String message) async {
-    try {
-      await _initializeLogger(); // Asegura que el logger se inicialice solo una vez
+  try {
+    await _initializeLogger(); // Asegura que el logger se inicialice solo una vez
 
-      if (_logger == null) return;
-      // Ejecutar la operación con timeout de 10 segundos
-      await _logWithTimeout(status, message);
-    } catch (e) {
-      print('Se produjo un error al intentar acceder al SEQ $e');
-    }
+    if (_logger == null) return;
+
+    // Ejecutar la operación con timeout de 1 segundo
+    await _logWithTimeout(status, message, const Duration(seconds: 3));
+  } catch (e) {
+    print('Se produjo un error al intentar acceder al SEQ $e');
   }
+}
 
 // Función auxiliar que maneja el timeout
-  static Future<void> _logWithTimeout(String status, String message) async {
+  static Future<void> _logWithTimeout(String status, String message, Duration timeout) async {
     try {
+      await _logger!
+        .log(status as SeqLogLevel, message)
+        .timeout(timeout, onTimeout: () {
+      print('La conexión a SEQ ha sido cancelada después de ${timeout.inSeconds} segundos');
+      return; // Cancelar la operación si el tiempo de espera excede
+    });
       await Future(() async {
         switch (status) {
           case 'information':
@@ -533,4 +540,30 @@ class Funciones {
       SnackBar(content: Text(message)),
     );
   }
+
+  // Función para mostrar el modal de reglas del juego
+  void showGameRules(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Reglas del Juego'),
+          content: const Text(
+              '1. Arrastra los residuos hacia el basurero correcto (plástico, papel u orgánico).\n'
+              '2. Ganas puntos por cada residuo correctamente clasificado.\n'
+              '3. Pierdes puntos por clasificaciones incorrectas.\n'
+              '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n 5. Diviértete Aprendiendo!!'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cierra el diálogo
+              },
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }
