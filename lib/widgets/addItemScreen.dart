@@ -200,7 +200,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
       });
     }
   }
-
   // Resetear el formulario después de la subida exitosa
   void _resetForm() {
     setState(() {
