@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
-import 'package:recila_me/widgets/build_text_field.dart';
+import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/login.dart';
@@ -463,34 +463,58 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                           //),
                         ],
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 5),
                       buildTextField(
-                        controller: _nombreController,
                         labelText: 'Nombre',
+                        controller: _nombreController,
+                        maxLength: 30,
+                        keyboardType: TextInputType.name,
+                        validator: (value) =>
+                            value!.isEmpty ? 'Ingrese su nombre' : null,
                       ),
+                      const SizedBox(height: 5),
                       buildTextField(
-                        controller: _apellidoController,
                         labelText: 'Apellido',
+                        controller: _apellidoController,
+                        maxLength: 30,
+                        keyboardType: TextInputType.name,
+                        validator: (value) =>
+                            value!.isEmpty ? 'Ingrese su Apellido' : null,
                       ),
+                      const SizedBox(height: 5),
                       buildTextField(
-                        controller: _edadController,
                         labelText: 'Edad',
-                        isNumber: true,
+                        controller: _edadController,
+                        maxLength: 2,
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                            value!.isEmpty ? 'Ingrese su Edad' : null,
                       ),
+                      const SizedBox(height: 5),
                       buildTextField(
+                        labelText: 'Direccion',
                         controller: _direccionController,
-                        labelText: 'Dirección',
+                        maxLength: 80,
+                        keyboardType: TextInputType.name,
+                        validator: (value) =>
+                            value!.isEmpty ? 'Ingrese su Direccion' : null,
                       ),
+                      const SizedBox(height: 5),
                       GestureDetector(
                         onTap: _isLoading ? null : _mostrarSeleccionPais,
                         child: AbsorbPointer(
                           child: buildTextField(
-                            controller: _paisController,
                             labelText: 'País',
+                            controller: _paisController,
+                            maxLength: 80,
+                            keyboardType: TextInputType.name,
+                            validator: (value) =>
+                                value!.isEmpty ? 'Ingrese el país' : null,
                             isReadOnly: true,
                           ),
                         ),
                       ),
+                      const SizedBox(height: 5),
                       GestureDetector(
                         onTap: () {
                           if (!_isLoading && _paisController.text.isNotEmpty) {
@@ -505,18 +529,26 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         },
                         child: AbsorbPointer(
                           child: buildTextField(
-                            controller: _ciudadController,
                             labelText: 'Ciudad',
+                            controller: _ciudadController,
+                            maxLength: 80,
+                            keyboardType: TextInputType.name,
+                            validator: (value) =>
+                                value!.isEmpty ? 'Ingrese la ciudad' : null,
                             isReadOnly: true,
                           ),
                         ),
                       ),
+                      const SizedBox(height: 5),
                       buildTextField(
-                        controller: _telefonoController,
                         labelText: 'Teléfono',
-                        isNumber: true,
+                        controller: _telefonoController,
+                        maxLength: 20,
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                             null,
                       ),
-                      const SizedBox(height: 100),
+                      const SizedBox(height: 25),
                     ],
                   ),
                 ),

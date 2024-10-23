@@ -13,7 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/inicio.dart';
-import 'package:recila_me/widgets/item_detail_screen.dart';
+import 'package:recila_me/widgets/itemDetailScreen.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:url_launcher/url_launcher.dart';
@@ -510,5 +510,27 @@ class Funciones {
         SnackBar(content: Text('Error al intentar abrir WhatsApp: $e')),
       );
     }
+  }
+
+  static Future<File?> pickImageFromGallery(BuildContext context) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? pickedImage = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      SeqLog('information', 'Imagen seleccionada: ${pickedImage.path}');
+      return File(pickedImage.path); // Devolver el archivo seleccionado
+    } else {
+      // Mostrar SnackBar si no se selecciona imagen
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No se seleccionó ninguna imagen.')),
+      );
+      return null; // Devolver null si no se seleccionó ninguna imagen
+    }
+  }
+
+  static void showSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 }
