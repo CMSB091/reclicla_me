@@ -92,7 +92,15 @@ flutter:
     - assets/images/agregarUsuario.png
     - assets/images/exitDoor.png
     - assets/images/perfil.png
-    - assets/recycling_tips.json
+    - assets/images/miniJuego/blue_trash_bin.png
+    - assets/images/miniJuego/maroon_trash_bin.png
+    - assets/images/miniJuego/green_trash_bin.png
+    - assets/images/miniJuego/yellow_trash_bin.png 
+    - assets/images/miniJuego/red_trash_bin.png
+    - assets/images/miniJuego/animatedBottle.png 
+    - assets/images/miniJuego/glassBottle.png
+    - assets/images/miniJuego/can.png
+    - assets/json/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-trash.json
     - assets/animations/lotti-recycle.json

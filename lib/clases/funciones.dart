@@ -107,13 +107,15 @@ class Funciones {
       await SeqLog('error', 'Error al cerrar sesión: $e');
     } finally {
       // Cierra el diálogo
-      Navigator.of(context, rootNavigator: true).pop();
-      // Redirige a la página de login
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const LoginApp(),
-        ),
-      );
+      if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        // Redirige a la página de login
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const LoginApp(),
+          ),
+        );
+      }
     }
   }
 
@@ -211,56 +213,39 @@ class Funciones {
 
   // Función que registra los acontecimientos en el SEQ log
   static Future<void> SeqLog(String status, String message) async {
-  try {
-    await _initializeLogger(); // Asegura que el logger se inicialice solo una vez
+    try {
+      await _initializeLogger(); // Asegura que el logger se inicialice solo una vez
 
-    if (_logger == null) return;
+      if (_logger == null) return;
 
-    // Ejecutar la operación con timeout de 1 segundo
-    await _logWithTimeout(status, message, const Duration(seconds: 3));
-  } catch (e) {
-    print('Se produjo un error al intentar acceder al SEQ $e');
+      // Ejecutar la operación con timeout de 1 segundo
+      await _logWithTimeout(status, message, const Duration(seconds: 3));
+    } catch (e) {
+      print('Se produjo un error al intentar acceder al SEQ $e');
+    }
   }
-}
 
 // Función auxiliar que maneja el timeout
-  static Future<void> _logWithTimeout(String status, String message, Duration timeout) async {
+  static Future<void> _logWithTimeout(
+      String status, String message, Duration timeout) async {
     try {
-      await _logger!
-        .log(status as SeqLogLevel, message)
-        .timeout(timeout, onTimeout: () {
-      print('La conexión a SEQ ha sido cancelada después de ${timeout.inSeconds} segundos');
-      return; // Cancelar la operación si el tiempo de espera excede
-    });
+      // Convertir el string `status` a `SeqLogLevel`
+      SeqLogLevel logLevel = _mapStringToSeqLogLevel(status);
+
+      await _logger!.log(logLevel, message).timeout(timeout, onTimeout: () {
+        print(
+            'La conexión a SEQ ha sido cancelada después de ${timeout.inSeconds} segundos');
+        return; // Cancelar la operación si el tiempo de espera excede
+      });
+
       await Future(() async {
-        switch (status) {
-          case 'information':
+        switch (logLevel) {
+          case SeqLogLevel.information:
+          case SeqLogLevel.warning:
+          case SeqLogLevel.error:
+          case SeqLogLevel.debug:
             await _logger!.log(
-              SeqLogLevel.information,
-              message,
-              null,
-              {'Timestamp': DateTime.now().toUtc().toIso8601String()},
-            );
-            break;
-          case 'warning':
-            await _logger!.log(
-              SeqLogLevel.warning,
-              message,
-              null,
-              {'Timestamp': DateTime.now().toUtc().toIso8601String()},
-            );
-            break;
-          case 'error':
-            await _logger!.log(
-              SeqLogLevel.error,
-              message,
-              null,
-              {'Timestamp': DateTime.now().toUtc().toIso8601String()},
-            );
-            break;
-          case 'debug':
-            await _logger!.log(
-              SeqLogLevel.debug,
+              logLevel,
               message,
               null,
               {'Timestamp': DateTime.now().toUtc().toIso8601String()},
@@ -279,6 +264,22 @@ class Funciones {
       } else {
         print('Se produjo un error al registrar el log en SEQ: $e');
       }
+    }
+  }
+
+// Función auxiliar para convertir un String a SeqLogLevel
+  static SeqLogLevel _mapStringToSeqLogLevel(String status) {
+    switch (status.toLowerCase()) {
+      case 'information':
+        return SeqLogLevel.information;
+      case 'warning':
+        return SeqLogLevel.warning;
+      case 'error':
+        return SeqLogLevel.error;
+      case 'debug':
+        return SeqLogLevel.debug;
+      default:
+        throw ArgumentError('Nivel de log no reconocido: $status');
     }
   }
 
@@ -360,40 +361,46 @@ class Funciones {
         );
 
         if (result) {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('Datos Guardados'),
-                content: Text(
-                    'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => MyInicio(
-                            cameras: cameras,
+          if (context.mounted) {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('Datos Guardados'),
+                  content: Text(
+                      'Nombre: $nombre\nApellido: $apellido\nEdad: $edad\nDirección: $direccion\nCiudad: $ciudad\nPaís: $pais\nTeléfono: $telefono'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MyInicio(
+                              cameras: cameras,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
+                        );
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error al guardar los datos.')),
-          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Error al guardar los datos.')),
+            );
+          }
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e')),
+          );
+        }
       } finally {
         setSavingState(false);
       }
@@ -458,7 +465,7 @@ class Funciones {
             userName: username,
             estado: estado,
             email: email,
-            pais : pais),
+            pais: pais),
       ),
     );
   }
@@ -469,7 +476,8 @@ class Funciones {
     return DateFormat('dd/MM/yyyy HH:mm').format(date);
   }
 
-  void launchWhatsApp(String contact, String country, BuildContext context) async {
+  void launchWhatsApp(
+      String contact, String country, BuildContext context) async {
     try {
       // Eliminar caracteres no numéricos y formatear el número
       String phoneNumber = contact.replaceAll(RegExp(r'[^\d+]'), '');
@@ -480,7 +488,7 @@ class Funciones {
         'Argentina': '54',
         'Uruguay': '598',
         'Brasil': '55',
-        'Paraguay' : '595',
+        'Paraguay': '595',
       };
 
       // Verificar si el país está en la lista de códigos y agregar el código de país si no está presente
@@ -521,7 +529,8 @@ class Funciones {
 
   static Future<File?> pickImageFromGallery(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? pickedImage = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedImage =
+        await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedImage != null) {
       SeqLog('information', 'Imagen seleccionada: ${pickedImage.path}');
@@ -549,10 +558,10 @@ class Funciones {
         return AlertDialog(
           title: const Text('Reglas del Juego'),
           content: const Text(
-              '1. Arrastra los residuos hacia el basurero correcto (plástico, papel u orgánico).\n'
+              '1. Arrastra los residuos hacia el basurero correcto (Plástico, Papel, Orgánico, Vidrio o Materiales Peligrosos).\n'
               '2. Ganas puntos por cada residuo correctamente clasificado.\n'
               '3. Pierdes puntos por clasificaciones incorrectas.\n'
-              '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n 5. Diviértete Aprendiendo!!'),
+              '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n5. Diviértete Aprendiendo!!'),
           actions: [
             TextButton(
               onPressed: () {
@@ -565,5 +574,4 @@ class Funciones {
       },
     );
   }
-
 }

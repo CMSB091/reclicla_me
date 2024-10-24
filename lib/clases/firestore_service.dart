@@ -226,10 +226,8 @@ class FirestoreService {
       }
 
       // Eliminar imágenes relacionadas con el usuario desde la colección 'items'
-      QuerySnapshot itemsSnapshot = await _db
-          .collection('items')
-          .where('email', isEqualTo: correo)
-          .get();
+      QuerySnapshot itemsSnapshot =
+          await _db.collection('items').where('email', isEqualTo: correo).get();
 
       for (DocumentSnapshot itemDoc in itemsSnapshot.docs) {
         String? storagePath = itemDoc['storagePath'];
@@ -867,9 +865,12 @@ class FirestoreService {
             'puntos': puntos,
             'fecha': DateTime.now(),
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('¡Puntaje actualizado correctamente!')),
-          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text('¡Puntaje actualizado correctamente!')),
+            );
+          }
         } else {
           // Si no existe un registro, crear uno nuevo
           await _db.collection('puntajes').add({
@@ -877,20 +878,25 @@ class FirestoreService {
             'puntos': puntos,
             'fecha': DateTime.now(),
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('¡Puntaje guardado correctamente!')),
-          );
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('¡Puntaje guardado correctamente!')),
+            );
+          }
         }
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al guardar puntaje: $e')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al guardar puntaje: $e')),
+          );
+        }
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Usuario no logueado')),
-      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuario no logueado')),
+        );
+      }
     }
   }
-  
 }

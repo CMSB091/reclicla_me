@@ -19,14 +19,14 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController =TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   FirestoreService firebase = FirestoreService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isSubmitting = false;
   // Variable para controlar la visibilidad de la contraseña
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-
   void _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -50,7 +50,8 @@ class _RegisterPageState extends State<RegisterPage> {
         }
 
         // Registrar al usuario en Firebase Authentication
-        UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        UserCredential userCredential =
+            await _auth.createUserWithEmailAndPassword(
           email: email,
           password: password,
         );
@@ -64,6 +65,7 @@ class _RegisterPageState extends State<RegisterPage> {
             );
             // Redirigir a la página de DatosPersonales después de registrar
             List<CameraDescription> cameras = await availableCameras();
+            if(context.mounted){
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
@@ -74,15 +76,18 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
             );
+            }
           }
         }
       } catch (e) {
         setState(() {
           _isSubmitting = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al registrar usuario: $e')),
-        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error al registrar usuario: $e')),
+          );
+        }
       } finally {
         setState(() {
           _isSubmitting = false;
