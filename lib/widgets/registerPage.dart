@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -43,9 +44,7 @@ class _RegisterPageState extends State<RegisterPage> {
           setState(() {
             _isSubmitting = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('El correo ya está registrado')),
-          );
+          showCustomSnackBar(context,'El correo ya está registrado',SnackBarType.error);
           return;
         }
 
@@ -60,9 +59,7 @@ class _RegisterPageState extends State<RegisterPage> {
         if (userCredential.user != null) {
           bool userCreated = await firebase.createUser(email);
           if (userCreated) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Usuario registrado exitosamente')),
-            );
+            showCustomSnackBar(context,'Usuario registrado exitosamente',SnackBarType.confirmation);
             // Redirigir a la página de DatosPersonales después de registrar
             List<CameraDescription> cameras = await availableCameras();
             if(context.mounted){
@@ -84,9 +81,7 @@ class _RegisterPageState extends State<RegisterPage> {
           _isSubmitting = false;
         });
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al registrar usuario: $e')),
-          );
+          showCustomSnackBar(context,'Error al registrar usuario: $e',SnackBarType.error);
         }
       } finally {
         setState(() {

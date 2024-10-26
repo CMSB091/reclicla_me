@@ -6,6 +6,7 @@ import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 
 class NoticiasChatGPT extends StatefulWidget {
   const NoticiasChatGPT({super.key});
@@ -148,11 +149,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
           await firestoreService.fetchChatHistoryByEmail(userEmail);
 
       if (chatHistoryList.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'No se encontraron interacciones previas para este usuario.')),
-        );
+        showCustomSnackBar(context,'No se encontraron interacciones previas para este usuario.',SnackBarType.error);
         return;
       }
 
@@ -211,11 +208,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                                 chatHistoryList.removeAt(
                                     index); // Eliminar del historial local
                               });
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text('Chat eliminado.')),
-                              );
+                              showCustomSnackBar(context,'Chat eliminado.',SnackBarType.confirmation);
                             }
                           },
                         ),
@@ -235,9 +228,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       );
     } catch (e) {
       Funciones.SeqLog('error', 'Error al recuperar el historial de chat: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al cargar el historial de chat.')),
-      );
+      showCustomSnackBar(context,'Error al recuperar el historial de chat: $e',SnackBarType.error);
     }
   }
 

@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/servicios/dynamicLinkService.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'registerPage.dart';
 import '../clases/firestore_service.dart';
 import 'inicio.dart';
@@ -118,9 +119,7 @@ class _LoginPageState extends State<LoginPage> {
                 ? 'Contraseña incorrecta.'
                 : 'Error en la autenticación.';
         Funciones.SeqLog('error', 'Error en la autenticación: $message');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        showCustomSnackBar(context,message,SnackBarType.error);
       } finally {
         if (mounted) {
           setState(() => _isLoading = false);

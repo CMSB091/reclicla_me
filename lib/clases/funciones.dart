@@ -453,7 +453,8 @@ class Funciones {
       String username,
       bool estado,
       String email,
-      String pais) {
+      String pais,
+      String idpub) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -465,7 +466,8 @@ class Funciones {
             userName: username,
             estado: estado,
             email: email,
-            pais: pais),
+            pais: pais,
+            idpub: idpub),
       ),
     );
   }
@@ -476,12 +478,13 @@ class Funciones {
     return DateFormat('dd/MM/yyyy HH:mm').format(date);
   }
 
-  void launchWhatsApp(
-      String contact, String country, BuildContext context) async {
+  void launchWhatsApp(String contact, String country, BuildContext context,
+      String id, String title, String imageUrl) async {
     try {
       // Eliminar caracteres no numéricos y formatear el número
       String phoneNumber = contact.replaceAll(RegExp(r'[^\d+]'), '');
       print(country);
+
       // Mapa de códigos de país según el país
       Map<String, String> countryCodes = {
         'Chile': '56',
@@ -505,8 +508,13 @@ class Funciones {
         phoneNumber = '${countryCodes[country]}${phoneNumber.substring(1)}';
       }
 
+      // Definir el mensaje a enviar, incluyendo el enlace de la imagen
+      String message = Uri.encodeComponent(
+          '¡Hola, estoy interesado en la publicación con ID número $id. Título: $title. Aquí puedes ver la imagen: $imageUrl');
+
       // URL usando el esquema `https://wa.me/`
-      final Uri whatsappWebUri = Uri.parse('https://wa.me/$phoneNumber');
+      final Uri whatsappWebUri =
+          Uri.parse('https://wa.me/$phoneNumber?text=$message');
 
       // Verificar si se puede abrir WhatsApp mediante este esquema alternativo
       if (await canLaunchUrl(whatsappWebUri)) {
@@ -546,7 +554,13 @@ class Funciones {
 
   static void showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior
+            .floating, // Hace que el SnackBar "flote" en lugar de estar pegado a la parte inferior
+        margin: const EdgeInsets.all(16), // Margen alrededor del SnackBar
+        duration: const Duration(seconds: 3), // Duración de la animación
+      ),
     );
   }
 

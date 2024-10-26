@@ -530,6 +530,7 @@ class FirestoreService {
     required String email,
     required String titulo,
     required bool estado,
+    required int idpub
   }) async {
     // Verificar conexión a Internet antes de subir la imagen
     print('Paso 1');
@@ -585,7 +586,8 @@ class FirestoreService {
           'timestamp': Timestamp.now(), // Añadir un timestamp
           'email': email,
           'titulo': titulo,
-          'estado': estado
+          'estado': estado,
+          'idpub': idpub,
         });
       } else {
         print('Error: La subida no fue exitosa.');
