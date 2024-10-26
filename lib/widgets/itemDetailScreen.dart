@@ -102,7 +102,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         ),
         title: Text(
           widget.title,
-          style: const TextStyle(fontFamily: 'Artwork', fontSize: 30),
+          style: const TextStyle(fontFamily: 'Artwork', fontSize: 22),
         ), // Título del artículo
         backgroundColor: Colors.green.shade200, // Color de fondo similar
       ),

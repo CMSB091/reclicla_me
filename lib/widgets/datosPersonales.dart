@@ -76,6 +76,17 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
   void initState() {
     super.initState();
     _initializeData();
+    _setupTextListeners(); // Agregar los listeners
+  }
+
+  void _setupTextListeners() {
+    _nombreController.addListener(() => setState(() {}));
+    _apellidoController.addListener(() => setState(() {}));
+    _edadController.addListener(() => setState(() {}));
+    _direccionController.addListener(() => setState(() {}));
+    _ciudadController.addListener(() => setState(() {}));
+    _paisController.addListener(() => setState(() {}));
+    _telefonoController.addListener(() => setState(() {}));
   }
 
   Future<void> _initializeData() async {
@@ -101,46 +112,19 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
   }
 
   Future<void> _loadUserProfileImage() async {
-    try {
-      String? email = widget.correo;
-      // Obtener el documento de usuario desde Firebase
-      final usuarioSnapshot = await _firestoreService.getUserDocument(email);
+    String? email = widget.correo;
+    String? userImage = await _firestoreService.loadUserProfileImage(email);
 
-      if (usuarioSnapshot.exists) {
-        // Convertir los datos a Map<String, dynamic>
-        final data = usuarioSnapshot.data() as Map<String, dynamic>?;
-        final String? userImage =
-            data?['imageUrl']; // Acceder al campo imageUrl
-
-        setState(() {
-          imageUrl = userImage ??
-              'assets/images/perfil.png'; // Si es nulo, cargar imagen por defecto
-        });
-      } else {
-        // Si no existe el documento del usuario, cargar la imagen por defecto
-        setState(() {
-          imageUrl = 'assets/images/perfil.png';
-        });
-      }
-    } catch (e) {
-      Funciones.SeqLog('error', 'Error al cargar la imagen del perfil: $e');
-      setState(() {
-        imageUrl =
-            'assets/images/perfil.png'; // En caso de error, cargar la imagen por defecto
-      });
-    }
+    setState(() {
+      imageUrl = userImage;
+    });
   }
 
   Future<void> _cargarPaises() async {
-    try {
-      List<String> paises = await _firestoreService.getPaises();
-      setState(() {
-        _paises = paises;
-        Funciones.SeqLog('information', paises as String);
-      });
-    } catch (e) {
-      Funciones.SeqLog('error', 'Error al cargar países: $e');
-    }
+    List<String> paises = await firestoreService.cargarPaises();
+    setState(() {
+      _paises = paises;
+    });
   }
 
   void _mostrarSeleccionPais() async {
@@ -160,9 +144,14 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
 
   Future<void> _mostrarCiudades(String pais) async {
     try {
-      List<String> ciudades = await _firestoreService.getCiudadesPorPais(pais);
-      String? selectedCiudad =
-          await _mostrarDialogoSeleccion('Selecciona tu ciudad', ciudades);
+      List<String> ciudadesObtenidas =
+          await _firestoreService.getCiudadesPorPais(pais);
+      setState(() {
+        ciudades =
+            ciudadesObtenidas; // Actualizar el estado con la lista de ciudades
+      });
+      String? selectedCiudad = await _mostrarDialogoSeleccion(
+          'Selecciona tu ciudad', ciudadesObtenidas);
       if (selectedCiudad != null) {
         setState(() {
           _ciudadController.text = selectedCiudad;
@@ -436,12 +425,15 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         children: [
                           CircleAvatar(
                             radius: 60,
-                            backgroundImage: imageUrl != null
+                            backgroundImage: (imageUrl != null &&
+                                    imageUrl!.isNotEmpty &&
+                                    imageUrl!.startsWith('http'))
                                 ? NetworkImage(imageUrl!)
                                 : const AssetImage('assets/images/perfil.png')
                                     as ImageProvider,
                             backgroundColor: Colors.grey.shade200,
                           ),
+
                           IconButton(
                             icon: const FaIcon(FontAwesomeIcons.circlePlus,
                                 color: Colors.green),
@@ -518,8 +510,8 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                       GestureDetector(
                         onTap: () {
                           if (!_isLoading && _paisController.text.isNotEmpty) {
-                            _mostrarDialogoSeleccion(
-                                'Selecciona tu Ciudad', ciudades);
+                            _mostrarCiudades(_paisController
+                                .text); // Llamar a la función que carga las ciudades
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -545,8 +537,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         controller: _telefonoController,
                         maxLength: 20,
                         keyboardType: TextInputType.number,
-                        validator: (value) =>
-                             null,
+                        validator: (value) => null,
                       ),
                       const SizedBox(height: 25),
                     ],

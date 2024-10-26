@@ -19,6 +19,9 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = false;
   final Funciones _funciones = Funciones();
 
+  // Nueva variable para almacenar el término de búsqueda
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -49,7 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         title: const Text(
           'Artículos en Donación',
-          style: TextStyle(fontFamily: 'Artwork', fontSize: 21),
+          style: TextStyle(fontFamily: 'Artwork', fontSize: 22),
         ),
         backgroundColor: Colors.green.shade200,
         actions: [
@@ -65,225 +68,270 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: BlurredBackground(
-        child: StreamBuilder<QuerySnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('items')
-              .orderBy('timestamp', descending: true)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Buscar Artículo',
+                  prefixIcon: const Icon(FontAwesomeIcons.magnifyingGlass),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('items')
+                    .orderBy('timestamp', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-            final items = snapshot.data!.docs;
-            return ListView.builder(
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                var item = items[index];
-                bool isDonated = (item['estado'] is bool) ? item['estado'] : false; // Cambio aquí
-                String itemEmail = item['email'] ?? '';
+                  final items = snapshot.data!.docs;
 
-                return Card(
-                  color: Colors.grey.withOpacity(0.1),
-                  margin: const EdgeInsets.all(8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Si los correos coinciden, mostrar el título arriba de la imagen
-                      if (userEmail == itemEmail)
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text(
-                            item['titulo'] ?? 'Sin título',
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: GestureDetector(
-                              onTap: () async {
-                                setState(() {
-                                  _isLoading = true; // Mostrar el spinner
-                                });
+                  // Filtrar los items según el término de búsqueda
+                  final filteredItems = items.where((item) {
+                    String titulo =
+                        item['titulo']?.toString().toLowerCase() ?? '';
+                    return titulo.contains(_searchQuery);
+                  }).toList();
 
-                                try {
-                                  // Obtener el país del usuario publicador desde la colección 'usuario'
-                                  String pais = await firestoreService
-                                      .getPaisFromUsuario(itemEmail);
-                                  // Asegurarse de que la función loadUserEmail se complete antes de continuar
-                                  await loadUserEmail(item['email']);
+                  if (filteredItems.isEmpty) {
+                    return const Center(
+                        child: Text('No se encontraron resultados.'));
+                  }
 
-                                  // Verificar que nombreUsuario y userEmail no sean nulos antes de navegar
-                                  if (nombreUsuario != null &&
-                                      userEmail != null) {
-                                    _funciones.navigateToItemDetail(
-                                        context,
-                                        item['imageUrl'],
-                                        item['titulo'] ?? 'Sin título',
-                                        item['description'] ??
-                                            'Sin descripción',
-                                        item['contact'] ?? 'Sin contacto',
-                                        nombreUsuario!, // Nombre del usuario recuperado
-                                        item['estado'] ?? false,
-                                        userEmail!, // Email recuperado
-                                        pais);
-                                  } else {
-                                    // Manejar el caso de que no se haya podido recuperar el nombre o email
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              'Error al recuperar los datos del usuario')),
-                                    );
-                                  }
-                                } finally {
-                                  setState(() {
-                                    _isLoading =
-                                        false; // Ocultar el spinner cuando finalice la operación
-                                  });
-                                }
-                              },
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Image.network(
-                                    item[
-                                        'imageUrl'], // Previsualización de la imagen
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.fill,
-                                  ),
-                                  if (_isLoading)
-                                    const CircularProgressIndicator(),
-                                ],
-                              ),
-                            ),
-                          ),
+                  return ListView.builder(
+                    itemCount: filteredItems.length,
+                    itemBuilder: (context, index) {
+                      var item = filteredItems[index];
+                      String itemId = item['idpub'].toString();
+                      bool isDonated =
+                          (item['estado'] is bool) ? item['estado'] : false;
+                      String itemEmail = item['email'] ?? '';
 
-                          const SizedBox(
-                              width: 10), // Espacio entre imagen y botones
-
-                          // Si los correos coinciden, mostrar los botones debajo de la imagen
-                          if (userEmail == itemEmail)
-                            Expanded(
+                      return Card(
+                        color: Colors.grey.withOpacity(0.1),
+                        margin: const EdgeInsets.all(8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
                               child: Row(
                                 mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      FontAwesomeIcons.pen,
+                                  Text(
+                                    item['titulo'] ?? 'Sin título',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    'ID: $itemId',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                       color: Colors.black,
                                     ),
-                                    onPressed: () {
-                                      // Redirigir a AddItemScreen con los datos del item seleccionado y el flag de editar
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => AddItemScreen(
-                                            itemId: item.id,
-                                            titulo: item['titulo'],
-                                            description: item['description'],
-                                            contact: item['contact'],
-                                            imageUrl: item['imageUrl'],
-                                            isEdit:
-                                                true, // Indicar que estamos en modo de edición
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(FontAwesomeIcons.trash),
-                                    color: Colors.black,
-                                    onPressed: () {
-                                      // Mostrar el diálogo de confirmación antes de eliminar
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: const Text(
-                                                'Confirmar eliminación'),
-                                            content: const Text(
-                                                '¿Estás seguro de que deseas eliminar este post? Esta acción no se puede deshacer.'),
-                                            actions: [
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(context)
-                                                      .pop(); // Cerrar diálogo sin eliminar
-                                                },
-                                                child: const Text('Cancelar'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                  firestoreService.deletePost(
-                                                    context,
-                                                    item.id,
-                                                    imageUrl: item['imageUrl'],
-                                                  );
-                                                },
-                                                child: const Text('Eliminar'),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
-                                    },
-                                  ),
-                                  Row(
-                                    children: [
-                                      Checkbox(
-                                        activeColor: Colors.green,
-                                        value: isDonated,
-                                        onChanged: (value) {
-                                          _showConfirmationDialog(
-                                              context, item.id, value!);
-                                        },
-                                      ),
-                                      const Text(
-                                        "Concretado",
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
                                   ),
                                 ],
                               ),
-                            )
-                          else
-                            // Si los correos no coinciden, mostrar el título donde estarían los botones
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  item['titulo'] ?? 'Sin título',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: GestureDetector(
+                                    onTap: () async {
+                                      setState(() {
+                                        _isLoading = true;
+                                      });
+
+                                      try {
+                                        String pais = await firestoreService
+                                            .getPaisFromUsuario(itemEmail);
+                                        await loadUserEmail(item['email']);
+
+                                        if (nombreUsuario != null &&
+                                            userEmail != null) {
+                                          _funciones.navigateToItemDetail(
+                                            context,
+                                            item['imageUrl'],
+                                            item['titulo'] ?? 'Sin título',
+                                            item['description'] ??
+                                                'Sin descripción',
+                                            item['contact'] ?? 'Sin contacto',
+                                            nombreUsuario!,
+                                            item['estado'] ?? false,
+                                            userEmail!,
+                                            pais,
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    'Error al recuperar los datos del usuario')),
+                                          );
+                                        }
+                                      } finally {
+                                        setState(() {
+                                          _isLoading = false;
+                                        });
+                                      }
+                                    },
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Image.network(
+                                          item['imageUrl'],
+                                          width: 80,
+                                          height: 80,
+                                          fit: BoxFit.fill,
+                                        ),
+                                        if (_isLoading)
+                                          const CircularProgressIndicator(),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
+                                const SizedBox(width: 10),
+                                if (userEmail !=
+                                    itemEmail) // Mostrar el estado solo si la publicación no pertenece al usuario logueado
+                                  Expanded(
+                                    child: Text(
+                                      isDonated
+                                          ? "Disponible"
+                                          : "No Disponible",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDonated
+                                            ? Colors.green
+                                            : Colors
+                                                .red, // Color verde si está disponible, rojo si no lo está
+                                      ),
+                                    ),
+                                  )
+                                else
+                                  Expanded(
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(FontAwesomeIcons.pen,
+                                              color: Colors.black),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    AddItemScreen(
+                                                  itemId: itemId,
+                                                  titulo: item['titulo'],
+                                                  description:
+                                                      item['description'],
+                                                  contact: item['contact'],
+                                                  imageUrl: item['imageUrl'],
+                                                  isEdit: true,
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                              FontAwesomeIcons.trash),
+                                          color: Colors.black,
+                                          onPressed: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return AlertDialog(
+                                                  title: const Text(
+                                                      'Confirmar eliminación'),
+                                                  content: const Text(
+                                                      '¿Estás seguro de que deseas eliminar este post? Esta acción no se puede deshacer.'),
+                                                  actions: [
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                      },
+                                                      child: const Text(
+                                                          'Cancelar'),
+                                                    ),
+                                                    TextButton(
+                                                      onPressed: () {
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        firestoreService
+                                                            .deletePost(context,
+                                                                itemId,
+                                                                imageUrl: item[
+                                                                    'imageUrl']);
+                                                      },
+                                                      child: const Text(
+                                                          'Eliminar'),
+                                                    ),
+                                                  ],
+                                                );
+                                              },
+                                            );
+                                          },
+                                        ),
+                                        Row(
+                                          children: [
+                                            Checkbox(
+                                              activeColor: Colors.green,
+                                              value: isDonated,
+                                              onChanged: (value) {
+                                                _showConfirmationDialog(
+                                                    context, itemId, value!);
+                                              },
+                                            ),
+                                            const Text(
+                                              "Concretado",
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
                             ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // Función para mostrar el modal de confirmación
   void _showConfirmationDialog(
       BuildContext context, String itemId, bool newState) {
     showDialog(
@@ -297,15 +345,14 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // Cerrar el diálogo
+                Navigator.of(context).pop();
               },
               child: const Text('Cancelar'),
             ),
             TextButton(
               onPressed: () {
-                // Actualizar el estado en Firestore según el valor del checkbox
                 firestoreService.updateDonationStatus(itemId, newState);
-                Navigator.of(context).pop(); // Cerrar el diálogo
+                Navigator.of(context).pop();
               },
               child: const Text('Sí'),
             ),
