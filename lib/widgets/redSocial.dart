@@ -70,18 +70,17 @@ class _HomeScreenState extends State<HomeScreen> {
       body: BlurredBackground(
         child: Column(
           children: [
-            // Campo de búsqueda con el ícono de búsqueda de FontAwesome
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextField(
                 onChanged: (value) {
                   setState(() {
-                    _searchQuery = value.toLowerCase(); // Convertir a minúsculas para una búsqueda insensible a mayúsculas
+                    _searchQuery = value.toLowerCase();
                   });
                 },
                 decoration: InputDecoration(
                   labelText: 'Buscar Artículo',
-                  prefixIcon: const Icon(FontAwesomeIcons.magnifyingGlass ),
+                  prefixIcon: const Icon(FontAwesomeIcons.magnifyingGlass),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -103,19 +102,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   // Filtrar los items según el término de búsqueda
                   final filteredItems = items.where((item) {
-                    String titulo = item['titulo']?.toString().toLowerCase() ?? '';
+                    String titulo =
+                        item['titulo']?.toString().toLowerCase() ?? '';
                     return titulo.contains(_searchQuery);
                   }).toList();
 
                   if (filteredItems.isEmpty) {
-                    return const Center(child: Text('No se encontraron resultados.'));
+                    return const Center(
+                        child: Text('No se encontraron resultados.'));
                   }
 
                   return ListView.builder(
                     itemCount: filteredItems.length,
                     itemBuilder: (context, index) {
                       var item = filteredItems[index];
-                      bool isDonated = (item['estado'] is bool) ? item['estado'] : false; // Cambio aquí
+                      String itemId = item['idpub'].toString();
+                      bool isDonated =
+                          (item['estado'] is bool) ? item['estado'] : false;
                       String itemEmail = item['email'] ?? '';
 
                       return Card(
@@ -124,17 +127,30 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (userEmail == itemEmail)
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  item['titulo'] ?? 'Sin título',
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    item['titulo'] ?? 'Sin título',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
+                                  Text(
+                                    'ID: $itemId',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
                               ),
+                            ),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -143,19 +159,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                   child: GestureDetector(
                                     onTap: () async {
                                       setState(() {
-                                        _isLoading = true; // Mostrar el spinner
+                                        _isLoading = true;
                                       });
 
                                       try {
-                                        String pais = await firestoreService.getPaisFromUsuario(itemEmail);
+                                        String pais = await firestoreService
+                                            .getPaisFromUsuario(itemEmail);
                                         await loadUserEmail(item['email']);
 
-                                        if (nombreUsuario != null && userEmail != null) {
+                                        if (nombreUsuario != null &&
+                                            userEmail != null) {
                                           _funciones.navigateToItemDetail(
                                             context,
                                             item['imageUrl'],
                                             item['titulo'] ?? 'Sin título',
-                                            item['description'] ?? 'Sin descripción',
+                                            item['description'] ??
+                                                'Sin descripción',
                                             item['contact'] ?? 'Sin contacto',
                                             nombreUsuario!,
                                             item['estado'] ?? false,
@@ -163,8 +182,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                             pais,
                                           );
                                         } else {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Error al recuperar los datos del usuario')),
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content: Text(
+                                                    'Error al recuperar los datos del usuario')),
                                           );
                                         }
                                       } finally {
@@ -189,21 +211,42 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 const SizedBox(width: 10),
-                                if (userEmail == itemEmail)
+                                if (userEmail !=
+                                    itemEmail) // Mostrar el estado solo si la publicación no pertenece al usuario logueado
+                                  Expanded(
+                                    child: Text(
+                                      isDonated
+                                          ? "Disponible"
+                                          : "No Disponible",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDonated
+                                            ? Colors.green
+                                            : Colors
+                                                .red, // Color verde si está disponible, rojo si no lo está
+                                      ),
+                                    ),
+                                  )
+                                else
                                   Expanded(
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceEvenly,
                                       children: [
                                         IconButton(
-                                          icon: const Icon(FontAwesomeIcons.pen, color: Colors.black),
+                                          icon: const Icon(FontAwesomeIcons.pen,
+                                              color: Colors.black),
                                           onPressed: () {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) => AddItemScreen(
-                                                  itemId: item.id,
+                                                builder: (context) =>
+                                                    AddItemScreen(
+                                                  itemId: itemId,
                                                   titulo: item['titulo'],
-                                                  description: item['description'],
+                                                  description:
+                                                      item['description'],
                                                   contact: item['contact'],
                                                   imageUrl: item['imageUrl'],
                                                   isEdit: true,
@@ -213,28 +256,39 @@ class _HomeScreenState extends State<HomeScreen> {
                                           },
                                         ),
                                         IconButton(
-                                          icon: const Icon(FontAwesomeIcons.trash),
+                                          icon: const Icon(
+                                              FontAwesomeIcons.trash),
                                           color: Colors.black,
                                           onPressed: () {
                                             showDialog(
                                               context: context,
                                               builder: (BuildContext context) {
                                                 return AlertDialog(
-                                                  title: const Text('Confirmar eliminación'),
-                                                  content: const Text('¿Estás seguro de que deseas eliminar este post? Esta acción no se puede deshacer.'),
+                                                  title: const Text(
+                                                      'Confirmar eliminación'),
+                                                  content: const Text(
+                                                      '¿Estás seguro de que deseas eliminar este post? Esta acción no se puede deshacer.'),
                                                   actions: [
                                                     TextButton(
                                                       onPressed: () {
-                                                        Navigator.of(context).pop();
+                                                        Navigator.of(context)
+                                                            .pop();
                                                       },
-                                                      child: const Text('Cancelar'),
+                                                      child: const Text(
+                                                          'Cancelar'),
                                                     ),
                                                     TextButton(
                                                       onPressed: () {
-                                                        Navigator.of(context).pop();
-                                                        firestoreService.deletePost(context, item.id, imageUrl: item['imageUrl']);
+                                                        Navigator.of(context)
+                                                            .pop();
+                                                        firestoreService
+                                                            .deletePost(context,
+                                                                itemId,
+                                                                imageUrl: item[
+                                                                    'imageUrl']);
                                                       },
-                                                      child: const Text('Eliminar'),
+                                                      child: const Text(
+                                                          'Eliminar'),
                                                     ),
                                                   ],
                                                 );
@@ -248,29 +302,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                               activeColor: Colors.green,
                                               value: isDonated,
                                               onChanged: (value) {
-                                                _showConfirmationDialog(context, item.id, value!);
+                                                _showConfirmationDialog(
+                                                    context, itemId, value!);
                                               },
                                             ),
                                             const Text(
                                               "Concretado",
-                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold),
                                             ),
                                           ],
                                         ),
                                       ],
-                                    ),
-                                  )
-                                else
-                                  Expanded(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(
-                                        item['titulo'] ?? 'Sin título',
-                                        style: const TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
                                     ),
                                   ),
                               ],
@@ -289,7 +332,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _showConfirmationDialog(BuildContext context, String itemId, bool newState) {
+  void _showConfirmationDialog(
+      BuildContext context, String itemId, bool newState) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
