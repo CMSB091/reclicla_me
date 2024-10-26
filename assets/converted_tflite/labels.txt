@@ -1,0 +1,8 @@
+Plastico
+Vidrio
+Aluminio
+Carton
+Isopor
+Papel
+Residuos
+Metal
