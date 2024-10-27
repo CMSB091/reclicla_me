@@ -51,6 +51,7 @@ dependencies:
   url_launcher: ^6.0.20 # Para levantar Whatsapp
   device_apps: ^2.0.0
   path: ^1.8.0
+  vibration: ^1.7.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -100,6 +101,13 @@ flutter:
     - assets/images/miniJuego/animatedBottle.png 
     - assets/images/miniJuego/glassBottle.png
     - assets/images/miniJuego/can.png
+    - assets/images/miniJuego/glass_cup.png
+    - assets/images/miniJuego/apple.png
+    - assets/images/miniJuego/cellphone.png
+    - assets/images/miniJuego/mouse.png
+    - assets/images/miniJuego/pilas.png
+    - assets/images/miniJuego/pajita_plastico.png
+    - assets/images/miniJuego/plastic_cup.png
     - assets/json/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-trash.json

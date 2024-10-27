@@ -7,7 +7,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:recila_me/clases/funciones.dart';
-import 'package:intl/intl.dart'; // Para formatear las fechas.
+import 'package:intl/intl.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart'; // Para formatear las fechas.
 
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -207,8 +208,7 @@ class FirestoreService {
         String? imageUrl = userDoc['imageUrl'];
         print('imageUrl $imageUrl');
 
-        if (imageUrl != null &&
-            imageUrl.startsWith('https://firebasestorage.googleapis.com')) {
+        if (imageUrl!.startsWith('https://firebasestorage.googleapis.com')) {
           try {
             // Crear una referencia a partir de la URL
             Reference storageRef =
@@ -233,7 +233,7 @@ class FirestoreService {
         String? storagePath = itemDoc['storagePath'];
         print('storagePath $storagePath');
 
-        if (storagePath != null && storagePath.isNotEmpty) {
+        if (storagePath!.isNotEmpty) {
           try {
             // Crear una referencia a partir del storagePath
             Reference storageRef = FirebaseStorage.instance.ref(storagePath);
@@ -522,16 +522,15 @@ class FirestoreService {
     return connectivityResult != ConnectivityResult.none;
   }
 
-  Future<void> uploadImageAndSaveToFirestore({
-    required File imageFile,
-    required String description,
-    required String contact,
-    required GlobalKey<ScaffoldState> scaffoldKey, // Para mostrar el SnackBar
-    required String email,
-    required String titulo,
-    required bool estado,
-    required int idpub
-  }) async {
+  Future<void> uploadImageAndSaveToFirestore(
+      {required File imageFile,
+      required String description,
+      required String contact,
+      required GlobalKey<ScaffoldState> scaffoldKey, // Para mostrar el SnackBar
+      required String email,
+      required String titulo,
+      required bool estado,
+      required int idpub}) async {
     // Verificar conexión a Internet antes de subir la imagen
     print('Paso 1');
     bool isConnected = await checkInternetConnection();
@@ -868,10 +867,8 @@ class FirestoreService {
             'fecha': DateTime.now(),
           });
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('¡Puntaje actualizado correctamente!')),
-            );
+            showCustomSnackBar(context, '¡Puntaje actualizado correctamente!',
+                SnackBarType.confirmation);
           }
         } else {
           // Si no existe un registro, crear uno nuevo
@@ -899,6 +896,51 @@ class FirestoreService {
           const SnackBar(content: Text('Usuario no logueado')),
         );
       }
+    }
+  }
+
+  Future<int> getCurrentUserScore(BuildContext context) async {
+    try {
+      // Obtener el email del usuario logueado
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no logueado');
+      }
+      String userEmail = user.email!;
+      print('Email del usuario logueado: $userEmail');
+
+      // Consultar Firestore para obtener el puntaje del usuario usando el campo "email"
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('puntajes')
+          .where('email', isEqualTo: userEmail)
+          .get();
+
+      // Verificar si se encontró algún documento
+      if (querySnapshot.docs.isNotEmpty) {
+        // Suponiendo que cada usuario tiene solo un documento en la colección "puntajes"
+        DocumentSnapshot userScoreSnapshot = querySnapshot.docs.first;
+        Map<String, dynamic> userData =
+            userScoreSnapshot.data() as Map<String, dynamic>;
+
+        print('Datos del documento: $userData');
+
+        // Verificar si el campo "puntos" está presente en los datos
+        if (userData.containsKey('puntos')) {
+          print('Puntaje encontrado: ${userData['puntos']}');
+          return userData['puntos'] as int;
+        } else {
+          print('El campo "puntos" no se encuentra en los datos.');
+        }
+      } else {
+        print('No se encontró ningún documento para el email: $userEmail');
+      }
+
+      // Retornar 0 si no hay puntaje guardado o el documento no existe
+      return 0;
+    } catch (e) {
+      // Manejar errores y retornar 0 en caso de fallo
+      print('Error al obtener el puntaje del usuario: $e');
+      return 0;
     }
   }
 }

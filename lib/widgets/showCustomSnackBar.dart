@@ -3,7 +3,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 enum SnackBarType { error, confirmation }
 
-void showCustomSnackBar(BuildContext context, String message, SnackBarType type) {
+void showCustomSnackBar(BuildContext context, String message, SnackBarType type,
+    {durationInMilliseconds = 3000}) {
   final overlay = Overlay.of(context);
   final overlayEntry = OverlayEntry(
     builder: (context) => Positioned(
@@ -20,8 +21,8 @@ void showCustomSnackBar(BuildContext context, String message, SnackBarType type)
   // Insertar el overlay
   overlay.insert(overlayEntry);
 
-  // Remover el overlay después de unos segundos
-  Future.delayed(const Duration(seconds: 3), () {
+  // Remover el overlay después de la duración especificada
+  Future.delayed(Duration(milliseconds: durationInMilliseconds), () {
     overlayEntry.remove();
   });
 }
@@ -30,9 +31,11 @@ class AnimatedSnackBar extends StatefulWidget {
   final String message;
   final SnackBarType type;
 
-  const AnimatedSnackBar({Key? key, required this.message, required this.type}) : super(key: key);
+  const AnimatedSnackBar(
+      {super.key, required this.message, required this.type});
 
   @override
+  // ignore: library_private_types_in_public_api
   _AnimatedSnackBarState createState() => _AnimatedSnackBarState();
 }
 

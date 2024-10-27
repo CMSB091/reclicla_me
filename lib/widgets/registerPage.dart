@@ -46,6 +46,7 @@ class _RegisterPageState extends State<RegisterPage> {
           });
           showCustomSnackBar(context,'El correo ya está registrado',SnackBarType.error);
           return;
+
         }
 
         // Registrar al usuario en Firebase Authentication
