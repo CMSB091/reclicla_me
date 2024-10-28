@@ -8,11 +8,11 @@ import 'package:recila_me/widgets/MiniJuegoBasura.dart';
 import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/login.dart';
-import 'package:recila_me/clases/object_detection_screen.dart';
 import 'package:camera/camera.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
 import 'package:recila_me/widgets/mySplashScreen.dart';
 import 'package:recila_me/widgets/redSocial.dart';
+import 'package:recila_me/widgets/object_detection_screen.dart';
 
 class MyInicio extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -54,7 +54,6 @@ class _MyInicioState extends State<MyInicio> {
           });
         }
       } catch (e) {
-        // Manejar el error aquí si ocurre un fallo al obtener el nombre
         Funciones.SeqLog('error', 'Error al obtener nombre de usuario: $e');
         setState(() {
           isLoading = false;
@@ -330,12 +329,7 @@ class _MyInicioState extends State<MyInicio> {
   Widget _getPageForIndex(int index) {
     switch (index) {
       case 0:
-        if (widget.cameras.isEmpty) {
-          return const Scaffold(
-            body: Center(child: Text('No se encontraron cámaras disponibles')),
-          );
-        }
-        return ObjectDetectionScreen(cameras: widget.cameras);
+        return const ObjectDetectionScreen();
       case 1:
         return const MySplash();
       case 2:
@@ -345,22 +339,6 @@ class _MyInicioState extends State<MyInicio> {
       default:
         return MyInicio(cameras: widget.cameras);
     }
-  }
-}
-
-class Page2 extends StatelessWidget {
-  const Page2({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Página 2'),
-      ),
-      body: const Center(
-        child: Text('Contenido de la Página 2'),
-      ),
-    );
   }
 }
 
