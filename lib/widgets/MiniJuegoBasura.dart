@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/clases/residuos.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/puntajes.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
@@ -16,49 +17,6 @@ class MiniJuegoBasura extends StatefulWidget {
 }
 
 class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
-  // Lista de residuos con rutas a las imágenes PNG
-  final List<Map<String, dynamic>> residuos = [
-    {
-      'imagen':
-          'assets/images/miniJuego/animatedBottle.png', // Ruta a la imagen en assets
-      'tipo': 'plastico'
-    },
-    {'imagen': 'assets/images/miniJuego/glassBottle.png', 'tipo': 'vidrio'},
-    {'imagen': 'assets/images/miniJuego/can.png', 'tipo': 'plastico'},
-    {
-      'imagen': 'assets/images/miniJuego/glass_cup.png',
-      'tipo': 'vidrio'
-    },
-    {
-      'imagen': 'assets/images/miniJuego/plastic_bottle2.png',
-      'tipo': 'plastico'
-    },
-    {
-      'imagen': 'assets/images/miniJuego/plastic_cup.png',
-      'tipo': 'plastico'
-    },
-    {
-      'imagen': 'assets/images/miniJuego/apple.png',
-      'tipo': 'organico'
-    },
-    {
-      'imagen': 'assets/images/miniJuego/cellphone.png',
-      'tipo': 'peligrosos'
-    },
-    {
-      'imagen': 'assets/images/miniJuego/mouse.png',
-      'tipo': 'peligrosos'
-    },
-    {
-      'imagen': 'assets/images/miniJuego/pilas.png',
-      'tipo': 'peligrosos'
-    },
-    {
-      'imagen': 'assets/images/miniJuego/pajita_plastico.png',
-      'tipo': 'plastico'
-    },
-  ];
-
   String residuoActual = '';
   String? imagenActual;
   int puntos = 0;
@@ -66,8 +24,7 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
   Timer? _timer;
   int _timeLeft = 60; // 60 segundos para el temporizador
   final Random random = Random();
-  bool _showSaveButton =
-      false; // Controla la visibilidad del botón para guardar puntaje
+  bool _showSaveButton = false; // Controla la visibilidad del botón para guardar puntaje
   Funciones funciones = Funciones();
   Color _puntosColor = Colors.black;
 // Comienza en 3
@@ -88,7 +45,7 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
   }
 
   void generarResiduo() {
-    final residuo = funciones.generarResiduoAleatorio(residuos);
+    final residuo = funciones.generarResiduoAleatorio(Residuos.lista);
     setState(() {
       residuoActual = residuo['tipo'];
       imagenActual = residuo['imagen'];

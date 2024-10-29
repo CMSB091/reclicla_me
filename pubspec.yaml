@@ -108,8 +108,13 @@ flutter:
     - assets/images/miniJuego/cellphone.png
     - assets/images/miniJuego/mouse.png
     - assets/images/miniJuego/pilas.png
-    - assets/images/miniJuego/pajita_plastico.png
-    - assets/images/miniJuego/plastic_cup.png
+    - assets/images/miniJuego/pajilla_mod.png
+    - assets/images/miniJuego/plastic_cup_mod.png
+    - assets/images/miniJuego/aceite_mod.png
+    - assets/images/miniJuego/coca_cola_bottle_mod.png
+    - assets/images/miniJuego/heinz_plastic_mod.png
+    - assets/images/miniJuego/plastic_bottle2.png
+    - assets/images/miniJuego/pepsi_bottle_mod.png
     - assets/json/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-trash.json
