@@ -116,6 +116,27 @@ flutter:
     - assets/images/miniJuego/plastic_bottle2.png
     - assets/images/miniJuego/pepsi_bottle_mod.png
     - assets/images/miniJuego/bolsa.png
+    - assets/images/miniJuego/coca_cola_lata_roja.png
+    - assets/images/miniJuego/coca_cola_lata.png
+    - assets/images/miniJuego/lata_aluminio.png
+    - assets/images/miniJuego/lata_cerveza.png
+    - assets/images/miniJuego/lata_conserva.png
+    - assets/images/miniJuego/cerveza_vidrio.png
+    - assets/images/miniJuego/coca_cola_vidrio.png
+    - assets/images/miniJuego/wine_bottle2.png
+    - assets/images/miniJuego/botella_mermelada.png
+    - assets/images/miniJuego/botella_vidrio.png
+    - assets/images/miniJuego/Green-Glass-Bottle.png
+    - assets/images/miniJuego/animado_carton.png
+    - assets/images/miniJuego/caja_carton.png
+    - assets/images/miniJuego/tubo_carton.png
+    - assets/images/miniJuego/cajita_carton.png
+    - assets/images/miniJuego/caja_de_carton.png
+    - assets/images/miniJuego/sticky_note.png
+    - assets/images/miniJuego/papel_arrugado.png
+    - assets/images/miniJuego/papel_rayado.png
+    - assets/images/miniJuego/periodico.png
+    - assets/images/miniJuego/papel_cuad.png
     - assets/json/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-trash.json
