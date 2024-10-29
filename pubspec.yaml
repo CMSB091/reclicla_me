@@ -115,6 +115,7 @@ flutter:
     - assets/images/miniJuego/heinz_plastic_mod.png
     - assets/images/miniJuego/plastic_bottle2.png
     - assets/images/miniJuego/pepsi_bottle_mod.png
+    - assets/images/miniJuego/bolsa.png
     - assets/json/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-trash.json
