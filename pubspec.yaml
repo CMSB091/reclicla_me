@@ -107,7 +107,14 @@ flutter:
     - assets/images/miniJuego/apple.png
     - assets/images/miniJuego/cellphone.png
     - assets/images/miniJuego/mouse.png
-    - assets/images/miniJuego/pilas.png
+    - assets/images/miniJuego/pila.png
+    - assets/images/miniJuego/teclado.png
+    - assets/images/miniJuego/bateria_telefono.png
+    - assets/images/miniJuego/calculadora.png
+    - assets/images/miniJuego/disco_duro.png
+    - assets/images/miniJuego/memoria.png
+    - assets/images/miniJuego/card.png
+    - assets/images/miniJuego/joystick.png
     - assets/images/miniJuego/pajilla_mod.png
     - assets/images/miniJuego/plastic_cup_mod.png
     - assets/images/miniJuego/aceite_mod.png
@@ -137,6 +144,16 @@ flutter:
     - assets/images/miniJuego/papel_rayado.png
     - assets/images/miniJuego/periodico.png
     - assets/images/miniJuego/papel_cuad.png
+    - assets/images/miniJuego/banana.png
+    - assets/images/miniJuego/naranja.png
+    - assets/images/miniJuego/tomate.png
+    - assets/images/miniJuego/lechuga.png
+    - assets/images/miniJuego/pera.png
+    - assets/images/miniJuego/cebolla.png
+    - assets/images/miniJuego/huevo.png
+    - assets/images/miniJuego/apple.png
+    - assets/images/miniJuego/locote.png
+    - assets/images/miniJuego/zanahoria.png
     - assets/json/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-trash.json

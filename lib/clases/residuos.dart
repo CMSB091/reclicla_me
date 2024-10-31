@@ -36,11 +36,27 @@ class Residuos {
     {'imagen': 'assets/images/miniJuego/periodico.png','tipo': 'papel'},
     {'imagen': 'assets/images/miniJuego/papel_cuad.png','tipo': 'papel'},
 
+    {'imagen': 'assets/images/miniJuego/banana.png','tipo': 'organico'},
+    {'imagen': 'assets/images/miniJuego/naranja.png','tipo': 'organico'},
+    {'imagen': 'assets/images/miniJuego/tomate.png','tipo': 'organico'},
+    {'imagen': 'assets/images/miniJuego/lechuga.png','tipo': 'organico'},
+    {'imagen': 'assets/images/miniJuego/pera.png','tipo': 'organico'},
+    {'imagen': 'assets/images/miniJuego/cebolla.png','tipo': 'organico'},
+    {'imagen': 'assets/images/miniJuego/huevo.png','tipo': 'organico'},
     {'imagen': 'assets/images/miniJuego/apple.png','tipo': 'organico'},
-
+    {'imagen': 'assets/images/miniJuego/locote.png','tipo': 'organico'},
+    {'imagen': 'assets/images/miniJuego/zanahoria.png','tipo': 'organico'},
+    
     {'imagen': 'assets/images/miniJuego/cellphone.png','tipo': 'peligrosos'},
     {'imagen': 'assets/images/miniJuego/mouse.png','tipo': 'peligrosos'},
-    {'imagen': 'assets/images/miniJuego/pilas.png','tipo': 'peligrosos'},
+    {'imagen': 'assets/images/miniJuego/pila.png','tipo': 'peligrosos'},
+    {'imagen': 'assets/images/miniJuego/teclado.png','tipo': 'peligrosos'},
+    {'imagen': 'assets/images/miniJuego/bateria_telefono.png','tipo': 'peligrosos'},
+    {'imagen': 'assets/images/miniJuego/calculadora.png','tipo': 'peligrosos'},
+    {'imagen': 'assets/images/miniJuego/disco_duro.png','tipo': 'peligrosos'},
+    {'imagen': 'assets/images/miniJuego/memoria.png','tipo': 'peligrosos'},
+    {'imagen': 'assets/images/miniJuego/card.png','tipo': 'peligrosos'},
+    {'imagen': 'assets/images/miniJuego/joystick.png','tipo': 'peligrosos'},
     
   ];
 }
