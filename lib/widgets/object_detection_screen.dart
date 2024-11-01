@@ -92,7 +92,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Detección de objetos'),
+        title: const Text('Detección de objetos'),
         centerTitle: true,
       ),
       body: Padding(
@@ -103,7 +103,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
             const SizedBox(height: 30),
             Center(
               child: _loading
-                  ? Container(
+                  ? SizedBox(
                       width: 280,
                       child: Column(
                         children: <Widget>[
@@ -117,7 +117,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                       height: 250,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
+                        boxShadow: const [
                           BoxShadow(
                             color: Colors.black26,
                             blurRadius: 10,
@@ -154,7 +154,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                   color: Colors.white, // Botón blanco
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       blurRadius: 5,
                       offset: Offset(0, 2),
@@ -181,7 +181,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
                   color: Colors.white, // Botón blanco
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       blurRadius: 5,
                       offset: Offset(0, 2),

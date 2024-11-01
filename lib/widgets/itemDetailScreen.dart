@@ -93,6 +93,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("Estado del item: ${widget.estado}");
     final User? user =
         FirebaseAuth.instance.currentUser; // Obtener el usuario logueado
     final String? loggedInEmail = user?.email; // Email del usuario logueado
@@ -231,10 +232,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  widget.estado ? 'Disponible' : 'No Disponible',
+                  !widget.estado ? 'Disponible' : 'No Disponible',
                   style: TextStyle(
                     fontSize: 16,
-                    color: widget.estado
+                    color: !widget.estado
                         ? const Color.fromARGB(255, 6, 128, 10)
                         : Colors.red, // Color basado en el estado
                     fontWeight: FontWeight.bold,
