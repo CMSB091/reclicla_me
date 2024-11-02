@@ -51,11 +51,7 @@ dependencies:
   url_launcher: ^6.0.20 # Para levantar Whatsapp
   device_apps: ^2.0.0
   path: ^1.8.0
-  #another_flutter_splash_screen: ^1.2.1
-  #image_picker: ^0.8.9
-  flutter_tflite: ^1.0.1
-  image_picker: ^0.8.5+3
-  lottie: ^3.1.2
+  vibration: ^1.7.4
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -67,6 +63,8 @@ dependencies:
   firebase_storage: ^12.3.1
   #image_picker: ^1.1.2
   connectivity_plus: ^6.0.5
+  lottie: ^3.1.3
+  flutter_tflite: ^1.0.1
 
   
 dev_dependencies:
@@ -105,6 +103,57 @@ flutter:
     - assets/images/miniJuego/animatedBottle.png 
     - assets/images/miniJuego/glassBottle.png
     - assets/images/miniJuego/can.png
+    - assets/images/miniJuego/glass_cup.png
+    - assets/images/miniJuego/apple.png
+    - assets/images/miniJuego/cellphone.png
+    - assets/images/miniJuego/mouse.png
+    - assets/images/miniJuego/pila.png
+    - assets/images/miniJuego/teclado.png
+    - assets/images/miniJuego/bateria_telefono.png
+    - assets/images/miniJuego/calculadora.png
+    - assets/images/miniJuego/disco_duro.png
+    - assets/images/miniJuego/memoria.png
+    - assets/images/miniJuego/card.png
+    - assets/images/miniJuego/joystick.png
+    - assets/images/miniJuego/pajilla_mod.png
+    - assets/images/miniJuego/plastic_cup_mod.png
+    - assets/images/miniJuego/aceite_mod.png
+    - assets/images/miniJuego/coca_cola_bottle_mod.png
+    - assets/images/miniJuego/heinz_plastic_mod.png
+    - assets/images/miniJuego/plastic_bottle2.png
+    - assets/images/miniJuego/pepsi_bottle_mod.png
+    - assets/images/miniJuego/bolsa.png
+    - assets/images/miniJuego/coca_cola_lata_roja.png
+    - assets/images/miniJuego/coca_cola_lata.png
+    - assets/images/miniJuego/lata_aluminio.png
+    - assets/images/miniJuego/lata_cerveza.png
+    - assets/images/miniJuego/lata_conserva.png
+    - assets/images/miniJuego/cerveza_vidrio.png
+    - assets/images/miniJuego/coca_cola_vidrio.png
+    - assets/images/miniJuego/wine_bottle2.png
+    - assets/images/miniJuego/botella_mermelada.png
+    - assets/images/miniJuego/botella_vidrio.png
+    - assets/images/miniJuego/Green-Glass-Bottle.png
+    - assets/images/miniJuego/animado_carton.png
+    - assets/images/miniJuego/caja_carton.png
+    - assets/images/miniJuego/tubo_carton.png
+    - assets/images/miniJuego/cajita_carton.png
+    - assets/images/miniJuego/caja_de_carton.png
+    - assets/images/miniJuego/sticky_note.png
+    - assets/images/miniJuego/papel_arrugado.png
+    - assets/images/miniJuego/papel_rayado.png
+    - assets/images/miniJuego/periodico.png
+    - assets/images/miniJuego/papel_cuad.png
+    - assets/images/miniJuego/banana.png
+    - assets/images/miniJuego/naranja.png
+    - assets/images/miniJuego/tomate.png
+    - assets/images/miniJuego/lechuga.png
+    - assets/images/miniJuego/pera.png
+    - assets/images/miniJuego/cebolla.png
+    - assets/images/miniJuego/huevo.png
+    - assets/images/miniJuego/apple.png
+    - assets/images/miniJuego/locote.png
+    - assets/images/miniJuego/zanahoria.png
     - assets/json/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-trash.json

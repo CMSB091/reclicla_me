@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -7,7 +8,8 @@ import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
-import 'package:recila_me/widgets/redSocial.dart'; // Para seleccionar imagen desde la galería
+import 'package:recila_me/widgets/redSocial.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart'; // Para seleccionar imagen desde la galería
 
 class AddItemScreen extends StatefulWidget {
   final String? itemId;
@@ -92,14 +94,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
       });
       Funciones.SeqLog('information', 'Foto tomada: ${_imageFile!.path}');
     } else {
-      _showSnackBar('No se tomó ninguna foto.');
+      showCustomSnackBar(
+          context, 'No se tomó ninguna foto.', SnackBarType.error);
     }
-  }
-
-  // Mostrar SnackBar
-  void _showSnackBar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _handleUpload() async {
@@ -110,8 +107,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
     try {
       if (!_formKey.currentState!.validate()) {
-        Funciones.showSnackBar(
-            context, 'Por favor, completa los campos correctamente.');
+        showCustomSnackBar(
+            context,
+            'Por favor, completa los campos correctamente.',
+            SnackBarType.error);
         setState(() {
           _isLoading = false;
         });
@@ -119,8 +118,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
       }
 
       if (_imageFile == null) {
-        Funciones.showSnackBar(
-            context, 'Por favor, selecciona una imagen primero.');
+        showCustomSnackBar(context, 'Por favor, selecciona una imagen primero.',
+            SnackBarType.error);
         setState(() {
           _isLoading = false;
         });
@@ -129,7 +128,23 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
       _formKey.currentState!.save();
 
+      // Obtener el email del usuario
       if (_userEmail != null) {
+        // Obtener el valor más alto de `idpub`
+        int maxIdPub = 0;
+        QuerySnapshot snapshot = await FirebaseFirestore.instance
+            .collection('items')
+            .orderBy('idpub', descending: true)
+            .limit(1)
+            .get();
+
+        if (snapshot.docs.isNotEmpty) {
+          maxIdPub = snapshot.docs.first['idpub'];
+        }
+
+        int newIdPub = maxIdPub + 1;
+
+        // Subir la imagen y guardar los datos en Firestore con el nuevo idpub
         await firestoreService.uploadImageAndSaveToFirestore(
           imageFile: _imageFile!,
           description: _descriptionController.text,
@@ -138,8 +153,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
           email: _userEmail!,
           titulo: _tituloController.text,
           estado: false,
+          idpub: newIdPub, // Asignar el nuevo idpub
         );
-        Funciones.showSnackBar(context, 'Publicacdo correctamente');
+
+        showCustomSnackBar(
+            context, 'Publicado correctamente', SnackBarType.confirmation);
         _resetForm();
         Navigator.pushReplacement(
           context,
@@ -148,8 +166,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   const HomeScreen()), // Asegúrate de usar el nombre correcto de la clase
         );
       } else {
-        Funciones.showSnackBar(
-            context, 'No se pudo cargar el email del usuario.');
+        showCustomSnackBar(context, 'No se pudo cargar el email del usuario.',
+            SnackBarType.error);
       }
     } catch (e) {
       print('Error $e');
@@ -175,13 +193,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
         _imageFile?.path, // Ruta del archivo si hay una nueva imagen
         widget.imageUrl, // URL de la imagen anterior
       );
-
       // Mostrar mensaje de éxito
-      Funciones.showSnackBar(context, 'Publicación actualizada correctamente');
-
+      showCustomSnackBar(context, 'Publicación actualizada correctamente',
+          SnackBarType.confirmation);
       // Limpiar los campos
       _resetForm();
-
       // Redirigir a la página de red social
       Navigator.pushReplacement(
         context,
@@ -191,15 +207,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
       );
     } catch (e) {
       print('Error al actualizar el post: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error al actualizar la publicación')),
-      );
+      showCustomSnackBar(
+          context, 'Error al actualizar la publicación', SnackBarType.error);
     } finally {
       setState(() {
         _isLoading = false; // Ocultar el spinner al finalizar
       });
     }
   }
+
   // Resetear el formulario después de la subida exitosa
   void _resetForm() {
     setState(() {
@@ -228,93 +244,106 @@ class _AddItemScreenState extends State<AddItemScreen> {
         ),
         backgroundColor: Colors.green.shade200,
       ),
-      body: BlurredBackground(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(15.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                buildTextField(
-                  labelText: 'Título',
-                  controller: _tituloController,
-                  maxLength: 20,
-                  validator: (value) =>
-                      value!.isEmpty ? 'Ingrese un título' : null,
-                ),
-                const SizedBox(height: 5),
-                buildTextField(
-                  labelText: 'Descripción',
-                  controller: _descriptionController,
-                  maxLength: 100,
-                  validator: (value) =>
-                      value!.isEmpty ? 'Ingrese una descripción' : null,
-                ),
-                const SizedBox(height: 5),
-                buildTextField(
-                  labelText: 'Contacto',
-                  controller: _contactController,
-                  maxLength: 15,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: (value) =>
-                      value!.isEmpty ? 'Ingrese un contacto' : null,
-                ),
-                const SizedBox(height: 5),
-                // Aquí es donde ajustamos qué imagen mostrar
-                if (widget.isEdit &&
-                    _imageFile == null &&
-                    widget.imageUrl != null)
-                  Image.network(
-                    widget
-                        .imageUrl!, // Mostrar la imagen desde la URL si es edición y no hay archivo local
-                    height: 300,
-                    width: 300,
-                  )
-                else if (_imageFile != null)
-                  Image.file(
-                    _imageFile!,
-                    height: 300,
-                    width: 300,
-                  )
-                else
-                  const Text('No se ha seleccionado ninguna imagen.'),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: _pickImageFromGallery,
-                      icon: const FaIcon(FontAwesomeIcons.image),
-                      label: const Text('Desde Galería'),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: _takePhoto,
-                      icon: const FaIcon(FontAwesomeIcons.camera),
-                      label: const Text('Tomar Foto'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _isLoading
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton.icon(
+      body: Stack(
+        children: [
+          AbsorbPointer(
+            absorbing:
+                _isLoading, // Bloquear interacciones si _isLoading es true
+            child: BlurredBackground(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(15.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      buildTextField(
+                        labelText: 'Título',
+                        controller: _tituloController,
+                        maxLength: 20,
+                        validator: (value) =>
+                            value!.isEmpty ? 'Ingrese un título' : null,
+                      ),
+                      const SizedBox(height: 5),
+                      buildTextField(
+                        labelText: 'Descripción',
+                        controller: _descriptionController,
+                        maxLength: 100,
+                        validator: (value) =>
+                            value!.isEmpty ? 'Ingrese una descripción' : null,
+                      ),
+                      const SizedBox(height: 5),
+                      buildTextField(
+                        labelText: 'Contacto',
+                        controller: _contactController,
+                        maxLength: 15,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        validator: (value) =>
+                            value!.isEmpty ? 'Ingrese un contacto' : null,
+                      ),
+                      const SizedBox(height: 5),
+                      // Mostrar la imagen seleccionada o cargada
+                      if (widget.isEdit &&
+                          _imageFile == null &&
+                          widget.imageUrl != null)
+                        Image.network(
+                          widget.imageUrl!,
+                          height: 300,
+                          width: 300,
+                        )
+                      else if (_imageFile != null)
+                        Image.file(
+                          _imageFile!,
+                          height: 300,
+                          width: 300,
+                        )
+                      else
+                        const Text('No se ha seleccionado ninguna imagen.'),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          ElevatedButton.icon(
+                            onPressed: _pickImageFromGallery,
+                            icon: const FaIcon(FontAwesomeIcons.image),
+                            label: const Text('Desde Galería'),
+                          ),
+                          ElevatedButton.icon(
+                            onPressed: _takePhoto,
+                            icon: const FaIcon(FontAwesomeIcons.camera),
+                            label: const Text('Tomar Foto'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
                         icon: const FaIcon(FontAwesomeIcons.upload),
-                        label:
-                            Text(widget.isEdit ? 'Actualizar' : 'Subir imagen'),
+                        label: Text(widget.isEdit ? 'Actualizar' : 'Publicar'),
                         onPressed: () {
                           if (widget.isEdit) {
-                            // Actualizar en Firebase si es edición
                             _updatePost();
                           } else {
                             _handleUpload();
                           }
                         },
                       ),
-              ],
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+          // Mostrar el spinner si _isLoading es true
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5), // Fondo semi-transparente
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+        ],
       ),
     );
   }

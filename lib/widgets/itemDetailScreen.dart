@@ -7,6 +7,7 @@ import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/clases/utilities.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 // Importar permisos
 
 class ItemDetailScreen extends StatefulWidget {
@@ -17,7 +18,8 @@ class ItemDetailScreen extends StatefulWidget {
   final String userName; // Nombre del usuario que publicó el artículo
   final bool estado;
   final String email;
-  final String pais; // Estado de disponibilidad del artículo
+  final String pais;
+  final String idpub;
 
   const ItemDetailScreen({
     super.key,
@@ -29,6 +31,7 @@ class ItemDetailScreen extends StatefulWidget {
     required this.estado,
     required this.email,
     required this.pais,
+    required this.idpub,
   });
 
   @override
@@ -52,6 +55,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       );
       // Limpiar el input después de enviar el comentario
       _commentController.clear();
+    }else{
+      showCustomSnackBar(context,'Debe ingresar un comentario!!', SnackBarType.error);
     }
   }
 
@@ -88,6 +93,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print("Estado del item: ${widget.estado}");
     final User? user =
         FirebaseAuth.instance.currentUser; // Obtener el usuario logueado
     final String? loggedInEmail = user?.email; // Email del usuario logueado
@@ -191,11 +197,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       icon: const FaIcon(FontAwesomeIcons.whatsapp),
                       color: const Color.fromARGB(255, 6, 128, 10),
                       onPressed: () {
-                        utilidades
-                            .checkIfAppIsInstalled(); // eliminar al finalizar
-                        utilidades.listInstalledApps(); // eliminar al finalizar
+                        //utilidades.checkIfAppIsInstalled(); // eliminar al finalizar
+                        //utilidades.listInstalledApps(); // eliminar al finalizar
                         funciones.launchWhatsApp(widget.contact, widget.pais,
-                            context); // Abrir WhatsApp
+                            context, widget.idpub, widget.title, widget.imageUrl); // Abrir WhatsApp
                       },
                     ),
                   ],
@@ -227,12 +232,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  widget.estado ? 'No disponible' : 'Disponible',
+                  !widget.estado ? 'Disponible' : 'No Disponible',
                   style: TextStyle(
                     fontSize: 16,
-                    color: widget.estado
-                        ? Colors.red
-                        : const Color.fromARGB(255, 6, 128, 10), // Color basado en el estado
+                    color: !widget.estado
+                        ? const Color.fromARGB(255, 6, 128, 10)
+                        : Colors.red, // Color basado en el estado
                     fontWeight: FontWeight.bold,
                   ),
                 ),

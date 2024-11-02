@@ -8,6 +8,7 @@ import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:camera/camera.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 
 class DatosPersonales extends StatelessWidget {
   final String correo;
@@ -513,10 +514,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                             _mostrarCiudades(_paisController
                                 .text); // Llamar a la función que carga las ciudades
                           } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Selecciona un país primero.')),
-                            );
+                            showCustomSnackBar(context,'Selecciona un país primero.',SnackBarType.error);
                           }
                         },
                         child: AbsorbPointer(

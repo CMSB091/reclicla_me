@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_seq/dart_seq.dart';
@@ -453,7 +454,8 @@ class Funciones {
       String username,
       bool estado,
       String email,
-      String pais) {
+      String pais,
+      String idpub) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -465,7 +467,8 @@ class Funciones {
             userName: username,
             estado: estado,
             email: email,
-            pais: pais),
+            pais: pais,
+            idpub: idpub),
       ),
     );
   }
@@ -476,12 +479,13 @@ class Funciones {
     return DateFormat('dd/MM/yyyy HH:mm').format(date);
   }
 
-  void launchWhatsApp(
-      String contact, String country, BuildContext context) async {
+  void launchWhatsApp(String contact, String country, BuildContext context,
+      String id, String title, String imageUrl) async {
     try {
       // Eliminar caracteres no numéricos y formatear el número
       String phoneNumber = contact.replaceAll(RegExp(r'[^\d+]'), '');
       print(country);
+
       // Mapa de códigos de país según el país
       Map<String, String> countryCodes = {
         'Chile': '56',
@@ -505,8 +509,13 @@ class Funciones {
         phoneNumber = '${countryCodes[country]}${phoneNumber.substring(1)}';
       }
 
+      // Definir el mensaje a enviar, incluyendo el enlace de la imagen
+      String message = Uri.encodeComponent(
+          '¡Hola, estoy interesado en la publicación con ID número $id. Título: $title. Aquí puedes ver la imagen: $imageUrl');
+
       // URL usando el esquema `https://wa.me/`
-      final Uri whatsappWebUri = Uri.parse('https://wa.me/$phoneNumber');
+      final Uri whatsappWebUri =
+          Uri.parse('https://wa.me/$phoneNumber?text=$message');
 
       // Verificar si se puede abrir WhatsApp mediante este esquema alternativo
       if (await canLaunchUrl(whatsappWebUri)) {
@@ -546,7 +555,13 @@ class Funciones {
 
   static void showSnackBar(BuildContext context, String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior
+            .floating, // Hace que el SnackBar "flote" en lugar de estar pegado a la parte inferior
+        margin: const EdgeInsets.all(16), // Margen alrededor del SnackBar
+        duration: const Duration(seconds: 3), // Duración de la animación
+      ),
     );
   }
 
@@ -574,4 +589,62 @@ class Funciones {
       },
     );
   }
+
+  void showLoadingSpinner(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible:
+          false, // Evita que el usuario cierre el diálogo tocando fuera de él
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+  }
+
+  // Genera un residuo aleatorio
+Map<String, dynamic> generarResiduoAleatorio(List<Map<String, dynamic>> residuos) {
+  final random = Random();
+  return residuos[random.nextInt(residuos.length)];
+}
+
+// Verifica la respuesta y retorna el puntaje actualizado y el estado de la verificación
+int verificarRespuesta(String tipoBasurero, String residuoActual, int puntos) {
+  if (tipoBasurero == residuoActual) {
+    return puntos + 1;
+  } else {
+    return puntos > 0 ? puntos - 1 : 0;
+  }
+}
+
+// Función para mostrar un diálogo de confirmación
+Future<bool> showConfirmationDialog(BuildContext context) async {
+  return await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Confirmar guardado'),
+        content: const Text(
+            'El puntaje que has conseguido es menor al que ya tienes guardado. ¿Deseas reemplazarlo de todas formas?'),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Cancelar'),
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+          ),
+          TextButton(
+            child: const Text('Guardar'),
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+          ),
+        ],
+      );
+    },
+  ).then((value) => value ?? false);
+}
+  
 }
