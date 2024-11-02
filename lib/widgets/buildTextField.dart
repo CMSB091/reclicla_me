@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-  InputDecoration buildInputDecoration(String labelText) {
+  InputDecoration buildInputDecoration(String labelText, String? hint) {
     return InputDecoration(
       labelText: labelText,
       labelStyle: const TextStyle(
@@ -22,6 +22,7 @@ import 'package:flutter/services.dart';
           color: Colors.green, // Borde cuando el campo está enfocado
         ),
       ),
+      hintText: hint
     );
   }
 
@@ -32,13 +33,14 @@ import 'package:flutter/services.dart';
     required String? Function(String?)? validator,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
-    bool isReadOnly = false
+    bool isReadOnly = false,
+    String? hint,
   }) {
     return Column(
       children: [
         TextFormField(
           controller: controller,
-          decoration: buildInputDecoration(labelText),
+          decoration: buildInputDecoration(labelText, hint),
           validator: validator,
           maxLines: null,
           keyboardType: keyboardType,

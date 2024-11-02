@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
@@ -12,7 +14,6 @@ class NoticiasChatGPT extends StatefulWidget {
   const NoticiasChatGPT({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _MyChatWidgetState createState() => _MyChatWidgetState();
 }
 
@@ -23,13 +24,11 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   String imageUrl = '';
   bool isLoading = false;
   List<Map<String, dynamic>> chatHistory = [];
-  late String userEmail = 'Cargando...'; // valor por defecto
+  late String userEmail = 'Cargando...';
   final ScrollController _scrollController = ScrollController();
   bool isTyping = false;
-  String typingIndicator =
-      'Escribiendo'; // Texto inicial para el indicador de escritura
-  // ignore: unused_field
-  Timer? _typingTimer; // Timer para animación de "Escribiendo..."
+  String typingIndicator = 'Escribiendo';
+  Timer? _typingTimer;
 
   Future<void> _setUserEmail() async {
     String? email = await firestoreService.loadUserEmail();
@@ -45,6 +44,12 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     }
   }
 
+  void _setupTextListeners() {
+    _controller.addListener(() {
+      setState(() {}); // Redibujar para actualizar el contador
+    });
+  }
+
   void _startTypingAnimation() {
     setState(() {
       isTyping = true;
@@ -53,9 +58,8 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     int dotCount = 0;
     _typingTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       setState(() {
-        dotCount = (dotCount + 1) % 4; // Ciclo entre 0, 1, 2, 3
-        typingIndicator =
-            'Escribiendo${'.' * dotCount}'; // Agrega puntos de manera cíclica
+        dotCount = (dotCount + 1) % 4;
+        typingIndicator = 'Escribiendo${'.' * dotCount}';
       });
     });
   }
@@ -128,11 +132,12 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   void initState() {
     super.initState();
     _setUserEmail();
+    _setupTextListeners();
   }
 
   void _loadSelectedChat(Map<String, dynamic> chat) {
     setState(() {
-      chatHistory.clear(); // Limpiar el historial actual
+      chatHistory.clear();
       if (chat['userPrompt'] != null && chat['chatResponse'] != null) {
         chatHistory.add({'message': chat['userPrompt'], 'isUser': true});
         chatHistory.add({'message': chat['chatResponse'], 'isUser': false});
@@ -149,7 +154,9 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
           await firestoreService.fetchChatHistoryByEmail(userEmail);
 
       if (chatHistoryList.isEmpty) {
-        showCustomSnackBar(context,'No se encontraron interacciones previas para este usuario.',SnackBarType.error);
+        showCustomSnackBar(context,
+            'No se encontraron interacciones previas para este usuario.',
+            SnackBarType.error);
         return;
       }
 
@@ -178,7 +185,6 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                           icon: const Icon(FontAwesomeIcons.trash,
                               color: Colors.red),
                           onPressed: () async {
-                            // Confirmar eliminación
                             final confirmDelete = await showDialog<bool>(
                               context: context,
                               builder: (context) {
@@ -205,17 +211,16 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                             if (confirmDelete == true) {
                               await firestoreService.deleteChatById(chat['id']);
                               setState(() {
-                                chatHistoryList.removeAt(
-                                    index); // Eliminar del historial local
+                                chatHistoryList.removeAt(index);
                               });
-                              showCustomSnackBar(context,'Chat eliminado.',SnackBarType.confirmation);
+                              showCustomSnackBar(context, 'Chat eliminado.',
+                                  SnackBarType.confirmation);
                             }
                           },
                         ),
                         onTap: () {
-                          Navigator.of(context).pop(); // Cerrar el diálogo
-                          _loadSelectedChat(
-                              chat); // Cargar el chat seleccionado
+                          Navigator.of(context).pop();
+                          _loadSelectedChat(chat);
                         },
                       );
                     },
@@ -228,7 +233,8 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       );
     } catch (e) {
       Funciones.SeqLog('error', 'Error al recuperar el historial de chat: $e');
-      showCustomSnackBar(context,'Error al recuperar el historial de chat: $e',SnackBarType.error);
+      showCustomSnackBar(context, 'Error al recuperar el historial de chat: $e',
+          SnackBarType.error);
     }
   }
 
@@ -274,8 +280,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                 itemBuilder: (context, index) {
                   if (index == chatHistory.length + (isTyping ? 2 : 1)) {
                     return const Padding(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                       child: Text(
                         '¡Hola! Soy Recyclops, aquí para ayudarte a reciclar de manera creativa y sostenible.',
                         textAlign: TextAlign.center,
@@ -320,14 +325,13 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
+                    child: buildTextField(
+                      labelText: '',
                       controller: _controller,
-                      decoration: InputDecoration(
-                        hintText: 'Escribe un mensaje...',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                      ),
+                      maxLength: 200,
+                      validator: (value) =>
+                          value!.isEmpty ? 'Debe ingresar un mensaje' : null,
+                      hint: 'Escribe un mensaje...',
                     ),
                   ),
                   IconButton(
