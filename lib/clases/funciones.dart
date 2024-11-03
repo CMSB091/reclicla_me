@@ -13,6 +13,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/configuracion/config.dart';
 import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/itemDetailScreen.dart';
 import 'package:recila_me/widgets/login.dart';
@@ -53,9 +54,8 @@ class Funciones {
   ];
 
   static final logger = SeqHttpLogger.create(
-    host:
-        'http://192.168.100.16:43674', //'http://10.0.2.2:43674'para el emulador
-    apiKey: dotenv.env['SEQ_LOGGER'],
+    host:'http://192.168.100.16:43674', //'http://10.0.2.2:43674'para el emulador
+    apiKey: Config.openaiApiKey, //dotenv.env['SEQ_LOGGER'],
     globalContext: {
       'App': 'ReciclaMe',
     },
@@ -122,7 +122,7 @@ class Funciones {
 
   // Función que retorna la respuesta de la API
   static Future<String> getChatGPTResponse(String prompt) async {
-    final apiKey = dotenv.env['OPENAI_API_KEY'];
+    const apiKey = Config.openaiApiKey;//dotenv.env['OPENAI_API_KEY'];
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
     final response = await http.post(
@@ -171,7 +171,7 @@ class Funciones {
 
   // Genera imagenes con la ayuda de la IA
   static Future<String> fetchGeneratedImage(String prompt) async {
-    final apiKey = dotenv.env['OPENAI_API_KEY'];
+    const apiKey = Config.openaiApiKey; //dotenv.env['OPENAI_API_KEY'];
     const apiUrl = 'https://api.openai.com/v1/images/generations';
 
     final response = await http.post(
@@ -205,7 +205,7 @@ class Funciones {
     _logger ??= SeqHttpLogger.create(
       host: /*'http://192.168.100.16:43674',*/ 'http://10.0.2.2:43674',
       /*para el emulador*/
-      apiKey: dotenv.env['SEQ_LOGGER'],
+      apiKey: Config.seqLogger,//dotenv.env['SEQ_LOGGER'],
       globalContext: {
         'App': 'ReciclaMe',
       },
