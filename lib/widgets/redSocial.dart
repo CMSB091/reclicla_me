@@ -6,6 +6,7 @@ import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'addItemScreen.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,8 +20,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String? nombreUsuario;
   bool _isLoading = false;
   final Funciones _funciones = Funciones();
-
-  // Nueva variable para almacenar el término de búsqueda
   String _searchQuery = '';
 
   @override
@@ -28,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     userEmail = FirebaseAuth.instance.currentUser?.email;
     if (userEmail != null) {
-      loadUserEmail(userEmail!); // Cargar el email del usuario logueado
+      loadUserEmail(userEmail!);
     }
   }
 
@@ -48,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
         leading: IconButton(
           icon: const FaIcon(FontAwesomeIcons.arrowLeft),
           onPressed: () {
-            Navigator.pop(context); // Acción de regresar
+            Navigator.pop(context);
           },
         ),
         title: const Text(
@@ -102,7 +101,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
 
                       final items = snapshot.data!.docs;
-
                       final filteredItems = items.where((item) {
                         String titulo =
                             item['titulo']?.toString().toLowerCase() ?? '';
@@ -201,11 +199,28 @@ class _HomeScreenState extends State<HomeScreen> {
                                         child: Stack(
                                           alignment: Alignment.center,
                                           children: [
-                                            Image.network(
-                                              item['imageUrl'],
+                                            CachedNetworkImage(
+                                              imageUrl: item['imageUrl'],
                                               width: 80,
                                               height: 80,
-                                              fit: BoxFit.fill,
+                                              fit: BoxFit.cover,
+                                              placeholder: (context, url) =>
+                                                  const CircularProgressIndicator(),
+                                              errorWidget:
+                                                  (context, url, error) =>
+                                                      const Icon(
+                                                Icons.error,
+                                                color: Colors.red,
+                                              ),
+                                              imageBuilder: (context, imageProvider) => Image(
+                                                image: imageProvider,
+                                                width: 80,
+                                                height: 80,
+                                                fit: BoxFit.cover,
+                                              ),
+                                              // Reduzcamos la calidad con un tamaño de miniatura
+                                              memCacheWidth: 150, // Puedes ajustar este valor
+                                              memCacheHeight: 150, // Puedes ajustar este valor
                                             ),
                                             if (_isLoading)
                                               const CircularProgressIndicator(),
@@ -298,32 +313,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                       scaffoldContext,
                                                                       item.id,
                                                                       imageUrl:
-                                                                          item[
-                                                                              'imageUrl']);
+                                                                          item[ 'imageUrl']);
                                                               showCustomSnackBar(
                                                                 scaffoldContext,
                                                                 'Publicación eliminada correctamente',
-                                                                SnackBarType
-                                                                    .confirmation,
+                                                                SnackBarType.confirmation,
                                                               );
                                                             } catch (e) {
                                                               showCustomSnackBar(
                                                                 scaffoldContext,
                                                                 'Error al eliminar la publicación',
-                                                                SnackBarType
-                                                                    .error,
+                                                                SnackBarType.error,
                                                               );
-                                                              debugPrint(
-                                                                  'Error al eliminar la publicación: $e');
+                                                              debugPrint('Error al eliminar la publicación: $e');
                                                             } finally {
                                                               setState(() {
-                                                                _isLoading =
-                                                                    false;
+                                                                _isLoading = false;
                                                               });
                                                             }
                                                           },
-                                                          child: const Text(
-                                                              'Eliminar'),
+                                                          child: const Text('Eliminar'),
                                                         ),
                                                       ],
                                                     );

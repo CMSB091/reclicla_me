@@ -36,14 +36,12 @@ class AddItemScreen extends StatefulWidget {
 class _AddItemScreenState extends State<AddItemScreen> {
   final _formKey = GlobalKey<FormState>();
   final _scaffoldKey = GlobalKey<ScaffoldState>();
-  // Controladores para los campos de texto
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _tituloController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
   File? _imageFile;
   String? _userEmail;
   bool _isLoading = false;
-  String? _imageUrl;
   FirestoreService firestoreService = FirestoreService();
 
   @override
@@ -52,16 +50,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
     _loadEmail();
     _setupTextListeners();
     if (widget.isEdit) {
-      // Si es modo edición, cargar los datos del artículo en los campos
       _tituloController.text = widget.titulo ?? '';
       _descriptionController.text = widget.description ?? '';
       _contactController.text = widget.contact ?? '';
-      _imageUrl = widget.imageUrl;
-      print('ImageUrl $_imageUrl');
     }
   }
 
-  // Cargar el email del usuario
   void _loadEmail() async {
     String? email = await firestoreService.loadUserEmail();
     setState(() {
@@ -69,7 +63,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     });
   }
 
-  // Configurar los listeners para los controladores de texto
   void _setupTextListeners() {
     _tituloController.addListener(() => setState(() {}));
     _descriptionController.addListener(() => setState(() {}));
@@ -83,7 +76,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     });
   }
 
-  // Función para tomar una foto desde la cámara
   Future<void> _takePhoto() async {
     final ImagePicker picker = ImagePicker();
     final XFile? photo = await picker.pickImage(source: ImageSource.camera);
@@ -100,7 +92,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
   }
 
   Future<void> _handleUpload() async {
-    // Mostrar el spinner
     setState(() {
       _isLoading = true;
     });
@@ -128,9 +119,19 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
       _formKey.currentState!.save();
 
+      // Confirmación si el campo de contacto tiene un valor
+      if (_contactController.text.isNotEmpty) {
+        bool? shouldProceed = await _showContactConfirmationDialog();
+        if (shouldProceed != true) {
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
       // Obtener el email del usuario
       if (_userEmail != null) {
-        // Obtener el valor más alto de `idpub`
         int maxIdPub = 0;
         QuerySnapshot snapshot = await FirebaseFirestore.instance
             .collection('items')
@@ -144,7 +145,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
         int newIdPub = maxIdPub + 1;
 
-        // Subir la imagen y guardar los datos en Firestore con el nuevo idpub
         await firestoreService.uploadImageAndSaveToFirestore(
           imageFile: _imageFile!,
           description: _descriptionController.text,
@@ -153,7 +153,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
           email: _userEmail!,
           titulo: _tituloController.text,
           estado: false,
-          idpub: newIdPub, // Asignar el nuevo idpub
+          idpub: newIdPub,
         );
 
         showCustomSnackBar(
@@ -172,7 +172,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     } catch (e) {
       print('Error $e');
     } finally {
-      // Ocultar el spinner después de que la operación termine
       setState(() {
         _isLoading = false;
       });
@@ -181,10 +180,21 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
   Future<void> _updatePost() async {
     setState(() {
-      _isLoading = true; // Mostrar el spinner al comenzar el proceso
+      _isLoading = true;
     });
 
     try {
+      // Confirmación si el campo de contacto tiene un valor
+      if (_contactController.text.isNotEmpty) {
+        bool? shouldProceed = await _showContactConfirmationDialog();
+        if (shouldProceed != true) {
+          setState(() {
+            _isLoading = false;
+          });
+          return;
+        }
+      }
+
       await firestoreService.updatePost(
         widget.itemId!,
         _tituloController.text,
@@ -193,12 +203,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
         _imageFile?.path, // Ruta del archivo si hay una nueva imagen
         widget.imageUrl, // URL de la imagen anterior
       );
-      // Mostrar mensaje de éxito
-      showCustomSnackBar(context, 'Publicación actualizada correctamente',
+
+      showCustomSnackBar(
+          context, 'Publicación actualizada correctamente',
           SnackBarType.confirmation);
-      // Limpiar los campos
       _resetForm();
-      // Redirigir a la página de red social
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -211,12 +220,33 @@ class _AddItemScreenState extends State<AddItemScreen> {
           context, 'Error al actualizar la publicación', SnackBarType.error);
     } finally {
       setState(() {
-        _isLoading = false; // Ocultar el spinner al finalizar
+        _isLoading = false;
       });
     }
   }
 
-  // Resetear el formulario después de la subida exitosa
+  Future<bool?> _showContactConfirmationDialog() {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Aviso!'),
+        content: const Text(
+          'El número de teléfono que has ingresado será visible para todos los usuarios, ¿desea continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _resetForm() {
     setState(() {
       _descriptionController.clear();
@@ -247,11 +277,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
       body: Stack(
         children: [
           AbsorbPointer(
-            absorbing:
-                _isLoading, // Bloquear interacciones si _isLoading es true
+            absorbing: _isLoading,
             child: BlurredBackground(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(15.0),
+                
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -280,11 +310,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly
                         ],
-                        validator: (value) =>
-                            value!.isEmpty ? 'Ingrese un contacto' : null,
+                        validator: (value) => null, // No obligatorio
                       ),
                       const SizedBox(height: 5),
-                      // Mostrar la imagen seleccionada o cargada
                       if (widget.isEdit &&
                           _imageFile == null &&
                           widget.imageUrl != null)
@@ -335,10 +363,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
               ),
             ),
           ),
-          // Mostrar el spinner si _isLoading es true
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.5), // Fondo semi-transparente
+              color: Colors.black.withOpacity(0.5),
               child: const Center(
                 child: CircularProgressIndicator(),
               ),
