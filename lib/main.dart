@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:camera/camera.dart';
@@ -17,9 +19,9 @@ void main() async {
   );
   try {
     await dotenv.load(fileName: '.env');
-    Funciones.SeqLog('debug','Variables de entorno cargadas correctamente');
+    //Funciones.SeqLog('debug','Variables de entorno cargadas correctamente');
   } catch (e) {
-    Funciones.SeqLog('error','Error al cargar el archivo .env: $e');
+    print('Error al cargar el archivo .env: $e');
   }
   var status = await Permission.camera.request();
   if (status.isGranted) {
