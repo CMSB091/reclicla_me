@@ -13,6 +13,9 @@ import 'package:recila_me/widgets/lottieWidget.dart';
 import 'package:recila_me/widgets/mySplashScreen.dart';
 import 'package:recila_me/widgets/redSocial.dart';
 import 'package:recila_me/widgets/object_detection_screen.dart';
+import 'package:recila_me/widgets/resumenes.dart';
+
+import 'noticias.dart';
 
 class MyInicio extends StatefulWidget {
   final List<CameraDescription> cameras;
@@ -275,21 +278,21 @@ class _MyInicioState extends State<MyInicio> {
             }
           },
           child: Center(
-            child: index == 1
+            child: index == 1 || index == 3
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Flexible(
                         child: buildLottieAnimation(
-                          path:'assets/animations/lottie-recomendations.json',
-                          width: 100,
-                          height: 100,
+                          path:index == 1 ? 'assets/animations/lottie-recomendations.json' : 'assets/animations/resumen_animation2.json',
+                          width: 125,
+                          height: 125,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      const Text(
-                        'Recomendaciones',
-                        style: TextStyle(
+                      Text(index == 1 ?
+                        'Recomendaciones': 'Resumen',
+                        style: const TextStyle(
                           fontFamily: 'Artwork',
                           fontSize: 16,
                           color: Colors.black,
@@ -320,7 +323,7 @@ class _MyInicioState extends State<MyInicio> {
       case 2:
         return 'Página 3';
       case 3:
-        return 'Página 4';
+        return 'Resumenes';
       default:
         return 'Menú ${index + 1}';
     }
@@ -331,11 +334,11 @@ class _MyInicioState extends State<MyInicio> {
       case 0:
         return const ObjectDetectionScreen();
       case 1:
-        return const MySplash();
+        return const MySplash(nextScreen: NoticiasChatGPT(),lottieAnimation: "assets/animations/lottie-robot.json");
       case 2:
         return const Page3();
       case 3:
-        return const Page4();
+        return const MySplash(nextScreen: PlasticCountSplashScreen(), lottieAnimation: "assets/animations/resumen_animation.json",);
       default:
         return MyInicio(cameras: widget.cameras);
     }
@@ -353,22 +356,6 @@ class Page3 extends StatelessWidget {
       ),
       body: const Center(
         child: Text('Contenido de la Página 3'),
-      ),
-    );
-  }
-}
-
-class Page4 extends StatelessWidget {
-  const Page4({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Página 4'),
-      ),
-      body: const Center(
-        child: Text('Contenido de la Página 4'),
       ),
     );
   }
