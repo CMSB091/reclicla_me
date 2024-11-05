@@ -9,8 +9,10 @@ import 'package:dart_seq_http_client/dart_seq_http_client.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/configuracion/config.dart';
 import 'package:recila_me/widgets/inicio.dart';
@@ -49,11 +51,12 @@ class Funciones {
     'basura',
     'compostaje',
     'pila',
-    'pilas, Gracias, gracias'
+    'pilas, gracias, imagen'
   ];
 
   static final logger = SeqHttpLogger.create(
-    host:'http://192.168.100.16:43674', //'http://10.0.2.2:43674'para el emulador
+    host:
+        'http://192.168.100.16:43674', //'http://10.0.2.2:43674'para el emulador
     apiKey: Config.openaiApiKey, //dotenv.env['SEQ_LOGGER'],
     globalContext: {
       'App': 'ReciclaMe',
@@ -121,7 +124,7 @@ class Funciones {
 
   // Función que retorna la respuesta de la API
   static Future<String> getChatGPTResponse(String prompt) async {
-    const apiKey = Config.openaiApiKey;//dotenv.env['OPENAI_API_KEY'];
+    const apiKey = Config.openaiApiKey; //dotenv.env['OPENAI_API_KEY'];
     const apiUrl = 'https://api.openai.com/v1/chat/completions';
 
     final response = await http.post(
@@ -204,7 +207,7 @@ class Funciones {
     _logger ??= SeqHttpLogger.create(
       host: /*'http://192.168.100.16:43674',*/ 'http://10.0.2.2:43674',
       /*para el emulador*/
-      apiKey: Config.seqLogger,//dotenv.env['SEQ_LOGGER'],
+      apiKey: Config.seqLogger, //dotenv.env['SEQ_LOGGER'],
       globalContext: {
         'App': 'ReciclaMe',
       },
@@ -603,47 +606,103 @@ class Funciones {
   }
 
   // Genera un residuo aleatorio
-Map<String, dynamic> generarResiduoAleatorio(List<Map<String, dynamic>> residuos) {
-  final random = Random();
-  return residuos[random.nextInt(residuos.length)];
-}
+  Map<String, dynamic> generarResiduoAleatorio(
+      List<Map<String, dynamic>> residuos) {
+    final random = Random();
+    return residuos[random.nextInt(residuos.length)];
+  }
 
 // Verifica la respuesta y retorna el puntaje actualizado y el estado de la verificación
-int verificarRespuesta(String tipoBasurero, String residuoActual, int puntos) {
-  if (tipoBasurero == residuoActual) {
-    return puntos + 1;
-  } else {
-    return puntos > 0 ? puntos - 1 : 0;
+  int verificarRespuesta(
+      String tipoBasurero, String residuoActual, int puntos) {
+    if (tipoBasurero == residuoActual) {
+      return puntos + 1;
+    } else {
+      return puntos > 0 ? puntos - 1 : 0;
+    }
+  }
+
+// Función para mostrar un diálogo de confirmación
+  Future<bool> showConfirmationDialog(BuildContext context) async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar guardado'),
+          content: const Text(
+              'El puntaje que has conseguido es menor al que ya tienes guardado. ¿Deseas reemplazarlo de todas formas?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+            ),
+            TextButton(
+              child: const Text('Guardar'),
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+            ),
+          ],
+        );
+      },
+    ).then((value) => value ?? false);
+  }
+
+  Future<void> writeDebugFile(String fileName, Map<String, dynamic> content) async {
+  try {
+    // Obtén el directorio de Descargas (para Android) o Documentos (para iOS)
+    final directory = await getExternalStorageDirectory(); // Para Android
+
+    // Para iOS o en caso de no tener permisos en Descargas, usar Documentos
+    final safeDirectory = directory ?? await getApplicationDocumentsDirectory();
+    final filePath = '${safeDirectory.path}/$fileName';
+
+    // Crea el archivo y escribe el contenido JSON
+    final file = File(filePath);
+    await file.writeAsString(json.encode(content), flush: true);
+
+    print("Archivo de debug escrito en: $filePath");
+  } catch (e) {
+    print("Error al escribir el archivo de debug: $e");
   }
 }
 
-// Función para mostrar un diálogo de confirmación
-Future<bool> showConfirmationDialog(BuildContext context) async {
-  return await showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Confirmar guardado'),
-        content: const Text(
-            'El puntaje que has conseguido es menor al que ya tienes guardado. ¿Deseas reemplazarlo de todas formas?'),
-        actions: <Widget>[
-          TextButton(
-            child: const Text('Cancelar'),
-            onPressed: () {
-              Navigator.of(context).pop(false);
-            },
-          ),
-          TextButton(
-            child: const Text('Guardar'),
-            onPressed: () {
-              Navigator.of(context).pop(true);
-            },
-          ),
-        ],
-      );
-    },
-  ).then((value) => value ?? false);
+static Future<void> saveDebugInfo(String message, {Map<String, dynamic>? additionalData}) async {
+  try {
+    // Obtén el directorio de Descargas (para Android) o Documentos (para iOS)
+    final directory = await getExternalStorageDirectory();
+    final safeDirectory = directory ?? await getApplicationDocumentsDirectory();
+    final filePath = '${safeDirectory.path}/debug_log.json';
+    
+    final file = File(filePath);
+
+    // Crea una nueva entrada de depuración con el mensaje y la marca de tiempo
+    final debugEntry = {
+      "message": message,
+      "timestamp": DateTime.now().toIso8601String(),
+      "additionalData": additionalData ?? {}
+    };
+
+    Map<String, dynamic> debugLog = {};
+
+    // Lee el contenido actual del archivo si existe
+    if (await file.exists()) {
+      final jsonString = await file.readAsString();
+      debugLog = jsonString.isNotEmpty ? json.decode(jsonString) : {};
+    }
+
+    // Agrega la nueva entrada con un identificador único (timestamp)
+    debugLog[DateTime.now().toIso8601String()] = debugEntry;
+
+    // Escribe el archivo con la nueva entrada
+    await file.writeAsString(json.encode(debugLog), flush: true);
+
+    print("Información de depuración guardada en: $filePath");
+  } catch (e) {
+    print("Error al guardar la información de depuración: $e");
+  }
 }
-  
 }

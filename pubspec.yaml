@@ -154,6 +154,7 @@ flutter:
     - assets/images/miniJuego/locote.png
     - assets/images/miniJuego/zanahoria.png
     - assets/json/recycling_tips.json
+    - assets/debug.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-trash.json
     - assets/animations/lotti-recycle.json
