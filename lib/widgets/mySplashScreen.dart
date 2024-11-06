@@ -4,7 +4,9 @@ import 'package:lottie/lottie.dart';
 import 'package:recila_me/widgets/noticias.dart';
 
 class MySplash extends StatefulWidget {
-  const MySplash({super.key});
+  final String detectedObject;
+
+  const MySplash({super.key, required this.detectedObject});
 
   @override
   State<MySplash> createState() => _MySplashState();
@@ -16,7 +18,9 @@ class _MySplashState extends State<MySplash> {
     return FlutterSplashScreen(
       useImmersiveMode: false,
       duration: const Duration(milliseconds: 3500),
-      nextScreen: const NoticiasChatGPT(),
+      nextScreen: NoticiasChatGPT(
+        initialPrompt: "Quiero que me recomiendes cómo reciclar este producto escaneado: ${widget.detectedObject}",
+      ),
       backgroundColor: Colors.white,
       splashScreenBody: Center(
         child: Lottie.asset(

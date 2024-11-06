@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tflite/flutter_tflite.dart';
+import 'mySplashScreen.dart';
 
 class ObjectDetectionScreen extends StatefulWidget {
   const ObjectDetectionScreen({super.key});
@@ -15,6 +16,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
   String label = '';
   double confidence = 0.0;
   bool _loading = true;
+  bool objectDetected = false;
 
   @override
   void initState() {
@@ -65,20 +67,20 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
     );
 
     if (recognitions == null || recognitions.isEmpty) {
-      // Si no se detecta nada, actualizar el estado con un mensaje informativo
       setState(() {
         label = "No se detectaron objetos.";
         confidence = 0.0;
         _loading = false;
+        objectDetected = false;
       });
       return;
     }
 
-    // Si hay resultados, obtener los valores
     setState(() {
       confidence = (recognitions[0]['confidence'] * 100);
       label = recognitions[0]['label'].toString();
       _loading = false;
+      objectDetected = true;
     });
   }
 
@@ -92,7 +94,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detección de objetos'),
+        title: const Text('Detección de Objetos'),
         centerTitle: true,
       ),
       body: Padding(
@@ -145,59 +147,40 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const Spacer(),
-            // Botón para agregar imagen
-            GestureDetector(
-              onTap: pickImageGallery,
-              child: Container(
-                height: 60,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Colors.white, // Botón blanco
-                  boxShadow: const [
-                    BoxShadow(
-                      blurRadius: 5,
-                      offset: Offset(0, 2),
-                      color: Colors.black26,
+            if (objectDetected)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MySplash(
+                        detectedObject: label, // Pasa el objeto detectado
+                      ),
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    'Seleccionar desde Galería',
-                    style: TextStyle(
-                        fontSize: 18, color: Theme.of(context).primaryColor),
+                  );
+                },
+                child: const Text('Consultar sobre reciclaje'),
+              ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: pickImageGallery,
+                    child: const Text('Seleccionar desde Galería'),
                   ),
                 ),
-              ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: pickImageCamera,
+                    child: const Text('Usar Cámara'),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
-            // Botón para usar la cámara
-            GestureDetector(
-              onTap: pickImageCamera,
-              child: Container(
-                height: 60,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Colors.white, // Botón blanco
-                  boxShadow: const [
-                    BoxShadow(
-                      blurRadius: 5,
-                      offset: Offset(0, 2),
-                      color: Colors.black26,
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    'Usar Cámara',
-                    style: TextStyle(
-                        fontSize: 18, color: Theme.of(context).primaryColor),
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),

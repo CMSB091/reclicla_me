@@ -10,7 +10,9 @@ import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
 
 class NoticiasChatGPT extends StatefulWidget {
-  const NoticiasChatGPT({super.key});
+  final String initialPrompt;
+
+  const NoticiasChatGPT({Key? key, required this.initialPrompt}) : super(key: key);
 
   @override
   _MyChatWidgetState createState() => _MyChatWidgetState();
@@ -18,7 +20,7 @@ class NoticiasChatGPT extends StatefulWidget {
 
 class _MyChatWidgetState extends State<NoticiasChatGPT> {
   final FirestoreService firestoreService = FirestoreService();
-  final TextEditingController _controller = TextEditingController();
+  late TextEditingController _controller;
   String chatResponse = '';
   String imageUrl = '';
   bool isLoading = false;
@@ -130,6 +132,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   @override
   void initState() {
     super.initState();
+    _controller = TextEditingController(text: widget.initialPrompt);
     _setUserEmail();
     _setupTextListeners();
   }
@@ -274,6 +277,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
             Expanded(
               child: ListView.builder(
                 reverse: true,
+                controller: _scrollController,
                 padding: const EdgeInsets.all(10),
                 itemCount: chatHistory.length + (isTyping ? 3 : 2),
                 itemBuilder: (context, index) {

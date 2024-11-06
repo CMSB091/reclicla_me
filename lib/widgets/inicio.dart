@@ -281,7 +281,7 @@ class _MyInicioState extends State<MyInicio> {
                     children: [
                       Flexible(
                         child: buildLottieAnimation(
-                          path:'assets/animations/lottie-recomendations.json',
+                          path: 'assets/animations/lottie-recomendations.json',
                           width: 100,
                           height: 100,
                         ),
@@ -331,7 +331,7 @@ class _MyInicioState extends State<MyInicio> {
       case 0:
         return const ObjectDetectionScreen();
       case 1:
-        return const MySplash();
+        return MySplash(detectedObject: 'Ejemplo de Objeto'); // Asegúrate de ajustar aquí
       case 2:
         return const Page3();
       case 3:

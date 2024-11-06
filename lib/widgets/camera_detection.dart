@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_tflite/flutter_tflite.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:recila_me/widgets/mySplashScreen.dart';
 
 class CameraDetection extends StatefulWidget {
   const CameraDetection({super.key});
@@ -18,11 +19,12 @@ class _CameraDetectionState extends State<CameraDetection> {
 
   Future<void> _tfliteInit() async {
     await Tflite.loadModel(
-        model: "assets/converted_tflite/model_unquant.tflite",
-        labels: "assets/converted_tflite/labels.txt",
-        numThreads: 1,
-        isAsset: true,
-        useGpuDelegate: false);
+      model: "assets/converted_tflite/model_unquant.tflite",
+      labels: "assets/converted_tflite/labels.txt",
+      numThreads: 1,
+      isAsset: true,
+      useGpuDelegate: false,
+    );
   }
 
   pickImageCamera() async {
@@ -32,7 +34,6 @@ class _CameraDetectionState extends State<CameraDetection> {
     if (image == null) return;
 
     var imageMap = File(image.path);
-
     setState(() {
       filePath = imageMap;
     });
@@ -47,7 +48,6 @@ class _CameraDetectionState extends State<CameraDetection> {
     );
 
     if (recognitions == null || recognitions.isEmpty) {
-      // Manejo cuando no se detecta nada
       setState(() {
         label = "No se detectaron objetos.";
         confidence = 0.0;
@@ -56,14 +56,12 @@ class _CameraDetectionState extends State<CameraDetection> {
       return;
     }
 
-    // Si hay resultados, obtener los valores
     setState(() {
       confidence = (recognitions[0]['confidence'] * 100);
       label = recognitions[0]['label'].toString();
       _loading = false;
     });
   }
-
 
   @override
   void dispose() {
@@ -75,7 +73,7 @@ class _CameraDetectionState extends State<CameraDetection> {
   void initState() {
     super.initState();
     _tfliteInit();
-    pickImageCamera();  // Iniciar con la cámara
+    pickImageCamera(); // Iniciar con la cámara
   }
 
   @override
@@ -92,7 +90,7 @@ class _CameraDetectionState extends State<CameraDetection> {
             const SizedBox(height: 30),
             Center(
               child: _loading
-                  ? const CircularProgressIndicator() // Mientras se procesa la imagen
+                  ? const CircularProgressIndicator()
                   : Container(
                       height: 250,
                       decoration: BoxDecoration(
@@ -114,10 +112,10 @@ class _CameraDetectionState extends State<CameraDetection> {
             const SizedBox(height: 20),
             Text(
               label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall!
-                  .copyWith(fontSize: 20, fontWeight: FontWeight.bold),
+              style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 12),
             Text(
@@ -125,17 +123,25 @@ class _CameraDetectionState extends State<CameraDetection> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const Spacer(),
-            // Opciones para guardar o retomar la foto después de la precisión
-            if (!_loading) // Solo mostrar si ya no está cargando
+            if (!_loading)
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   ElevatedButton(
                     onPressed: () {
-                      // Lógica para guardar la imagen
-                      print("Imagen guardada");
+                      if (label.isNotEmpty) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                MySplash(detectedObject: label),
+                          ),
+                        );
+                      } else {
+                        print("Error: No se detectó ningún objeto.");
+                      }
                     },
-                    child: const Text('Guardar Imagen'),
+                    child: const Text('Consultar sobre reciclaje'),
                   ),
                   ElevatedButton(
                     onPressed: pickImageCamera,
