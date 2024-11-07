@@ -168,6 +168,7 @@ flutter:
     - assets/animations/scan_objects.json
     - assets/animations/scan_objects2.json
     - assets/images/fondo.png
+    - assets/images/reciclaje_botellas.png
     - assets/converted_tflite/
     - assets/converted_tflite/model_unquant.tflite
     - assets/converted_tflite/labels.txt
