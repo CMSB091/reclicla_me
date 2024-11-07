@@ -21,7 +21,7 @@ class _MySplashState extends State<MySplash> {
   Widget build(BuildContext context) {
     return FlutterSplashScreen(
       useImmersiveMode: false,
-      duration: const Duration(milliseconds: 3500),
+      duration: const Duration(milliseconds: 4000),
       nextScreen: widget.nextScreen, // Utilizar el parámetro `nextScreen`
       backgroundColor: Colors.white,
       splashScreenBody: Center(

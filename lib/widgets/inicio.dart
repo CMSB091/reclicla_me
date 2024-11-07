@@ -278,20 +278,22 @@ class _MyInicioState extends State<MyInicio> {
             }
           },
           child: Center(
-            child: index == 1 || index == 3
+            child: index == 1 || index == 3 || index == 0
                 ? Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Flexible(
                         child: buildLottieAnimation(
-                          path:index == 1 ? 'assets/animations/lottie-recomendations.json' : 'assets/animations/resumen_animation2.json',
+                          path:index == 1 ? 'assets/animations/lottie-recomendations.json' : 
+                          index == 3 ? 'assets/animations/resumen_animation2.json' : 
+                          'assets/animations/scan_objects.json',
                           width: 125,
                           height: 125,
                         ),
                       ),
                       const SizedBox(height: 10),
                       Text(index == 1 ?
-                        'Recomendaciones': 'Resumen',
+                        'Recomendaciones': index == 3 ? 'Resumen' : 'Escaneo de Objetos',
                         style: const TextStyle(
                           fontFamily: 'Artwork',
                           fontSize: 16,
@@ -332,7 +334,7 @@ class _MyInicioState extends State<MyInicio> {
   Widget _getPageForIndex(int index) {
     switch (index) {
       case 0:
-        return const ObjectDetectionScreen();
+        return const MySplash(nextScreen: ObjectDetectionScreen(),lottieAnimation: "assets/animations/scan_objects2.json");
       case 1:
         return const MySplash(nextScreen: NoticiasChatGPT(),lottieAnimation: "assets/animations/lottie-robot.json");
       case 2:

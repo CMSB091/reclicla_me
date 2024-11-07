@@ -165,6 +165,8 @@ flutter:
     - assets/animations/lottie-recomendations.json
     - assets/animations/resumen_animation.json
     - assets/animations/resumen_animation2.json
+    - assets/animations/scan_objects.json
+    - assets/animations/scan_objects2.json
     - assets/images/fondo.png
     - assets/converted_tflite/
     - assets/converted_tflite/model_unquant.tflite
