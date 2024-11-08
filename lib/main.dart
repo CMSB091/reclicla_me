@@ -21,17 +21,14 @@ void main() async {
   if (status.isGranted) {
     try {
       cameras = await availableCameras();
-      if (cameras == null || cameras!.isEmpty) {
-        Funciones.SeqLog('debug', 'No se encontraron cámaras disponibles');
-      }
     } catch (e) {
-      Funciones.SeqLog('error', 'Error al obtener cámaras: $e');
+      await Funciones.saveDebugInfo('Error al obtener cámaras: $e');
       cameras = [];
     }
   } else {
-    Funciones.SeqLog('debug', 'Permiso de cámara denegado');
     cameras = [];
   }
 
   runApp(ReciclaMeApp(cameras: cameras));
 }
+

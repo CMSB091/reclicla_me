@@ -2,7 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tflite/flutter_tflite.dart';
-import 'mySplashScreen.dart';
+import 'package:recila_me/widgets/mySplashScreen.dart';
+import 'package:recila_me/widgets/noticias.dart';
 
 class ObjectDetectionScreen extends StatefulWidget {
   const ObjectDetectionScreen({super.key});
@@ -153,9 +154,10 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => MySplash(
-                        detectedObject: label, // Pasa el objeto detectado
-                      ),
+                      builder: (context) => MySplash(nextScreen: NoticiasChatGPT( initialPrompt: "Quiero que me recomiendes cómo reciclar este producto escaneado: $label",
+                      detectedObject: label, // Pasa el objeto detectado
+                      ), lottieAnimation: 'assets/animations/lottie-robot.json'),
+                      
                     ),
                   );
                 },

@@ -4,9 +4,13 @@ import 'package:lottie/lottie.dart';
 import 'package:recila_me/widgets/noticias.dart';
 
 class MySplash extends StatefulWidget {
-  final String detectedObject;
+  final Widget nextScreen; // Pantalla siguiente
+  final String lottieAnimation; // Ruta de la animación Lottie
 
-  const MySplash({super.key, required this.detectedObject});
+  const MySplash({super.key, 
+    required this.nextScreen,
+    required this.lottieAnimation
+  });
 
   @override
   State<MySplash> createState() => _MySplashState();
@@ -17,14 +21,12 @@ class _MySplashState extends State<MySplash> {
   Widget build(BuildContext context) {
     return FlutterSplashScreen(
       useImmersiveMode: false,
-      duration: const Duration(milliseconds: 3500),
-      nextScreen: NoticiasChatGPT(
-        initialPrompt: "Quiero que me recomiendes cómo reciclar este producto escaneado: ${widget.detectedObject}",
-      ),
+      duration: const Duration(milliseconds: 4000),
+      nextScreen: widget.nextScreen, // Utilizar el parámetro `nextScreen`
       backgroundColor: Colors.white,
       splashScreenBody: Center(
         child: Lottie.asset(
-          "assets/animations/lottie-robot.json",
+          widget.lottieAnimation, // Utilizar el parámetro `lottieAnimation`
           repeat: true,
         ),
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_tflite/flutter_tflite.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:recila_me/widgets/mySplashScreen.dart';
+import 'package:recila_me/widgets/noticias.dart';
 
 class CameraDetection extends StatefulWidget {
   const CameraDetection({super.key});
@@ -134,7 +135,7 @@ class _CameraDetectionState extends State<CameraDetection> {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                MySplash(detectedObject: label),
+                                NoticiasChatGPT(detectedObject: label, initialPrompt: 'initialPrompt: "Quiero que me recomiendes cómo reciclar este producto escaneado: $label}',),
                           ),
                         );
                       } else {

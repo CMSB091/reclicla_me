@@ -12,15 +12,19 @@ import 'package:recila_me/widgets/showCustomSnackBar.dart';
 class NoticiasChatGPT extends StatefulWidget {
   final String initialPrompt;
 
-  const NoticiasChatGPT({Key? key, required this.initialPrompt}) : super(key: key);
+  // ignore: use_super_parameters
+  const NoticiasChatGPT(
+      {Key? key, required this.initialPrompt, String? detectedObject})
+      : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _MyChatWidgetState createState() => _MyChatWidgetState();
 }
 
 class _MyChatWidgetState extends State<NoticiasChatGPT> {
   final FirestoreService firestoreService = FirestoreService();
-  late TextEditingController _controller;
+  TextEditingController _controller = TextEditingController();
   String chatResponse = '';
   String imageUrl = '';
   bool isLoading = false;
@@ -30,6 +34,8 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   bool isTyping = false;
   String typingIndicator = 'Escribiendo';
   Timer? _typingTimer;
+  bool isFirstMessage = true;
+  late String initialPrompt;
 
   Future<void> _setUserEmail() async {
     String? email = await firestoreService.loadUserEmail();
@@ -39,7 +45,6 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       });
     } else {
       setState(() {
-        Funciones.SeqLog('information', 'Correo no disponible');
         userEmail = 'Correo no disponible';
       });
     }
@@ -97,11 +102,18 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       _startTypingAnimation();
     });
 
-    _startTypingAnimation();
+    // Construye el historial de conversación en un solo string
+    String conversationContext = chatHistory
+        .map((message) =>
+            (message['isUser'] ? "Tú: " : "Chatbot: ") + message['message'])
+        .join("\n");
+
+    // Construye el prompt con el contexto de la conversación
+    String finalPrompt = isFirstMessage
+        ? 'Eres un experto en reciclaje de residuos comunes del hogar, incluyendo plásticos, metales, cartones, papeles, pilas y compostaje. Proporciona consejos prácticos y creativos sobre cómo reciclar o reutilizar estos materiales de manera sostenible en el hogar. Por favor, da la respuesta en no más de 200 palabras. Actúa como si fueses una persona real y teniendo en cuenta lo siguiente:\n\n$conversationContext\nTú: $prompt'
+        : '$conversationContext\nTú: $prompt';
 
     try {
-      String finalPrompt =
-          'Eres un experto en reciclaje de residuos comunes del hogar, incluyendo plásticos, metales, cartones, papeles, pilas y compostaje. Proporciona consejos prácticos y creativos sobre cómo reciclar o reutilizar estos materiales de manera sostenible en el hogar. Por favor, da la respuesta en no más de 200 palabras. Actua como si fueses una persona real y teniendo en cuenta lo siguiente: $prompt';
       String response = await Funciones.fetchChatGPTResponse(
           finalPrompt, _isRecyclingRelated(prompt));
 
@@ -109,17 +121,18 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         isTyping = false;
         chatResponse = response;
         chatHistory.add({'message': response, 'isUser': false});
+        isFirstMessage = false;
       });
 
       firestoreService.saveInteractionToFirestore(prompt, response, userEmail);
     } catch (e) {
-      setState(() {
+      setState(() async {
         isTyping = false;
-        Funciones.SeqLog(
-            'error',
-            e.toString().contains('insufficient_quota')
-                ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
-                : 'Error: $e');
+        await Funciones.saveDebugInfo(e
+                .toString()
+                .contains('insufficient_quota')
+            ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
+            : 'Error: $e');
       });
     } finally {
       setState(() {
@@ -132,20 +145,28 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: widget.initialPrompt);
     _setUserEmail();
-    _setupTextListeners();
+
+    // Inicializa _controller con el texto inicial de initialPrompt
+    _controller = TextEditingController(
+        text: widget.initialPrompt.isNotEmpty ? widget.initialPrompt : "");
+
+    // Configura el listener para actualizar el contador de caracteres al inicio
+    _controller.addListener(() {
+      setState(
+          () {}); // Esto forzará la actualización del contador de caracteres
+    });
   }
 
   void _loadSelectedChat(Map<String, dynamic> chat) {
-    setState(() {
+    setState(() async {
       chatHistory.clear();
       if (chat['userPrompt'] != null && chat['chatResponse'] != null) {
         chatHistory.add({'message': chat['userPrompt'], 'isUser': true});
         chatHistory.add({'message': chat['chatResponse'], 'isUser': false});
       } else {
-        Funciones.SeqLog(
-            'error', 'Datos del chat seleccionados están incompletos');
+        await Funciones.saveDebugInfo(
+            'Datos del chat seleccionados están incompletos');
       }
     });
   }
@@ -156,87 +177,98 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
           await firestoreService.fetchChatHistoryByEmail(userEmail);
 
       if (chatHistoryList.isEmpty) {
-        showCustomSnackBar(context,
-            'No se encontraron interacciones previas para este usuario.',
-            SnackBarType.error);
+        if (mounted) {
+          showCustomSnackBar(
+              context,
+              'No se encontraron interacciones previas para este usuario.',
+              SnackBarType.error);
+        }
         return;
       }
 
-      await showDialog(
-        context: context,
-        builder: (context) {
-          return StatefulBuilder(
-            builder: (context, setState) {
-              return AlertDialog(
-                title: const Text('Historial de Chat'),
-                content: SizedBox(
-                  width: double.maxFinite,
-                  child: ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: chatHistoryList.length,
-                    itemBuilder: (context, index) {
-                      final chat = chatHistoryList[index];
-                      return ListTile(
-                        title: Text(chat['timestamp'] ?? 'Fecha no disponible'),
-                        subtitle: Text(
-                          chat['userPrompt'] ?? 'Prompt vacío',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(FontAwesomeIcons.trash,
-                              color: Colors.red),
-                          onPressed: () async {
-                            final confirmDelete = await showDialog<bool>(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: const Text('Confirmar eliminación'),
-                                  content: const Text(
-                                      '¿Estás seguro de que quieres eliminar este chat?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: const Text('Cancelar'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: const Text('Eliminar'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
+      if (mounted) {
+        await showDialog(
+          context: context,
+          builder: (context) {
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return AlertDialog(
+                  title: const Text('Historial de Chat'),
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: chatHistoryList.length,
+                      itemBuilder: (context, index) {
+                        final chat = chatHistoryList[index];
+                        return ListTile(
+                          title:
+                              Text(chat['timestamp'] ?? 'Fecha no disponible'),
+                          subtitle: Text(
+                            chat['userPrompt'] ?? 'Prompt vacío',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(FontAwesomeIcons.trash,
+                                color: Colors.red),
+                            onPressed: () async {
+                              final confirmDelete = await showDialog<bool>(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: const Text('Confirmar eliminación'),
+                                    content: const Text(
+                                        '¿Estás seguro de que quieres eliminar este chat?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(false),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(true),
+                                        child: const Text('Eliminar'),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
 
-                            if (confirmDelete == true) {
-                              await firestoreService.deleteChatById(chat['id']);
-                              setState(() {
-                                chatHistoryList.removeAt(index);
-                              });
-                              showCustomSnackBar(context, 'Chat eliminado.',
-                                  SnackBarType.confirmation);
-                            }
+                              if (confirmDelete == true) {
+                                await firestoreService
+                                    .deleteChatById(chat['id']);
+                                setState(() {
+                                  chatHistoryList.removeAt(index);
+                                });
+                                showCustomSnackBar(context, 'Chat eliminado.',
+                                    SnackBarType.confirmation);
+                              }
+                            },
+                          ),
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            _loadSelectedChat(chat);
                           },
-                        ),
-                        onTap: () {
-                          Navigator.of(context).pop();
-                          _loadSelectedChat(chat);
-                        },
-                      );
-                    },
+                        );
+                      },
+                    ),
                   ),
-                ),
-              );
-            },
-          );
-        },
-      );
+                );
+              },
+            );
+          },
+        );
+      }
     } catch (e) {
-      Funciones.SeqLog('error', 'Error al recuperar el historial de chat: $e');
-      showCustomSnackBar(context, 'Error al recuperar el historial de chat: $e',
-          SnackBarType.error);
+      if (mounted) {
+        showCustomSnackBar(
+          context,
+          'Error al recuperar el historial de chat: $e',
+          SnackBarType.error,
+        );
+      }
     }
   }
 
@@ -283,9 +315,10 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                 itemBuilder: (context, index) {
                   if (index == chatHistory.length + (isTyping ? 2 : 1)) {
                     return const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      padding:
+                          EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                       child: Text(
-                        '¡Hola! Soy Recyclops, aquí para ayudarte a reciclar de manera creativa y sostenible.',
+                        '¡Hola! Soy Recyclops, estoy aquí para ayudarte a reciclar de manera creativa y sostenible.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontFamily: 'Artwork',
@@ -358,5 +391,13 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _scrollController.dispose();
+    _typingTimer?.cancel();
+    super.dispose();
   }
 }
