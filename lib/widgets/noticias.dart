@@ -114,8 +114,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         : '$conversationContext\nTú: $prompt';
 
     try {
-      String response = await Funciones.fetchChatGPTResponse(
-          finalPrompt, _isRecyclingRelated(prompt));
+      String response = await Funciones.fetchChatGPTResponse(finalPrompt, _isRecyclingRelated(prompt));
 
       setState(() {
         isTyping = false;
