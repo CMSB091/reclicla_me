@@ -1,45 +1,69 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class PlasticCountSplashScreen extends StatefulWidget {
-  const PlasticCountSplashScreen({super.key});
+  final int recycledItemCount;
+
+  const PlasticCountSplashScreen({super.key, this.recycledItemCount = 150});
 
   @override
-  _PlasticCountSplashScreenState createState() => _PlasticCountSplashScreenState();
+  _PlasticCountSplashScreenState createState() =>
+      _PlasticCountSplashScreenState();
 }
 
 class _PlasticCountSplashScreenState extends State<PlasticCountSplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+    with TickerProviderStateMixin {
+  late AnimationController _countController;
+  late AnimationController _backgroundController;
   late Animation<int> _recycledCountAnimation;
   late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+
+    // Controlador para el conteo de reciclaje
+    _countController = AnimationController(
       duration: const Duration(seconds: 3),
       vsync: this,
     );
 
-    // Configurar el conteo de reciclaje de 0 a 150
-    _recycledCountAnimation = IntTween(begin: 0, end: 150).animate(_controller)
+    // Configurar el conteo de reciclaje de 0 al valor especificado
+    _recycledCountAnimation = IntTween(begin: 0, end: widget.recycledItemCount)
+        .animate(_countController)
       ..addListener(() {
         setState(() {});
+      })
+      ..addStatusListener((status) {
+        // Detener la animación cuando alcanza el estado completo
+        if (status == AnimationStatus.completed) {
+          _countController.stop();
+        }
       });
 
-    // Configurar la animación de escala para comenzar un poco más pequeña que la pantalla completa y hacer zoom
-    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    // Iniciar la animación del contador (una sola vez)
+    _countController.forward();
+
+    // Controlador para la animación de fondo
+    _backgroundController = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
     );
 
-    // Iniciar ambas animaciones al cargar la pantalla
-    _controller.forward();
+    // Configurar la animación de escala para la imagen de fondo (sin bucle)
+    _scaleAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(parent: _backgroundController, curve: Curves.easeInOut),
+    );
+
+    // Iniciar la animación de fondo una sola vez
+    _backgroundController.forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _countController.dispose();
+    _backgroundController.dispose();
     super.dispose();
   }
 
@@ -48,15 +72,21 @@ class _PlasticCountSplashScreenState extends State<PlasticCountSplashScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Fondo con animación de zoom, comienza un poco más pequeño que el tamaño de pantalla
+          // Fondo con animación de zoom, filtro de color y desenfoque
           Positioned.fill(
             child: ScaleTransition(
               scale: _scaleAnimation,
-              child: Opacity(
-                opacity: 0.3,
-                child: Image.asset(
-                  'assets/images/reciclaje_botellas.png', // Cambia esta ruta según donde guardaste el GIF
-                  fit: BoxFit.cover, // Asegura que cubra toda la pantalla
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0), // Aplicar desenfoque
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                      Colors.green.withOpacity(0.3), BlendMode.overlay),
+                  child: Image.asset(
+                    'assets/images/reciclaje_botellas.png',
+                    fit: BoxFit.cover, // Asegura que la imagen cubra toda la pantalla
+                    width: double.infinity,
+                    height: double.infinity,
+                  ),
                 ),
               ),
             ),
@@ -67,20 +97,34 @@ class _PlasticCountSplashScreenState extends State<PlasticCountSplashScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Elementos de plástico reciclados',
+                  'Objetos de plástico reciclados',
                   style: GoogleFonts.comicNeue(
-                    fontSize: 24,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 6.0,
+                        color: Colors.black.withOpacity(0.5),
+                        offset: const Offset(2.0, 2.0),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 20),
                 Text(
                   '${_recycledCountAnimation.value}',
                   style: GoogleFonts.comicNeue(
-                    fontSize: 48,
+                    fontSize: 80,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        blurRadius: 6.0,
+                        color: Colors.black.withOpacity(0.5),
+                        offset: Offset(2.0, 2.0),
+                      ),
+                    ],
                   ),
                 ),
               ],
