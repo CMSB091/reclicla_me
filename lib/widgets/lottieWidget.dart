@@ -6,7 +6,7 @@ Widget buildLottieAnimation({
   double width = 100.0,
   double height = 100.0,
   BoxFit fit = BoxFit.contain,
-  bool repetir = false
+  bool repetir = true
 }) {
   return Lottie.asset(
     path,
