@@ -1,48 +1,62 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter_vibrate/flutter_vibrate.dart';
 
-class PlasticCountSplashScreen extends StatefulWidget {
-  final int recycledItemCount;
+class ReusableCountSplashScreen extends StatefulWidget {
+  final int itemCount;
+  final String title;
+  final String backgroundImagePath;
 
-  const PlasticCountSplashScreen({super.key, this.recycledItemCount = 150});
+  const ReusableCountSplashScreen({
+    Key? key,
+    required this.itemCount,
+    required this.title,
+    required this.backgroundImagePath,
+  }) : super(key: key);
 
   @override
-  _PlasticCountSplashScreenState createState() =>
-      _PlasticCountSplashScreenState();
+  _ReusableCountSplashScreenState createState() =>
+      _ReusableCountSplashScreenState();
 }
 
-class _PlasticCountSplashScreenState extends State<PlasticCountSplashScreen>
+class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _countController;
   late AnimationController _backgroundController;
-  late Animation<int> _recycledCountAnimation;
+  late Animation<int> _countAnimation;
   late Animation<double> _scaleAnimation;
+  bool _showLottieAnimation = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
     super.initState();
 
-    // Controlador para el conteo de reciclaje
+    // Controlador para el conteo
     _countController = AnimationController(
       duration: const Duration(seconds: 3),
       vsync: this,
     );
 
-    // Configurar el conteo de reciclaje de 0 al valor especificado
-    _recycledCountAnimation = IntTween(begin: 0, end: widget.recycledItemCount)
-        .animate(_countController)
+    // Configurar el conteo de 0 al valor especificado
+    _countAnimation = IntTween(begin: 0, end: widget.itemCount).animate(_countController)
       ..addListener(() {
         setState(() {});
       })
       ..addStatusListener((status) {
-        // Detener la animación cuando alcanza el estado completo
         if (status == AnimationStatus.completed) {
+          setState(() {
+            _showLottieAnimation = true; // Mostrar animación de Lottie cuando termine el conteo
+          });
+          _playCompletionSound(); // Reproducir sonido al finalizar el conteo
+          _vibrateOnCompletion(); // Vibrar al finalizar el conteo
           _countController.stop();
         }
       });
 
-    // Iniciar la animación del contador (una sola vez)
     _countController.forward();
 
     // Controlador para la animación de fondo
@@ -51,19 +65,31 @@ class _PlasticCountSplashScreenState extends State<PlasticCountSplashScreen>
       vsync: this,
     );
 
-    // Configurar la animación de escala para la imagen de fondo (sin bucle)
+    // Configurar la animación de escala para la imagen de fondo
     _scaleAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
       CurvedAnimation(parent: _backgroundController, curve: Curves.easeInOut),
     );
 
-    // Iniciar la animación de fondo una sola vez
     _backgroundController.forward();
+  }
+
+  // Función para reproducir el sonido
+  Future<void> _playCompletionSound() async {
+    await _audioPlayer.play(AssetSource('audio/congrats.mp3'));
+  }
+
+  // Función para activar la vibración
+  Future<void> _vibrateOnCompletion() async {
+    if (await Vibrate.canVibrate) {
+      Vibrate.vibrate(); // Vibración simple
+    }
   }
 
   @override
   void dispose() {
     _countController.dispose();
     _backgroundController.dispose();
+    _audioPlayer.dispose(); // Liberar el reproductor de audio al salir
     super.dispose();
   }
 
@@ -72,22 +98,24 @@ class _PlasticCountSplashScreenState extends State<PlasticCountSplashScreen>
     return Scaffold(
       body: Stack(
         children: [
-          // Fondo con animación de zoom, filtro de color y desenfoque
+          // Fondo con animación de zoom y desenfoque
           Positioned.fill(
             child: ScaleTransition(
               scale: _scaleAnimation,
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0), // Aplicar desenfoque
-                child: ColorFiltered(
-                  colorFilter: ColorFilter.mode(
-                      Colors.green.withOpacity(0.3), BlendMode.overlay),
-                  child: Image.asset(
-                    'assets/images/reciclaje_botellas.png',
-                    fit: BoxFit.cover, // Asegura que la imagen cubra toda la pantalla
-                    width: double.infinity,
-                    height: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.asset(
+                    widget.backgroundImagePath,
+                    fit: BoxFit.cover,
                   ),
-                ),
+                  BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 2.0, sigmaY: 2.0),
+                    child: Container(
+                      color: Colors.green.withOpacity(0.3),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -97,7 +125,7 @@ class _PlasticCountSplashScreenState extends State<PlasticCountSplashScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Objetos de plástico reciclados',
+                  widget.title,
                   style: GoogleFonts.comicNeue(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
@@ -113,16 +141,21 @@ class _PlasticCountSplashScreenState extends State<PlasticCountSplashScreen>
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  '${_recycledCountAnimation.value}',
+                  '${_countAnimation.value}',
                   style: GoogleFonts.comicNeue(
                     fontSize: 80,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                     shadows: [
                       Shadow(
-                        blurRadius: 6.0,
+                        blurRadius: 10.0,
+                        color: Colors.black.withOpacity(0.7),
+                        offset: const Offset(3.0, 3.0),
+                      ),
+                      Shadow(
+                        blurRadius: 20.0,
                         color: Colors.black.withOpacity(0.5),
-                        offset: Offset(2.0, 2.0),
+                        offset: const Offset(5.0, 5.0),
                       ),
                     ],
                   ),
@@ -130,6 +163,20 @@ class _PlasticCountSplashScreenState extends State<PlasticCountSplashScreen>
               ],
             ),
           ),
+          // Animación Lottie en pantalla completa, sobre los demás elementos, repitiéndose y escalada
+          if (_showLottieAnimation)
+            Positioned.fill(
+              child: Center(
+                child: Transform.scale(
+                  scale: 1.5,
+                  child: Lottie.asset(
+                    'assets/animations/fireworks.json',
+                    repeat: true,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

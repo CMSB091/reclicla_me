@@ -284,16 +284,22 @@ class _MyInicioState extends State<MyInicio> {
                     children: [
                       Flexible(
                         child: buildLottieAnimation(
-                          path:index == 1 ? 'assets/animations/lottie-recomendations.json' : 
-                          index == 3 ? 'assets/animations/resumen_animation2.json' : 
-                          'assets/animations/scan_objects.json',
+                          path: index == 1
+                              ? 'assets/animations/lottie-recomendations.json'
+                              : index == 3
+                                  ? 'assets/animations/resumen_animation2.json'
+                                  : 'assets/animations/scan_objects.json',
                           width: 125,
                           height: 125,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Text(index == 1 ?
-                        'Recomendaciones': index == 3 ? 'Resumen' : 'Escaneo de Objetos',
+                      Text(
+                        index == 1
+                            ? 'Recomendaciones'
+                            : index == 3
+                                ? 'Resumen'
+                                : 'Escaneo de Objetos',
                         style: const TextStyle(
                           fontFamily: 'Artwork',
                           fontSize: 16,
@@ -334,13 +340,26 @@ class _MyInicioState extends State<MyInicio> {
   Widget _getPageForIndex(int index) {
     switch (index) {
       case 0:
-        return  const MySplash(nextScreen: ObjectDetectionScreen(),lottieAnimation: "assets/animations/scan_objects2.json");
+        return const MySplash(
+            nextScreen: ObjectDetectionScreen(),
+            lottieAnimation: "assets/animations/scan_objects2.json");
       case 1:
-        return  const MySplash(nextScreen: NoticiasChatGPT(initialPrompt: '',),lottieAnimation: "assets/animations/lottie-robot.json");
+        return const MySplash(
+            nextScreen: NoticiasChatGPT(
+              initialPrompt: '',
+            ),
+            lottieAnimation: "assets/animations/lottie-robot.json");
       case 2:
         return const Page3();
       case 3:
-        return const MySplash(nextScreen: PlasticCountSplashScreen(), lottieAnimation: "assets/animations/resumen_animation.json",);
+        return const MySplash(
+          nextScreen: ReusableCountSplashScreen(
+            itemCount: 150,
+            title: 'Objetos de Plástico reciclados',
+            backgroundImagePath: 'assets/images/reciclaje_botellas.png',
+          ),
+          lottieAnimation: "assets/animations/resumen_animation.json",
+        );
       default:
         return MyInicio(cameras: widget.cameras);
     }
