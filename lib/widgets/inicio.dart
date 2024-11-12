@@ -354,8 +354,8 @@ class _MyInicioState extends State<MyInicio> {
       case 3:
         return const MySplash(
           nextScreen: ReusableCountSplashScreen(
+            title: 'Objetos de Plástico Reciclado',
             itemCount: 150,
-            title: 'Objetos de Plástico reciclados',
             backgroundImagePath: 'assets/images/reciclaje_botellas.png',
           ),
           lottieAnimation: "assets/animations/resumen_animation.json",

@@ -172,6 +172,7 @@ flutter:
     - assets/animations/fireworks.json
     - assets/images/fondo.png
     - assets/images/reciclaje_botellas.png
+    - assets/images/reciclaje_metal.png
     - assets/converted_tflite/
     - assets/converted_tflite/model_unquant.tflite
     - assets/converted_tflite/labels.txt
