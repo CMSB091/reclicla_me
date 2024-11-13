@@ -32,6 +32,9 @@ class _MyInicioState extends State<MyInicio> {
   User? user = FirebaseAuth.instance.currentUser;
   String? nombreUsuario;
   String? emailUsuario;
+  List<String> materials = [];
+  Funciones funciones = Funciones();
+  late String ruta;
 
   @override
   void initState() {
@@ -39,6 +42,7 @@ class _MyInicioState extends State<MyInicio> {
     if (user != null) {
       emailUsuario = user!.email; // Guardamos el email una vez
       _loadUserName();
+      loadMaterials();
     }
   }
 
@@ -69,6 +73,13 @@ class _MyInicioState extends State<MyInicio> {
   void dispose() {
     _isCancelled = true;
     super.dispose();
+  }
+
+  void loadMaterials() async {
+    materials = await Funciones.getDistinctMaterials();
+    setState(() {
+      ruta = funciones.materialInfo[materials[0]]!;
+    });
   }
 
   Future<void> _simulateLogout(BuildContext context) async {
@@ -352,11 +363,10 @@ class _MyInicioState extends State<MyInicio> {
       case 2:
         return const Page3();
       case 3:
-        return const MySplash(
+        return MySplash(
           nextScreen: ReusableCountSplashScreen(
-            title: 'Objetos de Plástico Reciclado',
             itemCount: 150,
-            backgroundImagePath: 'assets/images/reciclaje_botellas.png',
+            backgroundImagePath: ruta,
           ),
           lottieAnimation: "assets/animations/resumen_animation.json",
         );

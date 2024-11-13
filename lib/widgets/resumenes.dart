@@ -1,26 +1,22 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter_vibrate/flutter_vibrate.dart';
-import 'package:recila_me/widgets/inicio.dart';
+import 'package:recila_me/clases/funciones.dart';
 
 class ReusableCountSplashScreen extends StatefulWidget {
-  final String title;
-  final int itemCount;
   final String backgroundImagePath;
-  final int currentPage; // Número de página actual
-  final bool isFirstPage; // Indica si es la primera página
+  final int itemCount;
+  final int currentPage;
+  final bool isFirstPage;
 
   const ReusableCountSplashScreen({
     super.key,
-    required this.title,
-    required this.itemCount,
     required this.backgroundImagePath,
-    this.currentPage = 1, // Por defecto la primera página
+    required this.itemCount,
+    this.currentPage = 1,
     this.isFirstPage = false,
   });
 
@@ -37,42 +33,37 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
   late Animation<int> _countAnimation;
   late Animation<double> _titleOpacityAnimation;
   late Animation<double> _arrowOpacityAnimation;
-
+  Funciones funciones = Funciones();
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _showLottieAnimation = false;
   bool _showArrowIcon = false;
-
+  List<String> materials = []; // Lista de materiales únicos
   @override
   void initState() {
     super.initState();
-
-    _initializeAnimations();
-
-    // Inicializamos _countAnimation con el valor de itemCount
+    _initializeControllers();
     _countAnimation =
         IntTween(begin: 0, end: widget.itemCount).animate(_countController);
-
-    _startTitleAnimation();
+    Funciones.startTitleAnimation(_titleController, _startCountAnimation);
+    loadMaterials();
   }
 
-  void _initializeAnimations() {
-    _titleController = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    );
+  void loadMaterials() async {
+    materials = await Funciones.getDistinctMaterials();
+    setState(() {});
+    print(materials); // Lista de materiales únicos en orden alfabético
+  }
+
+  void _initializeControllers() {
+    _titleController = AnimationController(vsync: this);
+    _countController = AnimationController(vsync: this);
+    _arrowController = AnimationController(vsync: this);
+
+    Funciones.initializeAnimations(_titleController, _countController,
+        _arrowController, widget.itemCount, this);
 
     _titleOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _titleController, curve: Curves.easeIn),
-    );
-
-    _countController = AnimationController(
-      duration: const Duration(seconds: 3),
-      vsync: this,
-    );
-
-    _arrowController = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this,
     );
 
     _arrowOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -80,28 +71,17 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
     );
   }
 
-  void _startTitleAnimation() {
-    _titleController.forward().whenComplete(() {
-      _startCountAnimation();
-    });
-  }
-
   void _startCountAnimation() {
-    _countController.reset();
-    _countAnimation =
-        IntTween(begin: 0, end: widget.itemCount).animate(_countController)
-          ..addListener(() {
-            setState(() {});
-          })
-          ..addStatusListener((status) {
-            if (status == AnimationStatus.completed) {
-              _playCompletionSound();
-              _vibrateOnCompletion();
-              _showFireworks(); // Iniciar animación de fuegos artificiales
-            }
-          });
-
-    _countController.forward();
+    Funciones.startCountAnimation(
+      _countController,
+      _countAnimation,
+      () async {
+        await Funciones.playCompletionSound(_audioPlayer);
+        await Funciones.vibrateOnCompletion();
+        _showFireworks();
+      },
+      () => setState(() {}),
+    );
   }
 
   void _showFireworks() {
@@ -109,25 +89,13 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
       _showLottieAnimation = true;
     });
 
-    // Detener la animación de fuegos artificiales después de 3 segundos y mostrar las flechas
     Timer(const Duration(seconds: 3), () {
       setState(() {
         _showLottieAnimation = false;
         _showArrowIcon = true;
       });
-      _arrowController
-          .forward(); // Inicia la animación de opacidad de las flechas
+      _arrowController.forward();
     });
-  }
-
-  Future<void> _playCompletionSound() async {
-    await _audioPlayer.play(AssetSource('audio/congrats.mp3'));
-  }
-
-  Future<void> _vibrateOnCompletion() async {
-    if (await Vibrate.canVibrate) {
-      Vibrate.vibrate();
-    }
   }
 
   @override
@@ -139,121 +107,31 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
     super.dispose();
   }
 
-  void _onArrowRightPressed(int nextPage) {
-    late String cadena;
-    late int contador;
-    late String background;
-
-    if (nextPage == 2) {
-      cadena = 'Objetos de Metal Reciclados';
-      contador = 200;
-      background = 'assets/images/reciclaje_metal.png';
-    } else if (nextPage == 3) {
-      cadena = 'Objetos de Vidrio Reciclados';
-      contador = 300;
-      background = 'assets/images/reciclaje_botellas.png';
-    }
-
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) =>
-            ReusableCountSplashScreen(
-          title: cadena,
-          itemCount: contador,
-          backgroundImagePath: background,
-          currentPage: nextPage,
-          isFirstPage: nextPage == 1,
-        ),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          // Transición deslizante desde la derecha
-          const begin = Offset(1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOut;
-
-          var tween =
-              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      ),
-    );
-  }
-
-  // Acción para la flecha izquierda (página anterior o menú de inicio)
-  void _onArrowLeftPressed(int previousPage) {
-    if (widget.currentPage == 1) {
-      Navigator.of(context).pushReplacementNamed(
-          '/home'); // Navegar al menú de inicio si es la primera página
-    } else {
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              ReusableCountSplashScreen(
-            title: 'Objetos de Plástico Reciclados',
-            itemCount: 150,
-            backgroundImagePath: 'assets/images/reciclaje_botellas.png',
-            currentPage: previousPage,
-            isFirstPage: previousPage == 1,
-          ),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            // Transición deslizante desde la izquierda
-            const begin = Offset(-1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOut;
-
-            var tween =
-                Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-            return SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            );
-          },
-        ),
-      );
-    }
-  }
-
-  // Acción para el botón de Home
-  void _onHomePressed() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MyInicio(
-          cameras: [],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Verifica si materials está vacío o si el índice actual está fuera de rango
+    String titleText = 'Cargando...';
+    if (materials.isNotEmpty && widget.currentPage - 1 < materials.length) {
+      titleText = 'Objetos de ${materials[widget.currentPage - 1]} Reciclados';
+    }
+
     return Scaffold(
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              widget.backgroundImagePath,
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset(widget.backgroundImagePath, fit: BoxFit.cover),
           ),
           Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment
-                  .center, // Centrado vertical dentro de la columna
-              crossAxisAlignment: CrossAxisAlignment
-                  .center, // Centrado horizontal dentro de la columna
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 FadeTransition(
                   opacity: _titleOpacityAnimation,
                   child: Text(
-                    widget.title,
-                    textAlign: TextAlign
-                        .center, // Centra el texto dentro de su propio espacio
+                    titleText, // Usa el título dinámico comprobado
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.comicNeue(
                       fontSize: 33,
                       fontWeight: FontWeight.bold,
@@ -271,7 +149,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                 const SizedBox(height: 20),
                 Text(
                   '${_countAnimation.value}',
-                  textAlign: TextAlign.center, // Centra el texto del contador
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.comicNeue(
                     fontSize: 90,
                     fontWeight: FontWeight.bold,
@@ -293,7 +171,6 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
               ],
             ),
           ),
-
           if (_showLottieAnimation)
             Positioned.fill(
               child: Center(
@@ -307,7 +184,6 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                 ),
               ),
             ),
-
           if (_showArrowIcon)
             Positioned(
               bottom: 20,
@@ -322,8 +198,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                         color: Colors.black.withOpacity(0.5),
                         spreadRadius: 2,
                         blurRadius: 8,
-                        offset:
-                            const Offset(2, 2), // Desplazamiento del sombreado
+                        offset: const Offset(2, 2),
                       ),
                     ],
                   ),
@@ -333,13 +208,22 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                       size: 50,
                       color: Colors.white,
                     ),
-                    onPressed: () =>
-                        _onArrowRightPressed(widget.currentPage + 1),
+                    onPressed: () {
+                      if (widget.currentPage == materials.length) {
+                        Funciones.navigateToHome(context);
+                      } else {
+                        funciones.navigateToNextPage(
+                          context,
+                          widget.currentPage + 1,
+                          materials[widget.currentPage],
+                        );
+                      }
+                    },
                   ),
                 ),
               ),
             ),
-          if (_showArrowIcon)
+          if (_showArrowIcon && widget.currentPage > 1)
             Positioned(
               bottom: 20,
               left: 20,
@@ -353,8 +237,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                         color: Colors.black.withOpacity(0.5),
                         spreadRadius: 2,
                         blurRadius: 8,
-                        offset:
-                            const Offset(2, 2), // Desplazamiento del sombreado
+                        offset: const Offset(2, 2),
                       ),
                     ],
                   ),
@@ -364,14 +247,15 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                       size: 50,
                       color: Colors.white,
                     ),
-                    onPressed: () =>
-                        _onArrowLeftPressed(widget.currentPage - 1),
+                    onPressed: () => funciones.navigateToPreviousPage(
+                      context,
+                      widget.currentPage - 1,
+                      materials,
+                    ),
                   ),
                 ),
               ),
             ),
-
-          // Ícono de Home en el centro de las dos flechas
           if (_showArrowIcon)
             Positioned(
               bottom: 20,
@@ -388,8 +272,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                           color: Colors.black.withOpacity(0.5),
                           spreadRadius: 2,
                           blurRadius: 8,
-                          offset: const Offset(
-                              2, 2), // Desplazamiento del sombreado
+                          offset: const Offset(2, 2),
                         ),
                       ],
                     ),
@@ -399,7 +282,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                         size: 50,
                         color: Colors.white,
                       ),
-                      onPressed: _onHomePressed,
+                      onPressed: () => Funciones.navigateToHome(context),
                     ),
                   ),
                 ),
