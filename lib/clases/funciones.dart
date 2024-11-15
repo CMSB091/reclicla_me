@@ -57,10 +57,14 @@ class Funciones {
   ];
 
   Map<String, String> materialInfo = {
-    'Plástico': 'assets/images/reciclaje_botellas.png',
+    'Plastico': 'assets/images/reciclaje_botellas.png',
     'Vidrio': 'assets/images/reciclaje_vidrio.png',
     'Metal': 'assets/images/background_metal.png',
-    'Cartón': 'Reciclar en el contenedor marrón.',
+    'Aluminio': 'assets/images/aluminios_reciclar.png',
+    'Carton': 'assets/images/basura_carton.png',
+    'Isopor': 'assets/images/isopor_waste.png',
+    'Papel': 'assets/images/paper_recycling.png',
+    'Residuos': 'assets/images/recycle_general.png',
     // Agrega más materiales y sus valores aquí
   };
 
@@ -724,7 +728,6 @@ class Funciones {
     AnimationController titleController,
     AnimationController countController,
     AnimationController arrowController,
-    int itemCount,
     TickerProvider vsync,
   ) {
     titleController.duration = const Duration(seconds: 2);
@@ -765,10 +768,6 @@ class Funciones {
 
   void navigateToNextPage(BuildContext context, int nextPage, String elemento) {
     late int itemCount;
-    String papelInfo = materialInfo[elemento] ?? 'Información no disponible';
-    print('elemento $elemento');
-    print('papelInfo $papelInfo');
-
     if (nextPage == 2) {
       itemCount = 200;
     } else if (nextPage == 3) {
@@ -780,7 +779,6 @@ class Funciones {
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
             ReusableCountSplashScreen(
-          itemCount: itemCount,
           backgroundImagePath:
               materialInfo[elemento] ?? 'Información no disponible',
           currentPage: nextPage,
@@ -801,46 +799,36 @@ class Funciones {
     );
   }
 
-  void navigateToPreviousPage(BuildContext context, int previousPage, List<String> materials) {
-  int itemCount = 400;
-  
-  // Ajuste del índice para obtener el material correcto para la página anterior
-  String materialKey = materials[previousPage - 1];
-  String backgroundImagePath = materialInfo.containsKey(materialKey)
-      ? materialInfo[materialKey]!
-      : 'assets/images/default_image.png';
-
-  // Configura el `itemCount` basado en la página anterior
-  if (previousPage == 2) {
-    itemCount = 200;
-  } else if (previousPage == 3) {
-    itemCount = 300;
-  }
-
-  Navigator.pushReplacement(
-    context,
-    PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) =>
-          ReusableCountSplashScreen(
-        itemCount: itemCount,
-        backgroundImagePath: backgroundImagePath,
-        currentPage: previousPage,
-        isFirstPage: previousPage == 1,
+  void navigateToPreviousPage(
+      BuildContext context, int previousPage, List<String> materials) {
+    // Ajuste del índice para obtener el material correcto para la página anterior
+    String materialKey = materials[previousPage - 1];
+    String backgroundImagePath = materialInfo.containsKey(materialKey)
+        ? materialInfo[materialKey]!
+        : 'assets/images/default_image.png';
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ReusableCountSplashScreen(
+          backgroundImagePath: backgroundImagePath,
+          currentPage: previousPage,
+          isFirstPage: previousPage == 1,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(-1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
       ),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(-1.0, 0.0);
-        const end = Offset.zero;
-        const curve = Curves.easeInOut;
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-        return SlideTransition(
-          position: animation.drive(tween),
-          child: child,
-        );
-      },
-    ),
-  );
-}
-
+    );
+  }
 
   static void navigateToHome(BuildContext context) {
     Navigator.pushReplacement(
@@ -851,26 +839,67 @@ class Funciones {
     );
   }
 
-  static Future<List<String>> getDistinctMaterials() async {
-    List<String> materials = [];
+  static Future<List<String>> getDistinctMaterials(String email) async {
+  List<String> materials = [];
+  print('Email del usuario: $email');
 
-    try {
-      // Realiza la consulta en la colección 'historial', ordenando por 'material'
-      QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('historial')
-          .orderBy('material')
-          .get();
+  try {
+    // Realiza la consulta filtrando por el campo 'email' pasado como parámetro
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('historial')
+        .where('email', isEqualTo: email) // Filtra por el email pasado
+        // .orderBy('material') // Elimina temporalmente `orderBy` para ver si afecta los resultados
+        .get();
 
+    // Verifica si hay documentos en el snapshot
+    print('Cantidad de documentos recuperados: ${snapshot.docs.length}');
+
+    if (snapshot.docs.isEmpty) {
+      print('No se encontraron documentos para el email proporcionado.');
+    } else {
       // Extrae los valores únicos de la columna 'material'
-      Set<String> uniqueMaterials = snapshot.docs
-          .map((doc) => doc['material'] as String)
-          .toSet(); // Uso de un Set para valores únicos
+      Set<String> uniqueMaterials =
+          snapshot.docs.map((doc) => doc['material'] as String).toSet();
 
       materials = uniqueMaterials.toList();
+      print('Materiales únicos recuperados: $materials');
+    }
+  } catch (e) {
+    print('Error obteniendo materiales: $e');
+  }
+  
+  return materials;
+}
+
+
+  static Future<int> countMaterialInHistorial(
+      String material, String email) async {
+    int count = 0;
+    try {
+      // Realiza la consulta para contar los documentos del material y el email especificados
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('historial')
+          .where('material', isEqualTo: material)
+          .where('email', isEqualTo: email) // Filtra por el email pasado
+          .get();
+
+      // La cantidad de documentos en el snapshot representa la cantidad de registros
+      count = snapshot.docs.length;
     } catch (e) {
-      print('Error obteniendo materiales: $e');
+      print('Error contando registros para el material $material: $e');
     }
 
-    return materials;
+    return count;
+  }
+
+  Future<String?> getCurrentUserEmail() async {
+    try {
+      // Obtiene el email del usuario actualmente autenticado
+      String? userEmail = FirebaseAuth.instance.currentUser?.email;
+      return userEmail;
+    } catch (e) {
+      print('Error obteniendo el email del usuario: $e');
+      return null;
+    }
   }
 }

@@ -172,8 +172,14 @@ flutter:
     - assets/animations/fireworks.json
     - assets/images/fondo.png
     - assets/images/reciclaje_botellas.png
+    - assets/images/empy_trash.png
+    - assets/images/aluminios_reciclar.png
+    - assets/images/basura_carton.png
     - assets/images/background_metal.png
     - assets/images/reciclaje_vidrio.png
+    - assets/images/isopor_waste.png
+    - assets/images/paper_recycling.png
+    - assets/images/recycle_general.png
     - assets/converted_tflite/
     - assets/converted_tflite/model_unquant.tflite
     - assets/converted_tflite/labels.txt

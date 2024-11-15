@@ -76,9 +76,17 @@ class _MyInicioState extends State<MyInicio> {
   }
 
   void loadMaterials() async {
-    materials = await Funciones.getDistinctMaterials();
+    materials = await Funciones.getDistinctMaterials(emailUsuario!);
     setState(() {
-      ruta = funciones.materialInfo[materials[0]]!;
+      if (materials.isNotEmpty) {
+        String materialActual = materials.first;
+        print('materialActual $materialActual');
+        ruta = funciones.materialInfo[materialActual] ??
+            'assets/images/empy_trash.png'; // Ruta predeterminada
+      } else {
+        // Maneja el caso en que no hay materiales
+        ruta = 'assets/images/empy_trash.png';
+      }
     });
   }
 
@@ -365,7 +373,6 @@ class _MyInicioState extends State<MyInicio> {
       case 3:
         return MySplash(
           nextScreen: ReusableCountSplashScreen(
-            itemCount: 150,
             backgroundImagePath: ruta,
           ),
           lottieAnimation: "assets/animations/resumen_animation.json",

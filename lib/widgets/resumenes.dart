@@ -8,14 +8,12 @@ import 'package:recila_me/clases/funciones.dart';
 
 class ReusableCountSplashScreen extends StatefulWidget {
   final String backgroundImagePath;
-  final int itemCount;
   final int currentPage;
   final bool isFirstPage;
 
   const ReusableCountSplashScreen({
     super.key,
     required this.backgroundImagePath,
-    required this.itemCount,
     this.currentPage = 1,
     this.isFirstPage = false,
   });
@@ -38,20 +36,74 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
   bool _showLottieAnimation = false;
   bool _showArrowIcon = false;
   List<String> materials = []; // Lista de materiales únicos
+  late int cotador;
+  late String usuarioMail;
+  int contador = 0;
   @override
   void initState() {
     super.initState();
+    _initializeUserData(); // Asegura que usuarioMail esté inicializado
     _initializeControllers();
-    _countAnimation =
-        IntTween(begin: 0, end: widget.itemCount).animate(_countController);
+
+    // Inicializa `_countAnimation` con un valor predeterminado
+    _countAnimation = IntTween(begin: 0, end: 0).animate(_countController);
+
     Funciones.startTitleAnimation(_titleController, _startCountAnimation);
-    loadMaterials();
+  }
+
+  Future<void> _initializeUserData() async {
+    await getUserMail(); // Espera a obtener el correo del usuario antes de continuar
+    if (usuarioMail.isNotEmpty) {
+      loadMaterials(); // Llama a `loadMaterials` solo cuando `usuarioMail` está disponible
+    }
+  }
+
+  Future<void> getUserMail() async {
+    String? userEmail = await funciones.getCurrentUserEmail();
+    if (userEmail != null) {
+      setState(() {
+        usuarioMail = userEmail;
+      });
+    }
   }
 
   void loadMaterials() async {
-    materials = await Funciones.getDistinctMaterials();
-    setState(() {});
-    print(materials); // Lista de materiales únicos en orden alfabético
+    materials = await Funciones.getDistinctMaterials(usuarioMail);
+    setState(
+        () {}); // Actualiza el estado para cargar los materiales en la interfaz
+
+    if (materials.isNotEmpty) {
+      // Llama a `_initializeCounter` una vez que `materials` esté completamente cargado
+      _initializeCounter();
+    }
+  }
+
+  void _initializeCounter() async {
+    // Verifica que `materials` tenga elementos y que el índice esté en rango
+    if (materials.isNotEmpty && widget.currentPage - 1 < materials.length) {
+      String material = materials[widget.currentPage - 1];
+
+      // Obtiene el conteo real de manera asíncrona
+      int cotador = await displayMaterialCount(material);
+
+      // Ajusta la duración en función del valor final de `cotador` para aumentar la velocidad
+      _countController.duration = Duration(
+          milliseconds: cotador * 20); // Ajusta este valor según prefieras
+
+      // Actualiza `_countAnimation` con el valor de `cotador`
+      setState(() {
+        _countAnimation =
+            IntTween(begin: 0, end: cotador).animate(_countController);
+      });
+
+      // Inicia la animación del contador
+      _countController.forward(from: 0);
+    }
+  }
+
+  Future<int> displayMaterialCount(String material) async {
+    int count = await Funciones.countMaterialInHistorial(material, usuarioMail);
+    return count;
   }
 
   void _initializeControllers() {
@@ -59,8 +111,8 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
     _countController = AnimationController(vsync: this);
     _arrowController = AnimationController(vsync: this);
 
-    Funciones.initializeAnimations(_titleController, _countController,
-        _arrowController, widget.itemCount, this);
+    Funciones.initializeAnimations(
+        _titleController, _countController, _arrowController, this);
 
     _titleOpacityAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _titleController, curve: Curves.easeIn),
@@ -110,9 +162,10 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
   @override
   Widget build(BuildContext context) {
     // Verifica si materials está vacío o si el índice actual está fuera de rango
-    String titleText = 'Cargando...';
+    String titleText = 'Aún no has reciclado nada...';
     if (materials.isNotEmpty && widget.currentPage - 1 < materials.length) {
       titleText = 'Objetos de ${materials[widget.currentPage - 1]} Reciclados';
+      contador += 1;
     }
 
     return Scaffold(
@@ -146,7 +199,9 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                     ),
                   ),
                 ),
+                
                 const SizedBox(height: 20),
+                if(contador > 0 )
                 Text(
                   '${_countAnimation.value}',
                   textAlign: TextAlign.center,
@@ -171,7 +226,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
               ],
             ),
           ),
-          if (_showLottieAnimation)
+          if (_showLottieAnimation && contador > 0)
             Positioned.fill(
               child: Center(
                 child: Transform.scale(
@@ -184,7 +239,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                 ),
               ),
             ),
-          if (_showArrowIcon)
+          if (_showArrowIcon && contador > 0)
             Positioned(
               bottom: 20,
               right: 20,
