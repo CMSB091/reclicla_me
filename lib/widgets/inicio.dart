@@ -32,6 +32,9 @@ class _MyInicioState extends State<MyInicio> {
   User? user = FirebaseAuth.instance.currentUser;
   String? nombreUsuario;
   String? emailUsuario;
+  List<String> materials = [];
+  Funciones funciones = Funciones();
+  late String ruta;
 
   @override
   void initState() {
@@ -39,6 +42,7 @@ class _MyInicioState extends State<MyInicio> {
     if (user != null) {
       emailUsuario = user!.email; // Guardamos el email una vez
       _loadUserName();
+      loadMaterials();
     }
   }
 
@@ -69,6 +73,21 @@ class _MyInicioState extends State<MyInicio> {
   void dispose() {
     _isCancelled = true;
     super.dispose();
+  }
+
+  void loadMaterials() async {
+    materials = await Funciones.getDistinctMaterials(emailUsuario!);
+    setState(() {
+      if (materials.isNotEmpty) {
+        String materialActual = materials.first;
+        print('materialActual $materialActual');
+        ruta = funciones.materialInfo[materialActual] ??
+            'assets/images/empy_trash.png'; // Ruta predeterminada
+      } else {
+        // Maneja el caso en que no hay materiales
+        ruta = 'assets/images/empy_trash.png';
+      }
+    });
   }
 
   Future<void> _simulateLogout(BuildContext context) async {
@@ -284,16 +303,22 @@ class _MyInicioState extends State<MyInicio> {
                     children: [
                       Flexible(
                         child: buildLottieAnimation(
-                          path:index == 1 ? 'assets/animations/lottie-recomendations.json' : 
-                          index == 3 ? 'assets/animations/resumen_animation2.json' : 
-                          'assets/animations/scan_objects.json',
+                          path: index == 1
+                              ? 'assets/animations/lottie-recomendations.json'
+                              : index == 3
+                                  ? 'assets/animations/resumen_animation2.json'
+                                  : 'assets/animations/scan_objects.json',
                           width: 125,
                           height: 125,
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Text(index == 1 ?
-                        'Recomendaciones': index == 3 ? 'Resumen' : 'Escaneo de Objetos',
+                      Text(
+                        index == 1
+                            ? 'Recomendaciones'
+                            : index == 3
+                                ? 'Resumen'
+                                : 'Escaneo de Objetos',
                         style: const TextStyle(
                           fontFamily: 'Artwork',
                           fontSize: 16,
@@ -334,13 +359,24 @@ class _MyInicioState extends State<MyInicio> {
   Widget _getPageForIndex(int index) {
     switch (index) {
       case 0:
-        return  const MySplash(nextScreen: ObjectDetectionScreen(),lottieAnimation: "assets/animations/scan_objects2.json");
+        return const MySplash(
+            nextScreen: ObjectDetectionScreen(),
+            lottieAnimation: "assets/animations/scan_objects2.json");
       case 1:
-        return  const MySplash(nextScreen: NoticiasChatGPT(initialPrompt: '',),lottieAnimation: "assets/animations/lottie-robot.json");
+        return const MySplash(
+            nextScreen: NoticiasChatGPT(
+              initialPrompt: '',
+            ),
+            lottieAnimation: "assets/animations/lottie-robot.json");
       case 2:
         return const Page3();
       case 3:
-        return const MySplash(nextScreen: PlasticCountSplashScreen(), lottieAnimation: "assets/animations/resumen_animation.json",);
+        return MySplash(
+          nextScreen: ReusableCountSplashScreen(
+            backgroundImagePath: ruta,
+          ),
+          lottieAnimation: "assets/animations/resumen_animation.json",
+        );
       default:
         return MyInicio(cameras: widget.cameras);
     }

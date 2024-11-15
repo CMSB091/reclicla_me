@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_seq/dart_seq.dart';
@@ -9,6 +10,7 @@ import 'package:dart_seq_http_client/dart_seq_http_client.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -18,6 +20,7 @@ import 'package:recila_me/widgets/inicio.dart';
 import 'package:recila_me/widgets/itemDetailScreen.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http;
+import 'package:recila_me/widgets/resumenes.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 final FirestoreService firestoreService = FirestoreService();
@@ -52,6 +55,18 @@ class Funciones {
     'pila',
     'pilas, gracias, imagen'
   ];
+
+  Map<String, String> materialInfo = {
+    'Plastico': 'assets/images/reciclaje_botellas.png',
+    'Vidrio': 'assets/images/reciclaje_vidrio.png',
+    'Metal': 'assets/images/background_metal.png',
+    'Aluminio': 'assets/images/aluminios_reciclar.png',
+    'Carton': 'assets/images/basura_carton.png',
+    'Isopor': 'assets/images/isopor_waste.png',
+    'Papel': 'assets/images/paper_recycling.png',
+    'Residuos': 'assets/images/recycle_general.png',
+    // Agrega más materiales y sus valores aquí
+  };
 
   static final logger = SeqHttpLogger.create(
     host:
@@ -650,58 +665,234 @@ class Funciones {
     ).then((value) => value ?? false);
   }
 
-  Future<void> writeDebugFile(String fileName, Map<String, dynamic> content) async {
-  try {
-    // Obtén el directorio de Descargas (para Android) o Documentos (para iOS)
-    final directory = await getExternalStorageDirectory(); // Para Android
+  Future<void> writeDebugFile(
+      String fileName, Map<String, dynamic> content) async {
+    try {
+      // Obtén el directorio de Descargas (para Android) o Documentos (para iOS)
+      final directory = await getExternalStorageDirectory(); // Para Android
 
-    // Para iOS o en caso de no tener permisos en Descargas, usar Documentos
-    final safeDirectory = directory ?? await getApplicationDocumentsDirectory();
-    final filePath = '${safeDirectory.path}/$fileName';
+      // Para iOS o en caso de no tener permisos en Descargas, usar Documentos
+      final safeDirectory =
+          directory ?? await getApplicationDocumentsDirectory();
+      final filePath = '${safeDirectory.path}/$fileName';
 
-    // Crea el archivo y escribe el contenido JSON
-    final file = File(filePath);
-    await file.writeAsString(json.encode(content), flush: true);
+      // Crea el archivo y escribe el contenido JSON
+      final file = File(filePath);
+      await file.writeAsString(json.encode(content), flush: true);
 
-    print("Archivo de debug escrito en: $filePath");
-  } catch (e) {
-    print("Error al escribir el archivo de debug: $e");
+      print("Archivo de debug escrito en: $filePath");
+    } catch (e) {
+      print("Error al escribir el archivo de debug: $e");
+    }
   }
+
+  static Future<void> saveDebugInfo(String message,
+      {Map<String, dynamic>? additionalData}) async {
+    try {
+      // Obtén el directorio de Descargas (para Android) o Documentos (para iOS)
+      final directory = await getExternalStorageDirectory();
+      final safeDirectory =
+          directory ?? await getApplicationDocumentsDirectory();
+      final filePath = '${safeDirectory.path}/debug_log.json';
+
+      final file = File(filePath);
+
+      // Crea una nueva entrada de depuración con el mensaje y la marca de tiempo
+      final debugEntry = {
+        "message": message,
+        "timestamp": DateTime.now().toIso8601String(),
+        "additionalData": additionalData ?? {}
+      };
+
+      Map<String, dynamic> debugLog = {};
+
+      // Lee el contenido actual del archivo si existe
+      if (await file.exists()) {
+        final jsonString = await file.readAsString();
+        debugLog = jsonString.isNotEmpty ? json.decode(jsonString) : {};
+      }
+
+      // Agrega la nueva entrada con un identificador único (timestamp)
+      debugLog[DateTime.now().toIso8601String()] = debugEntry;
+
+      // Escribe el archivo con la nueva entrada
+      await file.writeAsString(json.encode(debugLog), flush: true);
+
+      print("Información de depuración guardada en: $filePath");
+    } catch (e) {
+      print("Error al guardar la información de depuración: $e");
+    }
+  }
+
+  static void initializeAnimations(
+    AnimationController titleController,
+    AnimationController countController,
+    AnimationController arrowController,
+    TickerProvider vsync,
+  ) {
+    titleController.duration = const Duration(seconds: 2);
+    countController.duration = const Duration(seconds: 3);
+    arrowController.duration = const Duration(seconds: 1);
+  }
+
+  static void startTitleAnimation(
+      AnimationController titleController, VoidCallback onComplete) {
+    titleController.forward().whenComplete(onComplete);
+  }
+
+  static void startCountAnimation(
+    AnimationController countController,
+    Animation<int> countAnimation,
+    VoidCallback onCompletion,
+    VoidCallback onValueChange,
+  ) {
+    countController.reset();
+    countAnimation.addListener(onValueChange);
+    countAnimation.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        onCompletion();
+      }
+    });
+    countController.forward();
+  }
+
+  static Future<void> playCompletionSound(AudioPlayer audioPlayer) async {
+    await audioPlayer.play(AssetSource('audio/congrats.mp3'));
+  }
+
+  static Future<void> vibrateOnCompletion() async {
+    if (await Vibrate.canVibrate) {
+      Vibrate.vibrate();
+    }
+  }
+
+  void navigateToNextPage(BuildContext context, int nextPage, String elemento) {
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ReusableCountSplashScreen(
+          backgroundImagePath:
+              materialInfo[elemento] ?? 'Información no disponible',
+          currentPage: nextPage,
+          isFirstPage: nextPage == 1,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  void navigateToPreviousPage(
+      BuildContext context, int previousPage, List<String> materials) {
+    // Ajuste del índice para obtener el material correcto para la página anterior
+    String materialKey = materials[previousPage - 1];
+    String backgroundImagePath = materialInfo.containsKey(materialKey)
+        ? materialInfo[materialKey]!
+        : 'assets/images/default_image.png';
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            ReusableCountSplashScreen(
+          backgroundImagePath: backgroundImagePath,
+          currentPage: previousPage,
+          isFirstPage: previousPage == 1,
+        ),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(-1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOut;
+          var tween =
+              Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+      ),
+    );
+  }
+
+  static void navigateToHome(BuildContext context) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const MyInicio(cameras: []),
+      ),
+    );
+  }
+
+  static Future<List<String>> getDistinctMaterials(String email) async {
+  List<String> materials = [];
+  print('Email del usuario: $email');
+
+  try {
+    // Realiza la consulta filtrando por el campo 'email' pasado como parámetro
+    QuerySnapshot snapshot = await FirebaseFirestore.instance
+        .collection('historial')
+        .where('email', isEqualTo: email) // Filtra por el email pasado
+        // .orderBy('material') // Elimina temporalmente `orderBy` para ver si afecta los resultados
+        .get();
+
+    // Verifica si hay documentos en el snapshot
+    print('Cantidad de documentos recuperados: ${snapshot.docs.length}');
+
+    if (snapshot.docs.isEmpty) {
+      print('No se encontraron documentos para el email proporcionado.');
+    } else {
+      // Extrae los valores únicos de la columna 'material'
+      Set<String> uniqueMaterials =
+          snapshot.docs.map((doc) => doc['material'] as String).toSet();
+
+      materials = uniqueMaterials.toList();
+      print('Materiales únicos recuperados: $materials');
+    }
+  } catch (e) {
+    print('Error obteniendo materiales: $e');
+  }
+  
+  return materials;
 }
 
-static Future<void> saveDebugInfo(String message, {Map<String, dynamic>? additionalData}) async {
-  try {
-    // Obtén el directorio de Descargas (para Android) o Documentos (para iOS)
-    final directory = await getExternalStorageDirectory();
-    final safeDirectory = directory ?? await getApplicationDocumentsDirectory();
-    final filePath = '${safeDirectory.path}/debug_log.json';
-    
-    final file = File(filePath);
 
-    // Crea una nueva entrada de depuración con el mensaje y la marca de tiempo
-    final debugEntry = {
-      "message": message,
-      "timestamp": DateTime.now().toIso8601String(),
-      "additionalData": additionalData ?? {}
-    };
+  static Future<int> countMaterialInHistorial(
+      String material, String email) async {
+    int count = 0;
+    try {
+      // Realiza la consulta para contar los documentos del material y el email especificados
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('historial')
+          .where('material', isEqualTo: material)
+          .where('email', isEqualTo: email) // Filtra por el email pasado
+          .get();
 
-    Map<String, dynamic> debugLog = {};
-
-    // Lee el contenido actual del archivo si existe
-    if (await file.exists()) {
-      final jsonString = await file.readAsString();
-      debugLog = jsonString.isNotEmpty ? json.decode(jsonString) : {};
+      // La cantidad de documentos en el snapshot representa la cantidad de registros
+      count = snapshot.docs.length;
+    } catch (e) {
+      print('Error contando registros para el material $material: $e');
     }
 
-    // Agrega la nueva entrada con un identificador único (timestamp)
-    debugLog[DateTime.now().toIso8601String()] = debugEntry;
-
-    // Escribe el archivo con la nueva entrada
-    await file.writeAsString(json.encode(debugLog), flush: true);
-
-    print("Información de depuración guardada en: $filePath");
-  } catch (e) {
-    print("Error al guardar la información de depuración: $e");
+    return count;
   }
-}
+
+  Future<String?> getCurrentUserEmail() async {
+    try {
+      // Obtiene el email del usuario actualmente autenticado
+      String? userEmail = FirebaseAuth.instance.currentUser?.email;
+      return userEmail;
+    } catch (e) {
+      print('Error obteniendo el email del usuario: $e');
+      return null;
+    }
+  }
 }
