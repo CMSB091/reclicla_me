@@ -767,13 +767,6 @@ class Funciones {
   }
 
   void navigateToNextPage(BuildContext context, int nextPage, String elemento) {
-    late int itemCount;
-    if (nextPage == 2) {
-      itemCount = 200;
-    } else if (nextPage == 3) {
-      itemCount = 300;
-    }
-
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
