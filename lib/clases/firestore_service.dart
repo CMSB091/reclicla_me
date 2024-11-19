@@ -944,4 +944,17 @@ class FirestoreService {
     }
   }
   
+   Future<Map<String, int>> getResumenReciclado(String email) async {
+    final querySnapshot = await _db
+        .collection('historial')
+        .where('email', isEqualTo: email)
+        .get();
+
+    Map<String, int> resumen = {};
+    for (var doc in querySnapshot.docs) {
+      String material = doc['material'];
+      resumen[material] = (resumen[material] ?? 0) + 1;
+    }
+    return resumen;
+  }
 }

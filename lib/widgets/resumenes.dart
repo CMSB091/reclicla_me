@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lottie/lottie.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/ResumenRecicladoScreen.dart';
 
 class ReusableCountSplashScreen extends StatefulWidget {
   final String backgroundImagePath;
@@ -265,7 +266,12 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                     ),
                     onPressed: () {
                       if (widget.currentPage == materials.length) {
-                        Funciones.navigateToHome(context);
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ResumenRecicladoScreen(),
+                          ),
+                        );
                       } else {
                         funciones.navigateToNextPage(
                           context,
@@ -333,7 +339,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                     ),
                     child: IconButton(
                       icon: const FaIcon(
-                        FontAwesomeIcons.home,
+                        FontAwesomeIcons.house,
                         size: 50,
                         color: Colors.white,
                       ),
