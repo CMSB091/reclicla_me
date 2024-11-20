@@ -1,10 +1,10 @@
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
 
 class ResumenRecicladoScreen extends StatefulWidget {
   const ResumenRecicladoScreen({super.key});
@@ -60,30 +60,43 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
   }
 
   Future<void> exportToExcel(Map<String, int> residuos) async {
-    var excel = Excel.createExcel(); // Crear un archivo Excel
-    Sheet sheetObject = excel['Resumen']; // Crear una hoja llamada "Resumen"
+    // Solicitar permisos de almacenamiento
+    var status = await Permission.storage.request();
 
-    // Agregar encabezados
-    sheetObject.appendRow(['Material', 'Cantidad']);
+    if (status.isGranted) {
+      var excel = Excel.createExcel(); // Crear un archivo Excel
+      Sheet sheetObject = excel['Resumen']; // Crear una hoja llamada "Resumen"
 
-    // Agregar datos
-    residuos.forEach((material, cantidad) {
-      sheetObject.appendRow([material, cantidad]);
-    });
+      // Agregar encabezados
+      sheetObject.appendRow(['Material', 'Cantidad']);
 
-    // Obtener el directorio donde guardar el archivo
-    final directory = await getApplicationDocumentsDirectory();
-    String filePath = '${directory.path}/resumen_reciclado.xlsx';
+      // Agregar datos
+      residuos.forEach((material, cantidad) {
+        sheetObject.appendRow([material, cantidad]);
+      });
 
-    // Guardar el archivo
-    File(filePath)
-      ..createSync(recursive: true)
-      ..writeAsBytesSync(excel.save()!);
+      // Obtener el directorio de descargas
+      final directory = Directory('/storage/emulated/0/Download');
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
+      }
+      String filePath = '${directory.path}/resumen_reciclado.xlsx';
 
-    // Mostrar mensaje de éxito
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Archivo exportado a: $filePath')),
-    );
+      // Guardar el archivo en la carpeta de descargas
+      File(filePath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(excel.save()!);
+
+      // Mostrar mensaje de éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Archivo exportado a: $filePath')),
+      );
+    } else {
+      // Mostrar mensaje de error si no se otorgan los permisos
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Permiso de almacenamiento denegado')),
+      );
+    }
   }
 
   @override
@@ -93,9 +106,14 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
         backgroundColor: Colors.green.shade200,
         title: const Column(
           children: [
-            Text('Resumen de Reciclados',
-                style: TextStyle(
-                    fontFamily: 'Artwork', fontSize: 25, color: Colors.black)),
+            Text(
+              'Resumen de Reciclados',
+              style: TextStyle(
+                fontFamily: 'Artwork',
+                fontSize: 25,
+                color: Colors.black,
+              ),
+            ),
           ],
         ),
         centerTitle: true,
@@ -105,21 +123,6 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
             Navigator.of(context).pop();
           },
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.download, color: Colors.black),
-            onPressed: () async {
-              final resumen = await _resumenFuture;
-              if (resumen.isNotEmpty) {
-                await exportToExcel(resumen);
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('No hay datos para exportar')),
-                );
-              }
-            },
-          ),
-        ],
       ),
       body: Stack(
         children: [
@@ -135,133 +138,160 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const Center(
-                          child: Text('No se encontraron datos.'));
+                        child: Text('No se encontraron datos.'),
+                      );
                     }
 
                     final resumen = snapshot.data!;
-                    final int totalCantidad = resumen.values.fold(
-                        0, (sum, item) => sum + item);
+                    final int totalCantidad =
+                        resumen.values.fold(0, (sum, item) => sum + item);
 
                     return Padding(
                       padding: const EdgeInsets.all(16.0),
                       child: SingleChildScrollView(
-                        child: Table(
-                          border: TableBorder.all(
-                            color: Colors.grey.shade400,
-                            width: 1,
-                          ),
-                          columnWidths: const {
-                            0: FlexColumnWidth(1), // Columna de íconos
-                            1: FlexColumnWidth(2), // Columna de materiales
-                            2: FlexColumnWidth(1), // Columna de cantidades
-                          },
+                        child: Column(
                           children: [
-                            const TableRow(
-                              decoration: BoxDecoration(
-                                color: Colors.blueAccent,
+                            Table(
+                              border: TableBorder.all(
+                                color: Colors.grey.shade400,
+                                width: 1,
                               ),
+                              columnWidths: const {
+                                0: FlexColumnWidth(1), // Columna de íconos
+                                1: FlexColumnWidth(2), // Columna de materiales
+                                2: FlexColumnWidth(1), // Columna de cantidades
+                              },
                               children: [
-                                SizedBox.shrink(),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 12.0, horizontal: 8.0),
-                                  child: Text(
-                                    'Material',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
+                                const TableRow(
+                                  decoration: BoxDecoration(
+                                    color: Colors.blueAccent,
                                   ),
+                                  children: [
+                                    SizedBox.shrink(),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12.0, horizontal: 8.0),
+                                      child: Text(
+                                        'Material',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12.0, horizontal: 8.0),
+                                      child: Text(
+                                        'Cantidad(Un.)',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 12.0, horizontal: 8.0),
-                                  child: Text(
-                                    'Cantidad(Un.)',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                      fontSize: 16,
+                                ...resumen.entries.map((entry) {
+                                  return TableRow(
+                                    decoration: BoxDecoration(
+                                      color: resumen.entries
+                                                      .toList()
+                                                      .indexOf(entry) %
+                                                  2 ==
+                                              0
+                                          ? Colors.grey.shade100
+                                          : Colors.white,
                                     ),
-                                    textAlign: TextAlign.center,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Image.asset(
+                                          _getMaterialIconPath(entry.key),
+                                          width: 40,
+                                          height: 40,
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12.0, horizontal: 8.0),
+                                        child: Text(
+                                          entry.key,
+                                          style: const TextStyle(fontSize: 14),
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 12.0, horizontal: 8.0),
+                                        child: Text(
+                                          entry.value.toString(),
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }),
+                                TableRow(
+                                  decoration: BoxDecoration(
+                                    color: Colors.lightGreen.shade200,
                                   ),
+                                  children: [
+                                    const SizedBox.shrink(),
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: 12.0, horizontal: 8.0),
+                                      child: Text(
+                                        'Total',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12.0, horizontal: 8.0),
+                                      child: Text(
+                                        totalCantidad.toString(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),
-                            ...resumen.entries.map((entry) {
-                              return TableRow(
-                                decoration: BoxDecoration(
-                                  color: resumen.entries
-                                              .toList()
-                                              .indexOf(entry) %
-                                          2 ==
-                                      0
-                                      ? Colors.grey.shade100
-                                      : Colors.white,
-                                ),
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Image.asset(
-                                      _getMaterialIconPath(entry.key),
-                                      width: 40,
-                                      height: 40,
+                            const SizedBox(height: 20),
+                            IconButton(
+                              onPressed: () async {
+                                if (resumen.isNotEmpty) {
+                                  await exportToExcel(resumen);
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content:
+                                          Text('No hay datos para exportar'),
                                     ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12.0, horizontal: 8.0),
-                                    child: Text(
-                                      entry.key,
-                                      style: const TextStyle(fontSize: 14),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        vertical: 12.0, horizontal: 8.0),
-                                    child: Text(
-                                      entry.value.toString(),
-                                      style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }),
-                            TableRow(
-                              decoration: BoxDecoration(
-                                color: Colors.lightGreen.shade200,
+                                  );
+                                }
+                              },
+                              icon: Image.asset(
+                                'assets/icons/aluminio.png', // Asegúrate de tener el icono de Excel en tus assets
+                                height: 50,
+                                width: 50,
                               ),
-                              children: [
-                                const SizedBox.shrink(),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: 12.0, horizontal: 8.0),
-                                  child: Text(
-                                    'Total',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 12.0, horizontal: 8.0),
-                                  child: Text(
-                                    totalCantidad.toString(),
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: Colors.black,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
+                              tooltip: 'Exportar a Excel',
                             ),
                           ],
                         ),
