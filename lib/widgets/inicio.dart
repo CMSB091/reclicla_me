@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/MiniJuegoBasura.dart';
+import 'package:recila_me/widgets/ResumenRecicladoScreen.dart';
 import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/login.dart';
@@ -226,6 +227,12 @@ class _MyInicioState extends State<MyInicio> {
                     icon: FontAwesomeIcons.heart,
                     text: 'Donaciones',
                     page: const HomeScreen(),
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.listCheck,
+                    text: 'Resumen Reciclaje',
+                    page: const ResumenRecicladoScreen(),
                   ),
                 ],
               ),

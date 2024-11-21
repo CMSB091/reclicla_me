@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -5,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'dart:io';
+import 'package:recila_me/widgets/inicio.dart';
 
 class ResumenRecicladoScreen extends StatefulWidget {
   const ResumenRecicladoScreen({super.key});
@@ -14,9 +17,8 @@ class ResumenRecicladoScreen extends StatefulWidget {
 }
 
 class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
-  late Future<Map<String, int>> _resumenFuture;
+  late Future<Map<String, int>> _resumenFuture = Future.value({});
   String _usuarioEmail = "";
-
   @override
   void initState() {
     super.initState();
@@ -99,22 +101,119 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
     }
   }
 
+  Future<void> _showConfirmDialog(
+      BuildContext context, Map<String, int> residuos) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar acción'),
+          content: const Text(
+              '¿Estás seguro de que deseas generar el archivo Excel?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Cierra el diálogo
+              },
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop(); // Cierra el diálogo
+                await exportToExcel(residuos); // Genera el archivo Excel
+              },
+              child: const Text('Confirmar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showResiduoInfoModal(
+      BuildContext context, String iconPath, String descripcion) async {
+    BuildContext? dialogContext; // Contexto del CircularProgressIndicator
+
+    // Mostrar el CircularProgressIndicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        dialogContext = context; // Guardar el contexto del indicador
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+
+    String chatGptResponse;
+    try {
+      // Generar un prompt para la consulta a ChatGPT
+      final String prompt =
+          'Proporciona información breve pero útil sobre el material "$descripcion" y una forma efectiva de reciclar. Actua como un experto en reciclaje. Recuerda que debes ser muy breve en la respuesta';
+      chatGptResponse = await Funciones.getChatGPTResponse(prompt);
+    } catch (e) {
+      chatGptResponse = 'Hubo un error al obtener la información: $e';
+    }
+
+    // Cerrar el CircularProgressIndicator
+    if (dialogContext != null) {
+      Navigator.of(dialogContext!).pop(); // Cierra el indicador
+    }
+
+    // Mostrar el modal con la información obtenida
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Image.asset(
+                iconPath,
+                width: 100,
+                height: 100,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  descripcion,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 25,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Text(
+              chatGptResponse,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // Cierra el modal actual
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green.shade200,
-        title: const Column(
-          children: [
-            Text(
-              'Resumen de Reciclados',
-              style: TextStyle(
-                fontFamily: 'Artwork',
-                fontSize: 25,
-                color: Colors.black,
-              ),
-            ),
-          ],
+        title: const Text(
+          'Resumen de Reciclados',
+          style: TextStyle(
+            fontFamily: 'Artwork',
+            fontSize: 22,
+            color: Colors.black,
+          ),
         ),
         centerTitle: true,
         leading: IconButton(
@@ -123,160 +222,178 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
             Navigator.of(context).pop();
           },
         ),
+        actions: [
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.circleQuestion),
+            onPressed: () {
+              Funciones().showGameRules(context,'Ayuda','Presiona los iconos de la tabla para obtener información extra acerca de los tipos de residuos');
+            },
+          ),
+        ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          Column(
-            children: [
-              Expanded(
-                child: FutureBuilder<Map<String, int>>(
-                  future: _resumenFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const Center(
-                        child: Text('No se encontraron datos.'),
-                      );
-                    }
+          // Contenido principal que se ajusta dinámicamente
+          Expanded(
+            child: FutureBuilder<Map<String, int>>(
+              future: _resumenFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Text('No se encontraron datos.'),
+                  );
+                }
 
-                    final resumen = snapshot.data!;
-                    final int totalCantidad =
-                        resumen.values.fold(0, (sum, item) => sum + item);
+                final resumen = snapshot.data!;
+                final int totalCantidad =
+                    resumen.values.fold(0, (sum, item) => sum + item);
 
-                    return Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SingleChildScrollView(
-                        child: Column(
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      children: [
+                        Table(
+                          border: TableBorder.all(
+                            color: Colors.grey.shade400,
+                            width: 1,
+                          ),
+                          columnWidths: const {
+                            0: FlexColumnWidth(1), // Columna de íconos
+                            1: FlexColumnWidth(2), // Columna de materiales
+                            2: FlexColumnWidth(1), // Columna de cantidades
+                          },
                           children: [
-                            Table(
-                              border: TableBorder.all(
-                                color: Colors.grey.shade400,
-                                width: 1,
+                            const TableRow(
+                              decoration: BoxDecoration(
+                                color: Colors.blueAccent,
                               ),
-                              columnWidths: const {
-                                0: FlexColumnWidth(1), // Columna de íconos
-                                1: FlexColumnWidth(2), // Columna de materiales
-                                2: FlexColumnWidth(1), // Columna de cantidades
-                              },
                               children: [
-                                const TableRow(
-                                  decoration: BoxDecoration(
-                                    color: Colors.blueAccent,
+                                SizedBox.shrink(),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 12.0, horizontal: 8.0),
+                                  child: Text(
+                                    'Material',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
                                   ),
-                                  children: [
-                                    SizedBox.shrink(),
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 12.0, horizontal: 8.0),
-                                      child: Text(
-                                        'Material',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 12.0, horizontal: 8.0),
-                                      child: Text(
-                                        'Cantidad(Un.)',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                          fontSize: 16,
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ),
-                                  ],
                                 ),
-                                ...resumen.entries.map((entry) {
-                                  return TableRow(
-                                    decoration: BoxDecoration(
-                                      color: resumen.entries
-                                                      .toList()
-                                                      .indexOf(entry) %
+                                Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 12.0, horizontal: 8.0),
+                                  child: Text(
+                                    'Cantidad(Un.)',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            ...resumen.entries.map((entry) {
+                              return TableRow(
+                                decoration: BoxDecoration(
+                                  color:
+                                      resumen.entries.toList().indexOf(entry) %
                                                   2 ==
                                               0
                                           ? Colors.grey.shade100
                                           : Colors.white,
-                                    ),
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Image.asset(
+                                ),
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        _showResiduoInfoModal(
+                                          context,
                                           _getMaterialIconPath(entry.key),
-                                          width: 40,
-                                          height: 40,
-                                        ),
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 12.0, horizontal: 8.0),
-                                        child: Text(
                                           entry.key,
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
+                                        );
+                                      },
+                                      child: Image.asset(
+                                        _getMaterialIconPath(entry.key),
+                                        width: 40,
+                                        height: 40,
                                       ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 12.0, horizontal: 8.0),
-                                        child: Text(
-                                          entry.value.toString(),
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }),
-                                TableRow(
-                                  decoration: BoxDecoration(
-                                    color: Colors.lightGreen.shade200,
+                                    ),
                                   ),
-                                  children: [
-                                    const SizedBox.shrink(),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          vertical: 12.0, horizontal: 8.0),
-                                      child: Text(
-                                        'Total',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12.0, horizontal: 8.0),
+                                    child: Text(
+                                      entry.key,
+                                      style: const TextStyle(fontSize: 14),
                                     ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 12.0, horizontal: 8.0),
-                                      child: Text(
-                                        totalCantidad.toString(),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                        ),
-                                        textAlign: TextAlign.center,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 12.0, horizontal: 8.0),
+                                    child: Text(
+                                      entry.value.toString(),
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
                                       ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                  ],
+                                  ),
+                                ],
+                              );
+                            }),
+                            TableRow(
+                              decoration: BoxDecoration(
+                                color: Colors.lightGreen.shade200,
+                              ),
+                              children: [
+                                const SizedBox.shrink(),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 12.0, horizontal: 8.0),
+                                  child: Text(
+                                    'Total',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12.0, horizontal: 8.0),
+                                  child: Text(
+                                    totalCantidad.toString(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.black,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 20),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
                             IconButton(
                               onPressed: () async {
                                 if (resumen.isNotEmpty) {
-                                  await exportToExcel(resumen);
+                                  await _showConfirmDialog(context, resumen);
                                 } else {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
@@ -287,24 +404,32 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
                                 }
                               },
                               icon: Image.asset(
-                                'assets/icons/aluminio.png', // Asegúrate de tener el icono de Excel en tus assets
+                                'assets/icons/excel_icon.png',
                                 height: 50,
                                 width: 50,
                               ),
                               tooltip: 'Exportar a Excel',
                             ),
+                            const Text(
+                              'Exportar',
+                              style: TextStyle(
+                                fontFamily: 'Artwork',
+                                fontSize: 25,
+                              ),
+                            ),
                           ],
                         ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
-          Positioned(
-            bottom: 20,
-            right: 20,
+          // Flecha fija al pie de la pantalla
+          Container(
+            padding: const EdgeInsets.all(20),
+            alignment: Alignment.bottomRight,
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
@@ -323,11 +448,11 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
                   color: Colors.white,
                 ),
                 onPressed: () {
-                  Navigator.pushReplacement(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          const ResumenRecicladoScreen(), // Cambiar destino
+                          const MyInicio(cameras: []), // Página de destino
                     ),
                   );
                 },

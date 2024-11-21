@@ -582,17 +582,13 @@ class Funciones {
   }
 
   // Función para mostrar el modal de reglas del juego
-  void showGameRules(BuildContext context) {
+  void showGameRules(BuildContext context, String cabecera, String cuerpo) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Reglas del Juego'),
-          content: const Text(
-              '1. Arrastra los residuos hacia el basurero correcto (Plástico, Papel, Orgánico, Vidrio o Materiales Peligrosos).\n'
-              '2. Ganas puntos por cada residuo correctamente clasificado.\n'
-              '3. Pierdes puntos por clasificaciones incorrectas.\n'
-              '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n5. Diviértete Aprendiendo!!'),
+          title:  Text(cabecera),
+          content: Text(cuerpo),
           actions: [
             TextButton(
               onPressed: () {
