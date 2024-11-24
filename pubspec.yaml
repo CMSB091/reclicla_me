@@ -30,7 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  camera: ^0.11.0+1
+  #camera: ^0.11.0+1
+  camera: ^0.10.3+3
   permission_handler: ^11.3.1
   tflite_flutter: ^0.10.4
   firebase_core: ^3.0.0
@@ -171,6 +172,7 @@ flutter:
     - assets/animations/scan_objects.json
     - assets/animations/scan_objects2.json
     - assets/animations/fireworks.json
+    - assets/animations/recycling3.json
     - assets/images/fondo.png
     - assets/images/reciclaje_botellas.png
     - assets/images/empy_trash.png
@@ -186,14 +188,14 @@ flutter:
     - assets/converted_tflite/labels.txt
     - assets/images/recycle-icons8.png
     - assets/audio/congrats.mp3
-    - assets/icons/plastico.png
-    - assets/icons/vidrio.png
-    - assets/icons/aluminio.png
-    - assets/icons/carton.png
-    - assets/icons/isopor.png
-    - assets/icons/metal.png
-    - assets/icons/papel.png
-    - assets/icons/residuos.png
+    - assets/icons/Plastico.png
+    - assets/icons/Vidrio.png
+    - assets/icons/Aluminio.png
+    - assets/icons/Carton.png
+    - assets/icons/Isopor.png
+    - assets/icons/Metal.png
+    - assets/icons/Papel.png
+    - assets/icons/Residuos.png
     - assets/icons/excel_icon.png
 
   fonts:

@@ -7,6 +7,7 @@ import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_seq/dart_seq.dart';
 import 'package:dart_seq_http_client/dart_seq_http_client.dart';
+import 'package:excel/excel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/configuracion/config.dart';
 import 'package:recila_me/widgets/inicio.dart';
@@ -860,7 +862,6 @@ class Funciones {
   return materials;
 }
 
-
   static Future<int> countMaterialInHistorial(
       String material, String email) async {
     int count = 0;
@@ -890,5 +891,126 @@ class Funciones {
       print('Error obteniendo el email del usuario: $e');
       return null;
     }
+  }
+
+  static Future<void> exportToExcel(
+      Map<String, int> residuos, Function(String) showSuccessMessage) async {
+    var status = await Permission.storage.request();
+
+    if (status.isGranted) {
+      var excel = Excel.createExcel();
+      Sheet sheetObject = excel['Resumen'];
+
+      sheetObject.appendRow(['Material', 'Cantidad']);
+      residuos.forEach((material, cantidad) {
+        sheetObject.appendRow([material, cantidad]);
+      });
+      sheetObject.appendRow(['Total', residuos.values.reduce((a, b) => a + b)]);
+
+      final directory = Directory('/storage/emulated/0/Download');
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
+      }
+      String filePath = '${directory.path}/resumen_reciclado.xlsx';
+
+      File(filePath)
+        ..createSync(recursive: true)
+        ..writeAsBytesSync(excel.save()!);
+
+      showSuccessMessage(filePath);
+    } else if (status.isPermanentlyDenied) {
+      openAppSettings();
+    } else {
+      throw Exception('Permiso de almacenamiento denegado');
+    }
+  }
+
+  static String getMaterialIconPath(String material) {
+    print('material $material');
+    switch (material.toLowerCase()) {
+      case 'plastico':
+        return 'assets/icons/Plastico.png';
+      case 'vidrio':
+        return 'assets/icons/Vidrio.png';
+      case 'papel':
+        return 'assets/icons/Papel.png';
+      case 'metal':
+        return 'assets/icons/Metal.png';
+      case 'aluminio':
+        return 'assets/icons/Aluminio.png';
+      case 'carton':
+        return 'assets/icons/Carton.png';
+      case 'isopor':
+        return 'assets/icons/Isopor.png';
+      default:
+        return 'assets/icons/Residuos.png';
+    }
+  }
+
+  static Future<void> showResiduoInfoModal(
+      BuildContext context, String iconPath, String descripcion) async {
+    BuildContext? dialogContext;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        dialogContext = context;
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+
+    String chatGptResponse;
+    try {
+      final String prompt =
+          'Proporciona información breve sobre "$descripcion" y cómo reciclarlo.';
+      chatGptResponse = await Funciones.getChatGPTResponse(prompt);
+    } catch (e) {
+      chatGptResponse = 'Error al obtener información: $e';
+    }
+
+    if (dialogContext != null) {
+      Navigator.of(dialogContext!).pop();
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Image.asset(
+                iconPath,
+                width: 100,
+                height: 100,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  descripcion,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 25,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Text(
+              chatGptResponse,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

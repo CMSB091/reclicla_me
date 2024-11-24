@@ -187,7 +187,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
                     titleText, // Usa el título dinámico comprobado
                     textAlign: TextAlign.center,
                     style: GoogleFonts.comicNeue(
-                      fontSize: 33,
+                      fontSize: 40,
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       shadows: [
