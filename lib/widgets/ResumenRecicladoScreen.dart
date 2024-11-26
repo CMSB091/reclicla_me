@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/huellaCarbono.dart';
 import 'package:recila_me/widgets/inicio.dart';
 
 class ResumenRecicladoScreen extends StatefulWidget {
@@ -19,22 +20,20 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeResumen();
+    _resumenFuture = _initializeResumen();
   }
 
-  Future<void> _initializeResumen() async {
-    String? userEmail = await Funciones().getCurrentUserEmail();
-
-    if (userEmail != null) {
-      setState(() {
+  Future<Map<String, int>> _initializeResumen() async {
+    try {
+      final userEmail = await Funciones().getCurrentUserEmail();
+      if (userEmail != null) {
         _usuarioEmail = userEmail;
-        _resumenFuture = firestoreService.getResumenReciclado(_usuarioEmail);
-      });
-    } else {
-      setState(() {
-        _resumenFuture = Future.value({});
-      });
+        return await firestoreService.getResumenReciclado(_usuarioEmail);
+      }
+    } catch (e) {
+      debugPrint('Error al inicializar resumen: $e');
     }
+    return {}; // Devuelve un mapa vacío si ocurre un error.
   }
 
   Future<Map<String, int>> _getTotalesPorMes() async {
@@ -216,8 +215,9 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
                           ),
                         ),
                         trailing: Text(
-                          entry.value== 1 ? '${entry.value} Unidad' : 
-                          '${entry.value} Unidades',
+                          entry.value == 1
+                              ? '${entry.value} Unidad'
+                              : '${entry.value} Unidades',
                           style: GoogleFonts.montserrat(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -305,7 +305,6 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
                       height: 50,
                       width: 50,
                     ),
-                    tooltip: 'Exportar a Excel',
                   ),
                   IconButton(
                     icon: const FaIcon(
@@ -318,7 +317,7 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              const MyInicio(cameras: []), // Página de destino
+                              HuellaCarbonoScreen(resumen: snapshot.data!),
                         ),
                       );
                     },

@@ -16,6 +16,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:recila_me/clases/CustomChartValue.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/configuracion/config.dart';
 import 'package:recila_me/widgets/inicio.dart';
@@ -24,6 +25,8 @@ import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:recila_me/widgets/resumenes.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 final FirestoreService firestoreService = FirestoreService();
 
@@ -589,7 +592,7 @@ class Funciones {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title:  Text(cabecera),
+          title: Text(cabecera),
           content: Text(cuerpo),
           actions: [
             TextButton(
@@ -831,36 +834,36 @@ class Funciones {
   }
 
   static Future<List<String>> getDistinctMaterials(String email) async {
-  List<String> materials = [];
-  print('Email del usuario: $email');
+    List<String> materials = [];
+    print('Email del usuario: $email');
 
-  try {
-    // Realiza la consulta filtrando por el campo 'email' pasado como parámetro
-    QuerySnapshot snapshot = await FirebaseFirestore.instance
-        .collection('historial')
-        .where('email', isEqualTo: email) // Filtra por el email pasado
-        // .orderBy('material') // Elimina temporalmente `orderBy` para ver si afecta los resultados
-        .get();
+    try {
+      // Realiza la consulta filtrando por el campo 'email' pasado como parámetro
+      QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('historial')
+          .where('email', isEqualTo: email) // Filtra por el email pasado
+          // .orderBy('material') // Elimina temporalmente `orderBy` para ver si afecta los resultados
+          .get();
 
-    // Verifica si hay documentos en el snapshot
-    print('Cantidad de documentos recuperados: ${snapshot.docs.length}');
+      // Verifica si hay documentos en el snapshot
+      print('Cantidad de documentos recuperados: ${snapshot.docs.length}');
 
-    if (snapshot.docs.isEmpty) {
-      print('No se encontraron documentos para el email proporcionado.');
-    } else {
-      // Extrae los valores únicos de la columna 'material'
-      Set<String> uniqueMaterials =
-          snapshot.docs.map((doc) => doc['material'] as String).toSet();
+      if (snapshot.docs.isEmpty) {
+        print('No se encontraron documentos para el email proporcionado.');
+      } else {
+        // Extrae los valores únicos de la columna 'material'
+        Set<String> uniqueMaterials =
+            snapshot.docs.map((doc) => doc['material'] as String).toSet();
 
-      materials = uniqueMaterials.toList();
-      print('Materiales únicos recuperados: $materials');
+        materials = uniqueMaterials.toList();
+        print('Materiales únicos recuperados: $materials');
+      }
+    } catch (e) {
+      print('Error obteniendo materiales: $e');
     }
-  } catch (e) {
-    print('Error obteniendo materiales: $e');
+
+    return materials;
   }
-  
-  return materials;
-}
 
   static Future<int> countMaterialInHistorial(
       String material, String email) async {
@@ -1012,5 +1015,147 @@ class Funciones {
         );
       },
     );
+  }
+
+  static Future<void> exportToPDF(
+      String content, Function(String) showSuccessMessage) async {
+    // Solicitar permiso de almacenamiento
+    var status = await Permission.storage.request();
+
+    if (status.isGranted) {
+      try {
+        // Crear un documento PDF
+        final pdf = pw.Document();
+
+        // Agregar contenido al PDF
+        pdf.addPage(
+          pw.Page(
+            pageFormat: PdfPageFormat.a4,
+            build: (pw.Context context) {
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Informe de Huella de Carbono',
+                    style: pw.TextStyle(
+                      fontSize: 24,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 16),
+                  pw.Text(
+                    content,
+                    style: pw.TextStyle(fontSize: 14),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+
+        // Ruta para guardar el PDF
+        final directory = Directory('/storage/emulated/0/Download');
+        if (!directory.existsSync()) {
+          directory.createSync(recursive: true);
+        }
+        String filePath = '${directory.path}/informe_huella_carbono.pdf';
+
+        // Guardar el archivo PDF
+        final file = File(filePath);
+        await file.writeAsBytes(await pdf.save());
+
+        // Mostrar mensaje de éxito
+        showSuccessMessage(filePath);
+      } catch (e) {
+        throw Exception('Error al generar el PDF: $e');
+      }
+    } else if (status.isPermanentlyDenied) {
+      openAppSettings();
+    } else {
+      throw Exception('Permiso de almacenamiento denegado');
+    }
+  }
+
+  static Future<void> exportToPDFWithChart(String content,
+      Map<String, int> resumen, Function(String) showSuccessMessage) async {
+    var status = await Permission.storage.request();
+
+    if (status.isGranted) {
+      try {
+        final pdf = pw.Document();
+
+        // Crear datos para el gráfico
+        final data = List<CustomChartValue>.generate(
+          resumen.length,
+          (index) {
+            final material = resumen.keys.elementAt(index);
+            final cantidad = resumen.values.elementAt(index).toDouble();
+            return CustomChartValue(index.toDouble(), cantidad);
+          },
+        );
+
+        // Crear gráfico en PDF
+        final chart = pw.Chart(
+          grid: pw.CartesianGrid(
+            xAxis: pw.FixedAxis.fromStrings(
+              resumen.keys.toList(),
+              margin: 10,
+            ),
+            yAxis: pw.FixedAxis(
+              List<double>.generate(
+                10,
+                (i) =>
+                    i * (resumen.values.reduce((a, b) => a > b ? a : b) / 10),
+              ),
+              divisions: true,
+            ),
+          ),
+          datasets: [
+            pw.BarDataSet<CustomChartValue>(
+              color: PdfColors.green,
+              borderColor: PdfColors.black,
+              data: data,
+            ),
+          ],
+        );
+
+        // Agregar contenido y gráfico al PDF
+        pdf.addPage(
+          pw.Page(
+            build: (pw.Context context) {
+              return pw.Column(
+                children: [
+                  pw.Text(
+                    'Informe de Huella de Carbono',
+                    style: pw.TextStyle(
+                        fontSize: 24, fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.SizedBox(height: 16),
+                  pw.Text(content),
+                  pw.SizedBox(height: 20),
+                  chart,
+                ],
+              );
+            },
+          ),
+        );
+
+        // Guardar PDF
+        final directory = Directory('/storage/emulated/0/Download');
+        if (!directory.existsSync()) {
+          directory.createSync(recursive: true);
+        }
+        String filePath =
+            '${directory.path}/informe_huella_carbono_con_grafico.pdf';
+        final file = File(filePath);
+        await file.writeAsBytes(await pdf.save());
+
+        showSuccessMessage(filePath);
+      } catch (e) {
+        throw Exception('Error al generar el PDF: $e');
+      }
+    } else {
+      throw Exception('Permiso de almacenamiento denegado');
+    }
   }
 }
