@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lottie/lottie.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Iconos de FontAwesome
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/ResumenGrafico.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
@@ -18,74 +18,12 @@ class HuellaCarbonoScreen extends StatefulWidget {
 
 class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
   late Future<String> _informeFuture;
-  late Future<String> _descripcionHuellaFuture;
   bool _isChartVisible = false;
 
   @override
   void initState() {
     super.initState();
-    _informeFuture = _generarInformeHuellaCarbono(widget.resumen);
-    _descripcionHuellaFuture = _obtenerDescripcionHuella();
-  }
-
-  Future<String> _generarInformeHuellaCarbono(Map<String, int> resumen) async {
-    const pesosPorUnidad = {
-      'Papel': 0.05,
-      'Plástico': 0.1,
-      'Vidrio': 0.5,
-      'Metal': 0.2,
-    };
-
-    const conversionCarbono = {
-      'Papel': 0.9,
-      'Plástico': 1.5,
-      'Vidrio': 0.5,
-      'Metal': 2.0,
-    };
-
-    final detallesMateriales = resumen.entries.map((entry) {
-      final material = entry.key;
-      final cantidad = entry.value;
-      final pesoPorUnidad = pesosPorUnidad[material] ?? 0.0;
-      final pesoTotal = cantidad * pesoPorUnidad;
-      final carbonoAhorrado = pesoTotal * (conversionCarbono[material] ?? 0.0);
-      return '$material: $cantidad unidades, ${pesoTotal.toStringAsFixed(2)} kg reciclados, '
-          '${carbonoAhorrado.toStringAsFixed(2)} kg de carbono ahorrados.';
-    }).join('\n');
-
-    final totalCarbonoAhorrado = resumen.entries.fold(0.0, (sum, entry) {
-      final material = entry.key;
-      final cantidad = entry.value;
-      final pesoPorUnidad = pesosPorUnidad[material] ?? 0.0;
-      final pesoTotal = cantidad * pesoPorUnidad;
-      final carbonoAhorrado = pesoTotal * (conversionCarbono[material] ?? 0.0);
-      return sum + carbonoAhorrado;
-    });
-
-    final porcentajeReduccion = (totalCarbonoAhorrado / 10000) * 100;
-
-    final informe = '''
-  Detalles del Ahorro por Material:
-  $detallesMateriales
-
-  Total de Carbono Ahorrado: ${totalCarbonoAhorrado.toStringAsFixed(2)} kg
-  Porcentaje de Reducción de Huella de Carbono: ${porcentajeReduccion.toStringAsFixed(2)}%
-  ''';
-
-    return informe;
-  }
-
-  Future<String> _obtenerDescripcionHuella() async {
-    const prompt = '''
-      Explica brevemente qué es la huella de carbono de manera clara y comprensible para el usuario final.
-    ''';
-
-    try {
-      final respuestaIA = await Funciones.getChatGPTResponse(prompt);
-      return respuestaIA;
-    } catch (e) {
-      return 'Hubo un error al obtener la descripción de la huella de carbono: $e';
-    }
+    _informeFuture = Funciones.generarInformeHuellaCarbono(widget.resumen);
   }
 
   @override
@@ -100,10 +38,23 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
           ),
         ),
         backgroundColor: Colors.green.shade200,
+        leading: IconButton(
+          icon: const FaIcon(FontAwesomeIcons.house, color: Colors.black),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.infoCircle), // Icono de ayuda
+            onPressed: () {
+              _mostrarModalDeAyuda(context);
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<String>(
-        future: Future.wait([_informeFuture, _descripcionHuellaFuture])
-            .then((results) => results.join('|||')), // Combina ambas respuestas
+        future: _informeFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -118,18 +69,27 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
               ),
             );
           } else {
-            final respuestas = snapshot.data!.split('|||');
-            final informe = respuestas[0];
-            final descripcionHuella = respuestas[1];
-
+            final informe = snapshot.data!;
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Encabezado con animación
-                    buildLottieAnimation(path: 'assets/animations/factory.json',width: 200, height: 200, repetir: true),
+                    // Animación Lottie
+                    buildLottieAnimation(
+                      path: 'assets/animations/factory.json',
+                      width: 200,
+                      height: 200,
+                      repetir: true,
+                    ),
+                    const SizedBox(height: 20),
+                    // Descripción de la huella de carbono
+                    _buildResumenTarjeta(
+                      '¿Qué es la Huella de Carbono?',
+                      'La huella de carbono es una medida que refleja la cantidad de gases de efecto invernadero, especialmente dióxido de carbono (CO2), que se generan directa o indirectamente por nuestras actividades diarias. '
+                          'Reciclar ayuda a reducir esta huella al evitar la producción desde cero de materiales y disminuir los desechos en vertederos.',
+                    ),
                     const SizedBox(height: 20),
                     Text(
                       'Impacto de tu Reciclaje',
@@ -140,24 +100,14 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 20),
-                    // Tarjeta de descripción de la huella de carbono
-                    _buildResumenTarjeta(
-                      '¿Qué es la Huella de Carbono?',
-                      descripcionHuella,
-                    ),
-                    const SizedBox(height: 10),
-                    // Tarjetas con el informe
-                    _buildResumenTarjeta(
-                      'Detalles del Informe',
-                      informe,
-                    ),
+                    _buildResumenTarjeta('Detalles del Informe', informe),
                     const SizedBox(height: 10),
                     _buildResumenTarjeta(
                       'Gráfico de Resumen',
                       'A continuación, se presenta un resumen gráfico de tus materiales reciclados.',
                     ),
                     const SizedBox(height: 10),
-                    // Gráfico
+                    // Gráfico de Resumen
                     VisibilityDetector(
                       key: const Key('pie_chart_visibility'),
                       onVisibilityChanged: (info) {
@@ -175,7 +125,7 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    // Botón de exportación
+                    // Botón de Exportar PDF
                     ElevatedButton.icon(
                       onPressed: () async {
                         try {
@@ -193,11 +143,12 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
                           Funciones.showSnackBar(
                             context,
                             'Error al exportar el PDF con gráfico: $e',
+                            color: Colors.red,
                           );
                         }
                       },
-                      icon: const Icon(Icons.picture_as_pdf),
-                      label: const Text('Exportar PDF con Gráfico'),
+                      icon: const Icon(FontAwesomeIcons.filePdf),
+                      label: const Text('Exportar informe en formato PDF'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green.shade400,
                       ),
@@ -212,6 +163,30 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
     );
   }
 
+  /// Muestra el modal de ayuda con la explicación sobre los cálculos
+  void _mostrarModalDeAyuda(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('¿Cómo se calculan los porcentajes?'),
+          content: const Text(
+            'Los porcentajes de ahorro de carbono se calculan utilizando datos estimados sobre la fabricación y reciclaje de materiales. '
+            'Estos modelos consideran factores como el impacto ambiental de la producción, la eficiencia del reciclaje y las emisiones evitadas al reciclar en lugar de desechar. '
+            'Recuerda que los cálculos son estimaciones y pueden variar según tu región y prácticas de reciclaje locales.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Entendido'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Construye una tarjeta de resumen
   Widget _buildResumenTarjeta(String titulo, String contenido) {
     return Card(
       color: Colors.lightGreen.shade100,

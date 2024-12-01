@@ -574,13 +574,20 @@ class Funciones {
     }
   }
 
-  static void showSnackBar(BuildContext context, String message) {
+  static void showSnackBar(
+    BuildContext context,
+    String message, {
+    Color color = Colors.green, // Color del fondo del SnackBar
+  }) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior
-            .floating, // Hace que el SnackBar "flote" en lugar de estar pegado a la parte inferior
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.white), // Estilo del texto
+        ),
+        behavior: SnackBarBehavior.floating, // Hace que el SnackBar "flote"
         margin: const EdgeInsets.all(16), // Margen alrededor del SnackBar
+        backgroundColor: color, // Color de fondo dinámico
         duration: const Duration(seconds: 3), // Duración de la animación
       ),
     );
@@ -1157,5 +1164,94 @@ class Funciones {
     } else {
       throw Exception('Permiso de almacenamiento denegado');
     }
+  }
+
+  /// Obtiene una descripción de la huella de carbono utilizando IA.
+  static Future<String> obtenerDescripcionHuella() async {
+    const prompt = '''
+      Explica brevemente qué es la huella de carbono de manera clara y comprensible para el usuario final.
+    ''';
+
+    try {
+      final respuestaIA = await getChatGPTResponse(prompt);
+      return respuestaIA;
+    } catch (e) {
+      return 'Hubo un error al obtener la descripción de la huella de carbono: $e';
+    }
+  }
+
+  /// Genera un informe del impacto en carbono basado en las unidades recicladas.
+  static Future<String> generarInformeHuellaCarbono(
+      Map<String, int> resumen) async {
+    // Crea el prompt dinámico para enviar a la API
+    final prompt = _crearPromptParaImpacto(resumen);
+
+    try {
+      // Enviamos el prompt a ChatGPT y obtenemos la respuesta
+      final respuestaIA = await getChatGPTResponse(prompt);
+
+      // Parseamos los resultados para obtener los porcentajes
+      final impactos = _parsearImpactoRespuesta(respuestaIA);
+
+      // Generamos el informe
+      final informe = impactos.entries.map((entry) {
+        final material = entry.key;
+        final porcentaje = entry.value;
+        return '$material: ${porcentaje.toStringAsFixed(2)}% de carbono ahorrado.';
+      }).join('\n');
+
+      // Calculamos el impacto total (promedio ponderado)
+      final totalImpacto = _calcularImpactoTotal(resumen, impactos);
+
+      return '''
+      Detalles del Impacto de Carbono:
+      $informe
+
+      Impacto Total Estimado: ${totalImpacto.toStringAsFixed(2)}%
+      ''';
+    } catch (e) {
+      return 'Hubo un error al generar el informe: $e';
+    }
+  }
+
+  /// Crea el prompt para enviar a la API.
+  static String _crearPromptParaImpacto(Map<String, int> resumen) {
+    final materiales = resumen.entries.map((entry) {
+      return '${entry.key}: ${entry.value} unidades recicladas';
+    }).join(', ');
+
+    return '''
+      Con base en los datos proporcionados, calcula un porcentaje estimado de carbono ahorrado para cada material reciclado.
+      También calcula un impacto total general considerando las cantidades de cada material.
+      Datos:
+      $materiales
+
+      Devuelve los resultados en formato JSON donde las claves sean los materiales y los valores los porcentajes de carbono ahorrado.
+    ''';
+  }
+
+  /// Parseamos la respuesta de la API para extraer los porcentajes.
+  static Map<String, double> _parsearImpactoRespuesta(String respuesta) {
+    try {
+      final Map<String, dynamic> jsonResponse = json.decode(respuesta);
+      return jsonResponse.map((key, value) => MapEntry(key, (value as num).toDouble()));
+    } catch (e) {
+      throw Exception('Error al parsear la respuesta: $e');
+    }
+  }
+
+  /// Calcula el impacto total basado en los porcentajes individuales y las cantidades recicladas.
+  static double _calcularImpactoTotal(
+      Map<String, int> resumen, Map<String, double> impactos) {
+    double totalImpacto = 0.0;
+    int totalUnidades = 0;
+
+    resumen.forEach((material, cantidad) {
+      totalUnidades += cantidad;
+      final porcentaje = impactos[material] ?? 0.0;
+      totalImpacto += porcentaje * cantidad;
+    });
+
+    return totalUnidades > 0 ? totalImpacto / totalUnidades : 0.0;
   }
 }
