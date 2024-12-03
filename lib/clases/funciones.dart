@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,7 +17,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:recila_me/clases/CustomChartValue.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/configuracion/config.dart';
 import 'package:recila_me/widgets/inicio.dart';
@@ -25,7 +25,6 @@ import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:recila_me/widgets/resumenes.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 final FirestoreService firestoreService = FirestoreService();
@@ -224,7 +223,8 @@ class Funciones {
   // Implementación del Singleton para el logger
   static Future<void> _initializeLogger() async {
     _logger ??= SeqHttpLogger.create(
-      host: /*'http://192.168.100.16:43674',*/ 'http://10.0.2.2:43674',
+      host: 'http://192.168.100.16:43674',
+      /*'http://10.0.2.2:43674',*/
       /*para el emulador*/
       apiKey: Config.seqLogger, //dotenv.env['SEQ_LOGGER'],
       globalContext: {
@@ -1024,145 +1024,106 @@ class Funciones {
     );
   }
 
-  static Future<void> exportToPDF(
-      String content, Function(String) showSuccessMessage) async {
-    // Solicitar permiso de almacenamiento
+  static Future<void> exportToPDFWithChart(
+    String conceptoHuella,
+    String detallesInforme,
+    Map<String, int> resumen,
+    Uint8List chartImageBytes, // Nueva imagen del gráfico
+    Function(String) showSuccessMessage,
+  ) async {
     var status = await Permission.storage.request();
 
-    if (status.isGranted) {
-      try {
-        // Crear un documento PDF
-        final pdf = pw.Document();
-
-        // Agregar contenido al PDF
-        pdf.addPage(
-          pw.Page(
-            pageFormat: PdfPageFormat.a4,
-            build: (pw.Context context) {
-              return pw.Column(
-                crossAxisAlignment: pw.CrossAxisAlignment.start,
-                children: [
-                  pw.Text(
-                    'Informe de Huella de Carbono',
-                    style: pw.TextStyle(
-                      fontSize: 24,
-                      fontWeight: pw.FontWeight.bold,
-                    ),
-                  ),
-                  pw.SizedBox(height: 16),
-                  pw.Text(
-                    content,
-                    style: pw.TextStyle(fontSize: 14),
-                  ),
-                ],
-              );
-            },
-          ),
-        );
-
-        // Ruta para guardar el PDF
-        final directory = Directory('/storage/emulated/0/Download');
-        if (!directory.existsSync()) {
-          directory.createSync(recursive: true);
-        }
-        String filePath = '${directory.path}/informe_huella_carbono.pdf';
-
-        // Guardar el archivo PDF
-        final file = File(filePath);
-        await file.writeAsBytes(await pdf.save());
-
-        // Mostrar mensaje de éxito
-        showSuccessMessage(filePath);
-      } catch (e) {
-        throw Exception('Error al generar el PDF: $e');
-      }
-    } else if (status.isPermanentlyDenied) {
-      openAppSettings();
-    } else {
+    if (!status.isGranted) {
       throw Exception('Permiso de almacenamiento denegado');
     }
-  }
 
-  static Future<void> exportToPDFWithChart(String content,
-      Map<String, int> resumen, Function(String) showSuccessMessage) async {
-    var status = await Permission.storage.request();
+    try {
+      final pdf = pw.Document();
 
-    if (status.isGranted) {
-      try {
-        final pdf = pw.Document();
+      // Agregar contenido al PDF
+      pdf.addPage(
+        pw.Page(
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Título
+                pw.Text(
+                  'Informe de Huella de Carbono',
+                  style: pw.TextStyle(
+                      fontSize: 24, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 16),
 
-        // Crear datos para el gráfico
-        final data = List<CustomChartValue>.generate(
-          resumen.length,
-          (index) {
-            final material = resumen.keys.elementAt(index);
-            final cantidad = resumen.values.elementAt(index).toDouble();
-            return CustomChartValue(index.toDouble(), cantidad);
-          },
-        );
-
-        // Crear gráfico en PDF
-        final chart = pw.Chart(
-          grid: pw.CartesianGrid(
-            xAxis: pw.FixedAxis.fromStrings(
-              resumen.keys.toList(),
-              margin: 10,
-            ),
-            yAxis: pw.FixedAxis(
-              List<double>.generate(
-                10,
-                (i) =>
-                    i * (resumen.values.reduce((a, b) => a > b ? a : b) / 10),
-              ),
-              divisions: true,
-            ),
-          ),
-          datasets: [
-            pw.BarDataSet<CustomChartValue>(
-              color: PdfColors.green,
-              borderColor: PdfColors.black,
-              data: data,
-            ),
-          ],
-        );
-
-        // Agregar contenido y gráfico al PDF
-        pdf.addPage(
-          pw.Page(
-            build: (pw.Context context) {
-              return pw.Column(
-                children: [
-                  pw.Text(
-                    'Informe de Huella de Carbono',
-                    style: pw.TextStyle(
-                        fontSize: 24, fontWeight: pw.FontWeight.bold),
+                // Concepto
+                pw.Text(
+                  '¿Qué es la Huella de Carbono?',
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
                   ),
-                  pw.SizedBox(height: 16),
-                  pw.Text(content),
-                  pw.SizedBox(height: 20),
-                  chart,
-                ],
-              );
-            },
-          ),
-        );
+                ),
+                pw.SizedBox(height: 8),
+                pw.Text(
+                  conceptoHuella,
+                  style: pw.TextStyle(fontSize: 14),
+                ),
+                pw.SizedBox(height: 20),
 
-        // Guardar PDF
-        final directory = Directory('/storage/emulated/0/Download');
-        if (!directory.existsSync()) {
-          directory.createSync(recursive: true);
-        }
-        String filePath =
-            '${directory.path}/informe_huella_carbono_con_grafico.pdf';
-        final file = File(filePath);
-        await file.writeAsBytes(await pdf.save());
+                // Detalles
+                pw.Text(
+                  'Detalles del Informe',
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 8),
+                pw.Text(
+                  detallesInforme,
+                  style: pw.TextStyle(fontSize: 14),
+                ),
+                pw.SizedBox(height: 20),
 
-        showSuccessMessage(filePath);
-      } catch (e) {
-        throw Exception('Error al generar el PDF: $e');
+                // Imagen del gráfico
+                pw.Text(
+                  'Gráfico de Resumen',
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 8),
+                pw.Image(
+                  pw.MemoryImage(chartImageBytes),
+                  width: 400,
+                  height: 300,
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      // Guardar el archivo PDF
+      const downloadPath = '/storage/emulated/0/Download';
+      final directory = Directory(downloadPath);
+
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
       }
-    } else {
-      throw Exception('Permiso de almacenamiento denegado');
+
+      final finalFilePath = '${directory.path}/informe_huella_carbono.pdf';
+      final file = File(finalFilePath);
+
+      if (await file.exists()) {
+        await file.delete();
+      }
+
+      await file.writeAsBytes(await pdf.save());
+      showSuccessMessage(finalFilePath);
+    } catch (e) {
+      throw Exception('Error al generar el PDF: $e');
     }
   }
 
@@ -1234,8 +1195,25 @@ class Funciones {
   static Map<String, double> _parsearImpactoRespuesta(String respuesta) {
     try {
       final Map<String, dynamic> jsonResponse = json.decode(respuesta);
-      return jsonResponse.map((key, value) => MapEntry(key, (value as num).toDouble()));
+      return jsonResponse
+          .map((key, value) => MapEntry(key, (value as num).toDouble()));
     } catch (e) {
+      // Intenta interpretar el texto como JSON manualmente
+      final List<String> lineas = respuesta.split('\n');
+      final Map<String, double> resultado = {};
+      for (final linea in lineas) {
+        final partes = linea.split(':');
+        if (partes.length == 2) {
+          final key = partes[0].trim();
+          final value = double.tryParse(partes[1].trim());
+          if (value != null) {
+            resultado[key] = value;
+          }
+        }
+      }
+      if (resultado.isNotEmpty) {
+        return resultado;
+      }
       throw Exception('Error al parsear la respuesta: $e');
     }
   }
