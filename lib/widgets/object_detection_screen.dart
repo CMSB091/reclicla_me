@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tflite/flutter_tflite.dart';
 import 'package:recila_me/widgets/mySplashScreen.dart';
 import 'package:recila_me/widgets/noticias.dart';
+import 'package:recila_me/widgets/historialPage.dart';
 
 class ObjectDetectionScreen extends StatefulWidget {
   const ObjectDetectionScreen({super.key});
@@ -91,6 +92,36 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
     super.dispose();
   }
 
+  Widget _buildStyledButton(String text, VoidCallback onPressed) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          color: Colors.white,
+          boxShadow: const [
+            BoxShadow(
+              blurRadius: 5,
+              offset: Offset(0, 2),
+              color: Colors.black26,
+            ),
+          ],
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 18,
+              color: Theme.of(context).primaryColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -103,16 +134,18 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            const SizedBox(height: 30),
+            const Spacer(), // Agrega un espacio flexible para empujar hacia abajo
             Center(
               child: _loading
                   ? SizedBox(
                       width: 280,
                       child: Column(
                         children: <Widget>[
-                          Image.asset('assets/images/recycle-icons8.png',
-                              color: Theme.of(context).primaryColor),
-                          const SizedBox(height: 50)
+                          Image.asset(
+                            'assets/images/recycle-icons8.png',
+                            color: Theme.of(context).primaryColor,
+                          ),
+                          const SizedBox(height: 50),
                         ],
                       ),
                     )
@@ -147,29 +180,17 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
               "Precisión: ${confidence.toStringAsFixed(0)}%",
               style: Theme.of(context).textTheme.bodySmall,
             ),
-            const Spacer(),
-            if (objectDetected)
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MySplash(nextScreen: NoticiasChatGPT( initialPrompt: "Quiero que me recomiendes cómo reciclar este producto escaneado: $label",
-                      detectedObject: label, // Pasa el objeto detectado
-                      ), lottieAnimation: 'assets/animations/lottie-robot.json'),
-                      
-                    ),
-                  );
-                },
-                child: const Text('Consultar sobre reciclaje'),
-              ),
-            const SizedBox(height: 10),
+            const Spacer(), // Este Spacer empuja hacia abajo los botones
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Expanded(
                   child: ElevatedButton(
                     onPressed: pickImageGallery,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).primaryColor,
+                    ),
                     child: const Text('Seleccionar desde Galería'),
                   ),
                 ),
@@ -177,11 +198,43 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                 Expanded(
                   child: ElevatedButton(
                     onPressed: pickImageCamera,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Theme.of(context).primaryColor,
+                    ),
                     child: const Text('Usar Cámara'),
                   ),
                 ),
               ],
             ),
+            if (objectDetected) ...[
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MySplash(
+                        nextScreen: NoticiasChatGPT(
+                          initialPrompt:
+                              "Quiero que me recomiendes cómo reciclar este producto escaneado: $label",
+                        ),
+                        lottieAnimation: 'assets/animations/lottie-robot.json',
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Theme.of(context).primaryColor,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                ),
+                child: const Text(
+                  'Consultar sobre reciclaje',
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
           ],
         ),

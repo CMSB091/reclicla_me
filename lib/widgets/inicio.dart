@@ -7,6 +7,7 @@ import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/MiniJuegoBasura.dart';
 import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
+import 'package:recila_me/widgets/historialPage.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:camera/camera.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
@@ -14,6 +15,8 @@ import 'package:recila_me/widgets/mySplashScreen.dart';
 import 'package:recila_me/widgets/redSocial.dart';
 import 'package:recila_me/widgets/object_detection_screen.dart';
 import 'package:recila_me/widgets/resumenes.dart';
+import 'package:recila_me/widgets/historialPage.dart';
+
 
 import 'noticias.dart';
 
@@ -348,7 +351,7 @@ class _MyInicioState extends State<MyInicio> {
       case 1:
         return 'ChatGpt';
       case 2:
-        return 'Página 3';
+        return 'Historial de objetos';
       case 3:
         return 'Resumenes';
       default:
@@ -369,7 +372,9 @@ class _MyInicioState extends State<MyInicio> {
             ),
             lottieAnimation: "assets/animations/lottie-robot.json");
       case 2:
-        return const Page3();
+      return const HistorialPage(
+        detectedItem: '',
+      ); 
       case 3:
         return MySplash(
           nextScreen: ReusableCountSplashScreen(

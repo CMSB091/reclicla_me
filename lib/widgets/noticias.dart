@@ -8,6 +8,9 @@ import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class NoticiasChatGPT extends StatefulWidget {
   final String initialPrompt;
@@ -47,6 +50,54 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       setState(() {
         userEmail = 'Correo no disponible';
       });
+    }
+  }
+
+  Future<void> _saveRecommendation() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        showCustomSnackBar(
+          context,
+          'No se encontró un usuario logueado.',
+          SnackBarType.error,
+        );
+        return;
+      }
+
+      // Nos aseguramos de que hay algo en chatResponse para guardar.
+      if (chatResponse.trim().isEmpty) {
+        showCustomSnackBar(
+          context,
+          'No hay recomendación para guardar.',
+          SnackBarType.error,
+        );
+        return;
+      }
+
+      await FirebaseFirestore.instance.collection('recommendations').add({
+        'recommendation': chatResponse,
+        'userEmail': user.email,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+
+      showCustomSnackBar(
+        context,
+        'Recomendación guardada exitosamente.',
+        SnackBarType.confirmation,
+      );
+
+      // Limpia el chatResponse si se desea.
+      setState(() {
+        chatResponse = '';
+      });
+    } catch (e) {
+      showCustomSnackBar(
+        context,
+        'Error al guardar recomendación: $e',
+        SnackBarType.error,
+      );
     }
   }
 
@@ -355,6 +406,22 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                 },
               ),
             ),
+            if (chatResponse.isNotEmpty) // Muestra el botón solo si hay una respuesta del chat
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ElevatedButton(
+                  onPressed: _saveRecommendation,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  ),
+                  child: const Text(
+                    'Guardar Recomendación',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
