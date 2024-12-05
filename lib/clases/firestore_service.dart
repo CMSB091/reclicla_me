@@ -943,5 +943,44 @@ class FirestoreService {
       return 0;
     }
   }
-  
+
+  Future<Map<String, int>> getResumenReciclado(String email) async {
+    final querySnapshot = await _db
+        .collection('historial')
+        .where('email', isEqualTo: email)
+        .get();
+
+    Map<String, int> resumen = {};
+    for (var doc in querySnapshot.docs) {
+      String material = doc['material'];
+      resumen[material] = (resumen[material] ?? 0) + 1;
+    }
+    return resumen;
+  }
+
+  Future<Map<String, int>> getTotalesPorFecha(
+    String email, DateTime inicio, DateTime fin) async {
+  // Obtener documentos del rango de fechas y del usuario especificado
+  final query = await FirebaseFirestore.instance
+      .collection('historial')
+      .where('email', isEqualTo: email)
+      .where('fecha', isGreaterThanOrEqualTo: inicio)
+      .where('fecha', isLessThanOrEqualTo: fin)
+      .get();
+
+  // Crear un mapa para contar los elementos agrupados por material
+  final Map<String, int> totales = {};
+  for (var doc in query.docs) {
+    final material = doc['material'] as String;
+
+    if (!totales.containsKey(material)) {
+      totales[material] = 0;
+    }
+    // Incrementar el conteo por cada documento del material
+    totales[material] = totales[material]! + 1;
+  }
+
+  return totales;
+}
+
 }
