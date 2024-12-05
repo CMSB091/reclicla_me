@@ -4,7 +4,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tflite/flutter_tflite.dart';
 import 'package:recila_me/widgets/mySplashScreen.dart';
 import 'package:recila_me/widgets/noticias.dart';
-import 'package:recila_me/widgets/historialPage.dart';
 
 class ObjectDetectionScreen extends StatefulWidget {
   const ObjectDetectionScreen({super.key});

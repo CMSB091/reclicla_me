@@ -15,7 +15,6 @@ import 'package:recila_me/widgets/mySplashScreen.dart';
 import 'package:recila_me/widgets/redSocial.dart';
 import 'package:recila_me/widgets/object_detection_screen.dart';
 import 'package:recila_me/widgets/resumenes.dart';
-import 'package:recila_me/widgets/historialPage.dart';
 
 
 import 'noticias.dart';
