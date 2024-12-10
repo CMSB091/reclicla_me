@@ -10,6 +10,7 @@ class ResumenRecicladoScreen extends StatefulWidget {
   const ResumenRecicladoScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ResumenRecicladoScreenState createState() => _ResumenRecicladoScreenState();
 }
 
@@ -34,34 +35,6 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
       debugPrint('Error al inicializar resumen: $e');
     }
     return {}; // Devuelve un mapa vacío si ocurre un error.
-  }
-
-  Future<Map<String, int>> _getTotalesPorMes() async {
-    final ahora = DateTime.now();
-
-    // Calcular el inicio del mes actual y del mes pasado
-    final inicioMesActual = DateTime(ahora.year, ahora.month, 1);
-    final inicioMesPasado = DateTime(ahora.year, ahora.month - 1, 1);
-    final finMesPasado = DateTime(ahora.year, ahora.month, 0);
-
-    // Consultar los totales del mes actual y mes pasado
-    final totalesMesActual = await firestoreService.getTotalesPorFecha(
-      _usuarioEmail,
-      inicioMesActual,
-      ahora,
-    );
-
-    final totalesMesPasado = await firestoreService.getTotalesPorFecha(
-      _usuarioEmail,
-      inicioMesPasado,
-      finMesPasado,
-    );
-
-    // Sumar los valores de cada mes
-    return {
-      'mesActual': totalesMesActual.values.fold(0, (sum, value) => sum + value),
-      'mesPasado': totalesMesPasado.values.fold(0, (sum, value) => sum + value),
-    };
   }
 
   String generarMensajeComparacion(Map<String, int> totales) {
@@ -93,12 +66,12 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
               fit: BoxFit.contain,
             ),
             const SizedBox(width: 8),
-            Text(
+            const Text(
               'Resumen',
-              style: GoogleFonts.montserrat(
-                fontSize: 22,
+              style: TextStyle(
+                fontFamily: 'Artwork',
                 fontWeight: FontWeight.bold,
-                color: Colors.black,
+                fontSize: 22,
               ),
             ),
             Lottie.asset(
@@ -113,7 +86,7 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
         leading: IconButton(
           icon: const FaIcon(FontAwesomeIcons.house, color: Colors.black),
           onPressed: () {
-            Navigator.of(context).pop();
+            Funciones.navigateToHome(context);
           },
         ),
         actions: [

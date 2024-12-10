@@ -125,7 +125,7 @@ class Funciones {
       // Cierra la sesión del usuario
       await FirebaseAuth.instance.signOut();
     } catch (e) {
-      await SeqLog('error', 'Error al cerrar sesión: $e');
+      await Funciones.saveDebugInfo('Error al cerrar sesión: $e');
     } finally {
       // Cierra el diálogo
       if (context.mounted) {
@@ -165,8 +165,7 @@ class Funciones {
           jsonDecode(utf8.decode(response.bodyBytes));
       return data['choices'][0]['message']['content'];
     } else {
-      await SeqLog('error',
-          'Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
+      await Funciones.saveDebugInfo('Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
       throw Exception('Failed to load ChatGPT response');
     }
   }
@@ -212,8 +211,7 @@ class Funciones {
       final imageUrlGenerated = data['data'][0]['url'];
       return imageUrlGenerated;
     } else {
-      await SeqLog(
-          'error', 'Error al generar la imagen: ${response.statusCode}');
+      await Funciones.saveDebugInfo('Error al generar la imagen: ${response.statusCode}');
       return '';
     }
   }
@@ -231,62 +229,6 @@ class Funciones {
         'App': 'ReciclaMe',
       },
     );
-  }
-
-  // Función que registra los acontecimientos en el SEQ log
-  static Future<void> SeqLog(String status, String message) async {
-    try {
-      await _initializeLogger(); // Asegura que el logger se inicialice solo una vez
-
-      if (_logger == null) return;
-
-      // Ejecutar la operación con timeout de 1 segundo
-      await _logWithTimeout(status, message, const Duration(seconds: 3));
-    } catch (e) {
-      print('Se produjo un error al intentar acceder al SEQ $e');
-    }
-  }
-
-// Función auxiliar que maneja el timeout
-  static Future<void> _logWithTimeout(
-      String status, String message, Duration timeout) async {
-    try {
-      // Convertir el string `status` a `SeqLogLevel`
-      SeqLogLevel logLevel = _mapStringToSeqLogLevel(status);
-
-      await _logger!.log(logLevel, message).timeout(timeout, onTimeout: () {
-        print(
-            'La conexión a SEQ ha sido cancelada después de ${timeout.inSeconds} segundos');
-        return; // Cancelar la operación si el tiempo de espera excede
-      });
-
-      await Future(() async {
-        switch (logLevel) {
-          case SeqLogLevel.information:
-          case SeqLogLevel.warning:
-          case SeqLogLevel.error:
-          case SeqLogLevel.debug:
-            await _logger!.log(
-              logLevel,
-              message,
-              null,
-              {'Timestamp': DateTime.now().toUtc().toIso8601String()},
-            );
-            break;
-          default:
-            print('Nivel de log no reconocido');
-        }
-
-        await _logger!.flush();
-      }).timeout(const Duration(seconds: 3)); // Timeout de 3 segundos
-    } catch (e) {
-      if (e is TimeoutException) {
-        print(
-            'El log de SEQ excedió el tiempo límite de 10 segundos y se abortó.');
-      } else {
-        print('Se produjo un error al registrar el log en SEQ: $e');
-      }
-    }
   }
 
 // Función auxiliar para convertir un String a SeqLogLevel
@@ -333,8 +275,7 @@ class Funciones {
         telefonoController.text = userData['telefono'] ?? '';
       }
     } catch (e) {
-      SeqLog('error',
-          'Se ha producido un error al cargar los datos del usuario $e');
+      await Funciones.saveDebugInfo('Se ha producido un error al cargar los datos del usuario $e');
     } finally {
       setLoadingState(false);
     }
@@ -505,7 +446,6 @@ class Funciones {
     try {
       // Eliminar caracteres no numéricos y formatear el número
       String phoneNumber = contact.replaceAll(RegExp(r'[^\d+]'), '');
-      print(country);
 
       // Mapa de códigos de país según el país
       Map<String, String> countryCodes = {
@@ -550,7 +490,6 @@ class Funciones {
       }
     } catch (e) {
       // Manejo de errores
-      debugPrint('Error al intentar abrir WhatsApp: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al intentar abrir WhatsApp: $e')),
       );
@@ -563,7 +502,7 @@ class Funciones {
         await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedImage != null) {
-      SeqLog('information', 'Imagen seleccionada: ${pickedImage.path}');
+      await Funciones.saveDebugInfo('Imagen seleccionada: ${pickedImage.path}');
       return File(pickedImage.path); // Devolver el archivo seleccionado
     } else {
       // Mostrar SnackBar si no se selecciona imagen
@@ -687,10 +626,8 @@ class Funciones {
       // Crea el archivo y escribe el contenido JSON
       final file = File(filePath);
       await file.writeAsString(json.encode(content), flush: true);
-
-      print("Archivo de debug escrito en: $filePath");
     } catch (e) {
-      print("Error al escribir el archivo de debug: $e");
+      await Funciones.saveDebugInfo("Error al escribir el archivo de debug: $e");
     }
   }
 
@@ -725,10 +662,8 @@ class Funciones {
 
       // Escribe el archivo con la nueva entrada
       await file.writeAsString(json.encode(debugLog), flush: true);
-
-      print("Información de depuración guardada en: $filePath");
     } catch (e) {
-      print("Error al guardar la información de depuración: $e");
+      await Funciones.saveDebugInfo("Error al guardar la información de depuración: $e");
     }
   }
 
@@ -842,7 +777,6 @@ class Funciones {
 
   static Future<List<String>> getDistinctMaterials(String email) async {
     List<String> materials = [];
-    print('Email del usuario: $email');
 
     try {
       // Realiza la consulta filtrando por el campo 'email' pasado como parámetro
@@ -853,20 +787,19 @@ class Funciones {
           .get();
 
       // Verifica si hay documentos en el snapshot
-      print('Cantidad de documentos recuperados: ${snapshot.docs.length}');
+      await Funciones.saveDebugInfo('Cantidad de documentos recuperados: ${snapshot.docs.length}');
 
       if (snapshot.docs.isEmpty) {
-        print('No se encontraron documentos para el email proporcionado.');
+        await Funciones.saveDebugInfo('No se encontraron documentos para el email proporcionado.');
       } else {
         // Extrae los valores únicos de la columna 'material'
         Set<String> uniqueMaterials =
             snapshot.docs.map((doc) => doc['material'] as String).toSet();
 
         materials = uniqueMaterials.toList();
-        print('Materiales únicos recuperados: $materials');
       }
     } catch (e) {
-      print('Error obteniendo materiales: $e');
+      await Funciones.saveDebugInfo('Error obteniendo materiales: $e');
     }
 
     return materials;
@@ -886,7 +819,7 @@ class Funciones {
       // La cantidad de documentos en el snapshot representa la cantidad de registros
       count = snapshot.docs.length;
     } catch (e) {
-      print('Error contando registros para el material $material: $e');
+      await Funciones.saveDebugInfo('Error contando registros para el material $material: $e');
     }
 
     return count;
@@ -898,7 +831,7 @@ class Funciones {
       String? userEmail = FirebaseAuth.instance.currentUser?.email;
       return userEmail;
     } catch (e) {
-      print('Error obteniendo el email del usuario: $e');
+      await Funciones.saveDebugInfo('Error obteniendo el email del usuario: $e');
       return null;
     }
   }
@@ -936,7 +869,6 @@ class Funciones {
   }
 
   static String getMaterialIconPath(String material) {
-    print('material $material');
     switch (material.toLowerCase()) {
       case 'plastico':
         return 'assets/icons/Plastico.png';
@@ -1066,7 +998,7 @@ class Funciones {
                 pw.SizedBox(height: 8),
                 pw.Text(
                   conceptoHuella,
-                  style: pw.TextStyle(fontSize: 14),
+                  style: const pw.TextStyle(fontSize: 14),
                 ),
                 pw.SizedBox(height: 20),
 
@@ -1081,7 +1013,7 @@ class Funciones {
                 pw.SizedBox(height: 8),
                 pw.Text(
                   detallesInforme,
-                  style: pw.TextStyle(fontSize: 14),
+                  style: const pw.TextStyle(fontSize: 14),
                 ),
                 pw.SizedBox(height: 20),
 

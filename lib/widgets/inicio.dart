@@ -6,6 +6,7 @@ import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/MiniJuegoBasura.dart';
 import 'package:recila_me/widgets/ResumenRecicladoScreen.dart';
+import 'package:recila_me/widgets/comentarios.dart';
 import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/historialPage.dart';
@@ -17,7 +18,6 @@ import 'package:recila_me/widgets/redSocial.dart';
 import 'package:recila_me/widgets/object_detection_screen.dart';
 import 'package:recila_me/widgets/resumenes.dart';
 
-
 import 'noticias.dart';
 
 class MyInicio extends StatefulWidget {
@@ -25,6 +25,7 @@ class MyInicio extends StatefulWidget {
   const MyInicio({super.key, required this.cameras});
 
   @override
+  // ignore: library_private_types_in_public_api
   _MyInicioState createState() => _MyInicioState();
 }
 
@@ -64,7 +65,7 @@ class _MyInicioState extends State<MyInicio> {
           });
         }
       } catch (e) {
-        Funciones.SeqLog('error', 'Error al obtener nombre de usuario: $e');
+        await Funciones.saveDebugInfo('Error al obtener nombre de usuario: $e');
         setState(() {
           isLoading = false;
         });
@@ -83,7 +84,6 @@ class _MyInicioState extends State<MyInicio> {
     setState(() {
       if (materials.isNotEmpty) {
         String materialActual = materials.first;
-        print('materialActual $materialActual');
         ruta = funciones.materialInfo[materialActual] ??
             'assets/images/empy_trash.png'; // Ruta predeterminada
       } else {
@@ -123,7 +123,7 @@ class _MyInicioState extends State<MyInicio> {
       try {
         await FirebaseAuth.instance.signOut();
       } catch (e) {
-        Funciones.SeqLog('error', 'Error al cerrar sesión: $e');
+        await Funciones.saveDebugInfo('Error al cerrar sesión: $e');
       } finally {
         if (mounted) {
           Navigator.of(context, rootNavigator: true).pop();
@@ -236,6 +236,14 @@ class _MyInicioState extends State<MyInicio> {
                     text: 'Resumen Reciclaje',
                     page: const ResumenRecicladoScreen(),
                   ),
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.comment,
+                    text: 'Comentarios',
+                    page: emailUsuario != null
+                        ? Comentarios(emailUsuario!)
+                        : const Placeholder(), // O alguna pantalla de error o loading
+                  ),
                 ],
               ),
             ),
@@ -250,7 +258,7 @@ class _MyInicioState extends State<MyInicio> {
       height: kToolbarHeight,
       color: Colors.green.shade200,
       alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: const Text(
         'Menú',
         style: TextStyle(
@@ -378,9 +386,9 @@ class _MyInicioState extends State<MyInicio> {
             ),
             lottieAnimation: "assets/animations/lottie-robot.json");
       case 2:
-      return const HistorialPage(
-        detectedItem: '',
-      ); 
+        return const HistorialPage(
+          detectedItem: '',
+        );
       case 3:
         return MySplash(
           nextScreen: ReusableCountSplashScreen(

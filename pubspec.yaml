@@ -162,6 +162,8 @@ flutter:
     - assets/images/miniJuego/apple.png
     - assets/images/miniJuego/locote.png
     - assets/images/miniJuego/zanahoria.png
+    - assets/images/wall_e.gif
+    - assets/images/wall_e_no_bg.gif
     - assets/json/recycling_tips.json
     - assets/tflite/model.tflite
     - assets/animations/lotti-trash.json

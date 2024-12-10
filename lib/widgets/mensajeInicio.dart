@@ -32,6 +32,7 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key, this.cameras});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SplashScreenState createState() => _SplashScreenState();
 }
 
@@ -50,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
       final jsonData = json.decode(data);
       _tips = List<RecyclingTip>.from(jsonData.map((x) => RecyclingTip.fromJson(x)));
     } catch (e) {
-      Funciones.SeqLog('error','Error al cargar los consejos de reciclaje: $e');
+      await Funciones.saveDebugInfo('Error al cargar los consejos de reciclaje: $e');
     } finally {
       _showWelcomeDialog();
     }

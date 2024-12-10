@@ -30,6 +30,7 @@ class AddItemScreen extends StatefulWidget {
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _AddItemScreenState createState() => _AddItemScreenState();
 }
 
@@ -84,7 +85,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
       setState(() {
         _imageFile = File(photo.path);
       });
-      Funciones.SeqLog('information', 'Foto tomada: ${_imageFile!.path}');
     } else {
       showCustomSnackBar(
           context, 'No se tomó ninguna foto.', SnackBarType.error);
@@ -170,7 +170,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
             SnackBarType.error);
       }
     } catch (e) {
-      print('Error $e');
+      await Funciones.saveDebugInfo('Error en la funcion _handleUpload $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -204,8 +204,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         widget.imageUrl, // URL de la imagen anterior
       );
 
-      showCustomSnackBar(
-          context, 'Publicación actualizada correctamente',
+      showCustomSnackBar(context, 'Publicación actualizada correctamente',
           SnackBarType.confirmation);
       _resetForm();
       Navigator.pushReplacement(
@@ -215,7 +214,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
                 const HomeScreen()), // Asegúrate de usar el nombre correcto de la clase
       );
     } catch (e) {
-      print('Error al actualizar el post: $e');
       showCustomSnackBar(
           context, 'Error al actualizar la publicación', SnackBarType.error);
     } finally {
@@ -281,7 +279,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
             child: BlurredBackground(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(15.0),
-                
                 child: Form(
                   key: _formKey,
                   child: Column(
