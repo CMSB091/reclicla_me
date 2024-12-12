@@ -836,23 +836,23 @@ class FirestoreService {
             'fecha': DateTime.now(),
           });
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('¡Puntaje guardado correctamente!')),
-            );
+            showCustomSnackBar(
+            context, '¡Puntaje guardado correctamente!', SnackBarType.error,
+            durationInMilliseconds: 3000);
           }
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al guardar puntaje: $e')),
-          );
+          showCustomSnackBar(
+            context, 'Error al guardar puntaje: $e', SnackBarType.error,
+            durationInMilliseconds: 3000);
         }
       }
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuario no logueado')),
-        );
+        showCustomSnackBar(
+            context, 'Usuario no logueado', SnackBarType.error,
+            durationInMilliseconds: 3000);
       }
     }
   }

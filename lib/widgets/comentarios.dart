@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 
 class Comentarios extends StatefulWidget {
   final String emailUsuario;
@@ -180,24 +181,14 @@ class _ComentariosState extends State<Comentarios> {
     final String comentarios = _comentariosController.text.trim();
 
     if (nombre.isEmpty || apellido.isEmpty || comentarios.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, completa todos los campos antes de enviar.'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showCustomSnackBar(
+            context, 'Por favor, completa todos los campos antes de enviar.', SnackBarType.error,
+            durationInMilliseconds: 3000);
       return;
     }
-
-    // Aquí puedes manejar el envío de los comentarios a tu base de datos o backend
-    print('Feedback enviado: $nombre $apellido - $comentarios');
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('¡Comentarios enviados con éxito!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+    showCustomSnackBar(
+            context, '¡Comentarios enviados con éxito!', SnackBarType.confirmation,
+            durationInMilliseconds: 3000);
 
     // Limpia los campos después de enviar
     _nombreController.clear();

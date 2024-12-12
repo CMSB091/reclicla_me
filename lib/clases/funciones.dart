@@ -24,6 +24,7 @@ import 'package:recila_me/widgets/itemDetailScreen.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:recila_me/widgets/resumenes.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -353,16 +354,16 @@ class Funciones {
           }
         } else {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Error al guardar los datos.')),
-            );
+            showCustomSnackBar(
+            context, 'Error al guardar los datos.', SnackBarType.error,
+            durationInMilliseconds: 3000);
           }
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
+          showCustomSnackBar(
+            context, 'Error: $e', SnackBarType.error,
+            durationInMilliseconds: 3000);
         }
       } finally {
         setSavingState(false);
@@ -393,15 +394,14 @@ class Funciones {
         onImageUploaded(downloadUrl);
 
         // Mostrar éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Imagen de perfil actualizada correctamente')),
-        );
+        showCustomSnackBar(
+            context, 'Imagen de perfil actualizada correctamente', SnackBarType.confirmation,
+            durationInMilliseconds: 3000);
       } catch (e) {
         // Mostrar error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al subir la imagen: $e')),
-        );
+        showCustomSnackBar(
+            context, 'Error al subir la imagen: $e', SnackBarType.error,
+            durationInMilliseconds: 3000);
       }
     }
   }
@@ -458,10 +458,9 @@ class Funciones {
 
       // Verificar si el país está en la lista de códigos y agregar el código de país si no está presente
       if (!countryCodes.containsKey(country)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('El país no está soportado para WhatsApp')),
-        );
+        showCustomSnackBar(
+            context, 'El país no está soportado para WhatsApp', SnackBarType.error,
+            durationInMilliseconds: 3000);
         return; // Si no hay código para el país, salir de la función
       }
 
@@ -482,17 +481,15 @@ class Funciones {
       if (await canLaunchUrl(whatsappWebUri)) {
         await launchUrl(whatsappWebUri, mode: LaunchMode.externalApplication);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'No se pudo abrir WhatsApp con el esquema web. Asegúrate de que está instalado.')),
-        );
+        showCustomSnackBar(
+            context, 'No se pudo abrir WhatsApp con el esquema web. Asegúrate de que está instalado.', SnackBarType.error,
+            durationInMilliseconds: 3000);
       }
     } catch (e) {
       // Manejo de errores
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al intentar abrir WhatsApp: $e')),
-      );
+      showCustomSnackBar(
+            context, 'Error al intentar abrir WhatsApp: $e', SnackBarType.error,
+            durationInMilliseconds: 3000);
     }
   }
 
@@ -506,9 +503,9 @@ class Funciones {
       return File(pickedImage.path); // Devolver el archivo seleccionado
     } else {
       // Mostrar SnackBar si no se selecciona imagen
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se seleccionó ninguna imagen.')),
-      );
+      showCustomSnackBar(
+            context, 'No se seleccionó ninguna imagen.', SnackBarType.error,
+            durationInMilliseconds: 3000);
       return null; // Devolver null si no se seleccionó ninguna imagen
     }
   }
