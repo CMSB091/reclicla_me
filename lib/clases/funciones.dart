@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:recila_me/clases/firestore_service.dart';
@@ -1161,4 +1162,27 @@ class Funciones {
 
     return totalUnidades > 0 ? totalImpacto / totalUnidades : 0.0;
   }
+
+  static Future<bool> guardarFeedback({
+    required String nombre,
+    required String apellido,
+    required String comentarios,
+    required String emailUsuario,
+    required DateTime fecha,
+  }) async {
+    try {
+      await FirebaseFirestore.instance.collection('feedbacks').add({
+        'nombre': nombre,
+        'apellido': apellido,
+        'comentarios': comentarios,
+        'emailUsuario': emailUsuario,
+        'fecha': fecha.toIso8601String(),
+      });
+      return true;
+    } catch (e) {
+      print('Error al guardar feedback: $e');
+      return false;
+    }
+  }
 }
+

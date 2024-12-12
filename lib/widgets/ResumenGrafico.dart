@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 class ResumenGrafico extends StatefulWidget {
   final Map<String, int> resumen;
 
-  const ResumenGrafico({Key? key, required this.resumen}) : super(key: key);
+  const ResumenGrafico({super.key, required this.resumen});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ResumenGraficoState createState() => _ResumenGraficoState();
 }
 
@@ -32,7 +33,7 @@ class _ResumenGraficoState extends State<ResumenGrafico> {
             return PieChartSectionData(
               color: _getColorForIndex(index),
               value: porcentaje,
-              title: '${material}\n${porcentaje.toStringAsFixed(1)}%',
+              title: '$material\n${porcentaje.toStringAsFixed(1)}%',
               titleStyle: TextStyle(
                 fontSize: MediaQuery.of(context).size.width * 0.035, // Texto proporcional
                 fontWeight: FontWeight.bold,

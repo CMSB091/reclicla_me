@@ -17,7 +17,7 @@ class NoticiasChatGPT extends StatefulWidget {
 
   // ignore: use_super_parameters
   const NoticiasChatGPT(
-      {Key? key, required this.initialPrompt, String? detectedObject})
+      {Key? key, required this.initialPrompt})
       : super(key: key);
 
   @override
@@ -327,13 +327,13 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green.shade200,
-        title: Column(
+        title: const Column(
           children: [
-            const Text('ChatBot', style: TextStyle(color: Colors.black)),
-            Text(
-              'Logged in as: $userEmail',
-              style: const TextStyle(color: Colors.black, fontSize: 12),
-            ),
+            Text('ChatBot', style: TextStyle(
+              fontFamily: 'ArtWork',
+              fontWeight: FontWeight.normal,
+              fontSize: 30,
+              color: Colors.black)),
           ],
         ),
         centerTitle: true,

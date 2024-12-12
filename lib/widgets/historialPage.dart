@@ -6,7 +6,7 @@ import 'package:recila_me/widgets/showCustomSnackBar.dart';
 class HistorialPage extends StatefulWidget {
   final String detectedItem;
 
-  const HistorialPage({Key? key, required this.detectedItem}) : super(key: key);
+  const HistorialPage({super.key, required this.detectedItem});
 
   @override
   State<HistorialPage> createState() => _HistorialPageState();
