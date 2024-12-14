@@ -103,7 +103,7 @@ class _SplashScreenState extends State<SplashScreen> {
                             ),
                             const SizedBox(width: 10),
                             const Text(
-                              'Consejo del día!',
+                              'Consejo Útil!',
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,

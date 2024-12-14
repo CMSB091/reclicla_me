@@ -74,6 +74,7 @@ dependencies:
   fl_chart: ^0.69.2
   screenshot: ^3.0.0
   package_info_plus: ^4.0.0
+  dio: ^5.2.1
 
   
 dev_dependencies:

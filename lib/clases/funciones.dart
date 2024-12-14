@@ -8,6 +8,7 @@ import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_seq/dart_seq.dart';
 import 'package:dart_seq_http_client/dart_seq_http_client.dart';
+import 'package:dio/dio.dart';
 import 'package:excel/excel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -15,8 +16,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/configuracion/config.dart';
@@ -1182,6 +1183,108 @@ class Funciones {
     } catch (e) {
       print('Error al guardar feedback: $e');
       return false;
+    }
+  }
+
+  /// Muestra un modal de ayuda reutilizable.
+  static void mostrarModalDeAyuda({
+    required BuildContext context,
+    required String titulo,
+    required String mensaje,
+    String textoBoton = 'Cerrar',
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(titulo),
+          content: Text(mensaje),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(textoBoton),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Genera un PDF y lo descarga en la carpeta Downloads
+  static Future<void> descargarPdf({
+    required String titulo,
+    required String contenido,
+    required BuildContext context,
+  }) async {
+    final pdf = pw.Document();
+
+    // Crear el contenido del PDF
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                titulo,
+                style: pw.TextStyle(
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              pw.Text(
+                contenido,
+                style: const pw.TextStyle(fontSize: 16),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    try {
+      // Obtener la ruta de la carpeta Downloads
+      final directory = Directory('/storage/emulated/0/Download');
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
+      }
+      final filePath = '${directory.path}/$titulo.pdf';
+
+      // Guardar el archivo PDF
+      final file = File(filePath);
+      await file.writeAsBytes(await pdf.save());
+
+      // Notificar al sistema de la descarga
+      await mostrarDescargaEnSistema(filePath);
+    } catch (e) {
+      // Manejo de errores
+      showCustomSnackBar(context,'Error al guardar el PDF: $e',SnackBarType.error);
+    }
+  }
+
+  /// Notifica al sistema que el archivo ha sido descargado
+  static Future<void> mostrarDescargaEnSistema(String filePath) async {
+    try {
+      final dio = Dio();
+      final url = 'file://$filePath';
+      final savePath = filePath;
+
+      // Simula una descarga para que el sistema gestione la notificación
+      await dio.download(
+        url,
+        savePath,
+        onReceiveProgress: (received, total) {
+          // Aquí puedes agregar una barra de progreso si es necesario
+        },
+      );
+
+      debugPrint('Descarga completada: $savePath');
+    } catch (e) {
+      debugPrint('Error al notificar descarga al sistema: $e');
     }
   }
 }

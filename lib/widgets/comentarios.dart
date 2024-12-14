@@ -49,8 +49,7 @@ class _ComentariosState extends State<Comentarios> {
 
   void _validateInputs() {
     setState(() {
-      _isButtonEnabled =
-          _nombreController.text.trim().isNotEmpty &&
+      _isButtonEnabled = _nombreController.text.trim().isNotEmpty &&
           _apellidoController.text.trim().isNotEmpty &&
           _comentariosController.text.trim().isNotEmpty;
     });
@@ -79,7 +78,7 @@ class _ComentariosState extends State<Comentarios> {
           IconButton(
             icon: const FaIcon(FontAwesomeIcons.infoCircle),
             onPressed: () {
-              _mostrarModalDeAyuda(context);
+              _mostrarAyuda(context);
             },
           ),
         ],
@@ -183,7 +182,8 @@ class _ComentariosState extends State<Comentarios> {
               color: Colors.black.withOpacity(0.5),
               child: Center(
                 child: buildLottieAnimation(
-                  path: 'assets/animations/loading.json', // Ruta del Lottie spinner
+                  path:
+                      'assets/animations/loading.json', // Ruta del Lottie spinner
                   width: 150,
                   height: 150,
                   fit: BoxFit.contain,
@@ -213,25 +213,12 @@ class _ComentariosState extends State<Comentarios> {
     );
   }
 
-  void _mostrarModalDeAyuda(BuildContext context) {
-    showDialog(
+  void _mostrarAyuda(BuildContext context) {
+    Funciones.mostrarModalDeAyuda(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Ayuda'),
-          content: const Text(
-            'Esta es la sección de comentarios donde puedes compartir tus ideas y opiniones.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cerrar'),
-            ),
-          ],
-        );
-      },
+      titulo: 'Ayuda',
+      mensaje:
+          'Esta es la sección de comentarios donde puedes compartir tus ideas y opiniones.',
     );
   }
 
@@ -267,9 +254,7 @@ class _ComentariosState extends State<Comentarios> {
     });
 
     if (success) {
-      showCustomSnackBar(
-          context,
-          '¡Comentarios enviados con éxito!',
+      showCustomSnackBar(context, '¡Comentarios enviados con éxito!',
           SnackBarType.confirmation,
           durationInMilliseconds: 3000);
 

@@ -13,6 +13,7 @@ import 'package:recila_me/widgets/historialPage.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:camera/camera.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
+import 'package:recila_me/widgets/misFavoritos.dart';
 import 'package:recila_me/widgets/mySplashScreen.dart';
 import 'package:recila_me/widgets/redSocial.dart';
 import 'package:recila_me/widgets/object_detection_screen.dart';
@@ -238,11 +239,19 @@ class _MyInicioState extends State<MyInicio> {
                   ),
                   _buildDrawerItem(
                     context,
-                    icon: FontAwesomeIcons.comment,
+                    icon: FontAwesomeIcons.userGear,
                     text: 'Comentarios',
                     page: emailUsuario != null
                         ? Comentarios(emailUsuario!)
                         : const Placeholder(), // O alguna pantalla de error o loading
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.bookmark,
+                    text: 'Mis\nFavoritos',
+                    page: emailUsuario != null
+                        ? MisFavoritos(userEmail: emailUsuario!)
+                        : const Placeholder(), // Pantalla de error o indicador de carga
                   ),
                 ],
               ),

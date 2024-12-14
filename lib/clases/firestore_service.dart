@@ -941,4 +941,12 @@ class FirestoreService {
 
     return totales;
   }
+
+  /// Recupera las recomendaciones del usuario ordenadas por timestamp.
+  Stream<QuerySnapshot> getUserRecommendations(String userEmail) {
+    return _db
+        .collection('recommendations')
+        .where('userEmail', isEqualTo: userEmail)
+        .snapshots();
+  }
 }
