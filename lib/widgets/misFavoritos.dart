@@ -199,6 +199,24 @@ class _MisFavoritosState extends State<MisFavoritos> {
                             );
 
                             if (confirm == true) {
+                              // Muestra el spinner mientras se procesa la eliminación
+                              showDialog(
+                                context: context,
+                                barrierDismissible:
+                                    false, // Evita que el usuario cierre el diálogo
+                                builder: (BuildContext context) {
+                                  return const AlertDialog(
+                                    content: Row(
+                                      children: [
+                                        CircularProgressIndicator(),
+                                        SizedBox(width: 20),
+                                        Text('Eliminando favorito...'),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+
                               try {
                                 debugPrint(
                                     'Intentando eliminar documento con ID: $docId');
@@ -207,17 +225,27 @@ class _MisFavoritosState extends State<MisFavoritos> {
                                         widget.userEmail, docId);
                                 debugPrint(
                                     'Documento eliminado correctamente por ID.');
-                                setState(() {}); // Refresca la interfaz
-                                showCustomSnackBar(
-                                    context,
-                                    'Favorito eliminado.',
-                                    SnackBarType.confirmation);
+
+                                if (mounted) {
+                                  Navigator.of(context, rootNavigator: true)
+                                      .pop(); // Cierra el spinner
+                                  setState(() {}); // Refresca la interfaz
+                                  showCustomSnackBar(
+                                      context,
+                                      'Favorito eliminado.',
+                                      SnackBarType.confirmation);
+                                }
                               } catch (e) {
                                 debugPrint('Error al eliminar favorito: $e');
-                                showCustomSnackBar(
-                                    context,
-                                    'Error al eliminar el favorito.',
-                                    SnackBarType.error);
+
+                                if (mounted) {
+                                  Navigator.of(context, rootNavigator: true)
+                                      .pop(); // Cierra el spinner
+                                  showCustomSnackBar(
+                                      context,
+                                      'Error al eliminar el favorito.',
+                                      SnackBarType.error);
+                                }
                               }
                             }
                           },
