@@ -11,13 +11,12 @@ import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-
 class NoticiasChatGPT extends StatefulWidget {
   final String initialPrompt;
 
   // ignore: use_super_parameters
   const NoticiasChatGPT(
-      {Key? key, required this.initialPrompt})
+      {Key? key, required this.initialPrompt, String? detectedObject})
       : super(key: key);
 
   @override
@@ -32,7 +31,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   String imageUrl = '';
   bool isLoading = false;
   List<Map<String, dynamic>> chatHistory = [];
-  late String userEmail = 'Cargando...';
+  String userEmail = 'Cargando...';
   final ScrollController _scrollController = ScrollController();
   bool isTyping = false;
   String typingIndicator = 'Escribiendo';
@@ -41,15 +40,16 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   late String initialPrompt;
 
   Future<void> _setUserEmail() async {
-    String? email = await firestoreService.loadUserEmail();
-    if (email!.isNotEmpty) {
+    try {
+      String? email = await firestoreService.loadUserEmail();
       setState(() {
-        userEmail = email;
+        userEmail = email ?? 'Correo no disponible';
       });
-    } else {
+    } catch (e) {
       setState(() {
-        userEmail = 'Correo no disponible';
+        userEmail = 'Error al cargar el correo';
       });
+      debugPrint('Error al cargar el correo del usuario: $e');
     }
   }
 
@@ -79,7 +79,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       await FirebaseFirestore.instance.collection('recommendations').add({
         'recommendation': chatResponse,
         'userEmail': user.email,
-        'timestamp': DateTime.now().toIso8601String(),
+        'timestamp': Timestamp.now(),
       });
 
       showCustomSnackBar(
@@ -127,11 +127,13 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   }
 
   void _scrollToBottom() {
-    _scrollController.animateTo(
-      _scrollController.position.minScrollExtent,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
-    );
+    if (mounted && _scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   Future<void> _fetchChatGPTResponse(String prompt) async {
@@ -165,7 +167,8 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         : '$conversationContext\nTú: $prompt';
 
     try {
-      String response = await Funciones.fetchChatGPTResponse(finalPrompt, _isRecyclingRelated(prompt));
+      String response = await Funciones.fetchChatGPTResponse(
+          finalPrompt, _isRecyclingRelated(prompt));
 
       setState(() {
         isTyping = false;
@@ -176,13 +179,12 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
 
       firestoreService.saveInteractionToFirestore(prompt, response, userEmail);
     } catch (e) {
-      setState(() async {
+      debugPrint('Error al obtener respuesta: $e');
+      await Funciones.saveDebugInfo(e.toString().contains('insufficient_quota')
+          ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
+          : 'Error: $e');
+      setState(() {
         isTyping = false;
-        await Funciones.saveDebugInfo(e
-                .toString()
-                .contains('insufficient_quota')
-            ? 'Error: Has excedido tu cuota actual. Por favor revisa tu plan y detalles de facturación.'
-            : 'Error: $e');
       });
     } finally {
       setState(() {
@@ -209,13 +211,13 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   }
 
   void _loadSelectedChat(Map<String, dynamic> chat) {
-    setState(() async {
+    setState(() {
       chatHistory.clear();
       if (chat['userPrompt'] != null && chat['chatResponse'] != null) {
         chatHistory.add({'message': chat['userPrompt'], 'isUser': true});
         chatHistory.add({'message': chat['chatResponse'], 'isUser': false});
       } else {
-        await Funciones.saveDebugInfo(
+        Funciones.saveDebugInfo(
             'Datos del chat seleccionados están incompletos');
       }
     });
@@ -250,57 +252,52 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                       shrinkWrap: true,
                       itemCount: chatHistoryList.length,
                       itemBuilder: (context, index) {
-                        final chat = chatHistoryList[index];
-                        return ListTile(
-                          title:
-                              Text(chat['timestamp'] ?? 'Fecha no disponible'),
-                          subtitle: Text(
-                            chat['userPrompt'] ?? 'Prompt vacío',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(FontAwesomeIcons.trash,
-                                color: Colors.red),
-                            onPressed: () async {
-                              final confirmDelete = await showDialog<bool>(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: const Text('Confirmar eliminación'),
-                                    content: const Text(
-                                        '¿Estás seguro de que quieres eliminar este chat?'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(false),
-                                        child: const Text('Cancelar'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(true),
-                                        child: const Text('Eliminar'),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
+                        // Validación para evitar errores de rango
+                        if (index < 0 ||
+                            index >= chatHistory.length + (isTyping ? 3 : 2)) {
+                          return const SizedBox.shrink();
+                        }
 
-                              if (confirmDelete == true) {
-                                await firestoreService
-                                    .deleteChatById(chat['id']);
-                                setState(() {
-                                  chatHistoryList.removeAt(index);
-                                });
-                                showCustomSnackBar(context, 'Chat eliminado.',
-                                    SnackBarType.confirmation);
-                              }
-                            },
-                          ),
-                          onTap: () {
-                            Navigator.of(context).pop();
-                            _loadSelectedChat(chat);
-                          },
+                        if (index == chatHistory.length + (isTyping ? 2 : 1)) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 8.0, horizontal: 16.0),
+                            child: Text(
+                              '¡Hola! Soy Recyclops, estoy aquí para ayudarte a reciclar de manera creativa y sostenible.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  fontFamily: 'Artwork',
+                                  fontSize: 22,
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          );
+                        }
+
+                        if (index == chatHistory.length + (isTyping ? 1 : 0)) {
+                          return Center(
+                            child: Lottie.asset(
+                              'assets/animations/lottie-chat-bot.json',
+                              width: 500,
+                              height: 500,
+                              repeat: true,
+                            ),
+                          );
+                        }
+
+                        if (isTyping && index == 0) {
+                          return ChatBubble(
+                            message: typingIndicator,
+                            isUser: false,
+                          );
+                        }
+
+                        final message = chatHistory[chatHistory.length -
+                            1 -
+                            (isTyping ? index - 1 : index)];
+                        return ChatBubble(
+                          message: message['message'] ?? 'Mensaje vacío',
+                          isUser: message['isUser'] as bool,
                         );
                       },
                     ),
@@ -327,13 +324,13 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green.shade200,
-        title: const Column(
+        title: Column(
           children: [
-            Text('ChatBot', style: TextStyle(
-              fontFamily: 'ArtWork',
-              fontWeight: FontWeight.normal,
-              fontSize: 30,
-              color: Colors.black)),
+            const Text('ChatBot', style: TextStyle(color: Colors.black)),
+            Text(
+              'Logged in as: $userEmail',
+              style: const TextStyle(color: Colors.black, fontSize: 12),
+            ),
           ],
         ),
         centerTitle: true,
@@ -406,15 +403,16 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                 },
               ),
             ),
-            if (chatResponse.isNotEmpty) // Muestra el botón solo si hay una respuesta del chat
+            if (chatResponse
+                .isNotEmpty) // Muestra el botón solo si hay una respuesta del chat
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ElevatedButton(
                   onPressed: _saveRecommendation,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 15),
                   ),
                   child: const Text(
                     'Guardar Recomendación',
@@ -431,8 +429,9 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                       labelText: '',
                       controller: _controller,
                       maxLength: 200,
-                      validator: (value) =>
-                          value!.isEmpty ? 'Debe ingresar un mensaje' : null,
+                      validator: (value) => (value == null || value.isEmpty)
+                          ? 'Debe ingresar un mensaje'
+                          : null,
                       hint: 'Escribe un mensaje...',
                     ),
                   ),
@@ -444,9 +443,9 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                       if (prompt.isNotEmpty) {
                         setState(() {
                           chatHistory.add({'message': prompt, 'isUser': true});
+                          _fetchChatGPTResponse(prompt);
+                          _controller.clear();
                         });
-                        _fetchChatGPTResponse(prompt);
-                        _controller.clear();
                       }
                     },
                   ),
@@ -461,9 +460,9 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
 
   @override
   void dispose() {
+    _typingTimer?.cancel();
     _controller.dispose();
     _scrollController.dispose();
-    _typingTimer?.cancel();
     super.dispose();
   }
 }
