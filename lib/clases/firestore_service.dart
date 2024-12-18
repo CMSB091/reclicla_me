@@ -365,7 +365,8 @@ class FirestoreService {
         };
       }).toList();
     } catch (e) {
-      await Funciones.saveDebugInfo('Error al recuperar el historial de chat: $e');
+      await Funciones.saveDebugInfo(
+          'Error al recuperar el historial de chat: $e');
       return [];
     }
   }
@@ -419,10 +420,12 @@ class FirestoreService {
             .collection('chat_interactions')
             .doc(chatId)
             .delete();
-        await Funciones.saveDebugInfo('Chat con ID $chatId eliminado correctamente.');
+        await Funciones.saveDebugInfo(
+            'Chat con ID $chatId eliminado correctamente.');
       } else {
         // Si el documento no existe
-        await Funciones.saveDebugInfo('No se encontró un chat con el ID $chatId para eliminar.');
+        await Funciones.saveDebugInfo(
+            'No se encontró un chat con el ID $chatId para eliminar.');
       }
     } catch (e) {
       await Funciones.saveDebugInfo('Error al eliminar el chat: $e');
@@ -533,7 +536,8 @@ class FirestoreService {
 
       // Monitorear el progreso de la subida
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-        Funciones.saveDebugInfo('Progreso: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100} %');
+        Funciones.saveDebugInfo(
+            'Progreso: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100} %');
       }, onError: (e) {
         showSnackBar(scaffoldKey, 'Error durante la subida de la imagen.');
       });
@@ -837,21 +841,20 @@ class FirestoreService {
           });
           if (context.mounted) {
             showCustomSnackBar(
-            context, '¡Puntaje guardado correctamente!', SnackBarType.error,
-            durationInMilliseconds: 3000);
+                context, '¡Puntaje guardado correctamente!', SnackBarType.error,
+                durationInMilliseconds: 3000);
           }
         }
       } catch (e) {
         if (context.mounted) {
           showCustomSnackBar(
-            context, 'Error al guardar puntaje: $e', SnackBarType.error,
-            durationInMilliseconds: 3000);
+              context, 'Error al guardar puntaje: $e', SnackBarType.error,
+              durationInMilliseconds: 3000);
         }
       }
     } else {
       if (context.mounted) {
-        showCustomSnackBar(
-            context, 'Usuario no logueado', SnackBarType.error,
+        showCustomSnackBar(context, 'Usuario no logueado', SnackBarType.error,
             durationInMilliseconds: 3000);
       }
     }
@@ -948,5 +951,26 @@ class FirestoreService {
         .collection('recommendations')
         .where('userEmail', isEqualTo: userEmail)
         .snapshots();
+  }
+
+  Future<void> deleteUserRecommendation(String userEmail, String docId) async {
+    try {
+      final path = 'recommendations/$docId';
+      final docRef = FirebaseFirestore.instance.doc(path);
+
+      // Verifica si el documento existe
+      final docSnapshot = await docRef.get();
+      if (!docSnapshot.exists) {
+        debugPrint('El documento con ID $docId no existe en Firestore.');
+        return;
+      }
+
+      debugPrint('Eliminando documento en ruta: $path');
+      await docRef.delete();
+      debugPrint('Documento eliminado correctamente en Firestore.');
+    } catch (e) {
+      debugPrint('Error al eliminar documento: $e');
+      rethrow;
+    }
   }
 }

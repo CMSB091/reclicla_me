@@ -11,7 +11,6 @@ class MisFavoritos extends StatefulWidget {
   const MisFavoritos({super.key, required this.userEmail});
 
   @override
-  // ignore: library_private_types_in_public_api
   _MisFavoritosState createState() => _MisFavoritosState();
 }
 
@@ -39,7 +38,6 @@ class _MisFavoritosState extends State<MisFavoritos> {
         ),
         actions: [
           IconButton(
-            // ignore: deprecated_member_use
             icon: const FaIcon(FontAwesomeIcons.infoCircle),
             onPressed: () {
               Funciones.mostrarModalDeAyuda(
@@ -83,6 +81,7 @@ class _MisFavoritosState extends State<MisFavoritos> {
               final data =
                   recommendations[index].data() as Map<String, dynamic>;
               final recommendation = data['recommendation'] ?? '';
+              final docId = recommendations[index].id;
 
               return Container(
                 margin: const EdgeInsets.all(16.0),
@@ -114,53 +113,118 @@ class _MisFavoritosState extends State<MisFavoritos> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade200,
-                        foregroundColor: Colors.black,
-                      ),
-                      onPressed: () async {
-                        // Mostrar un diálogo con un spinner predeterminado
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (BuildContext context) {
-                            return const AlertDialog(
-                              content: Row(
-                                children: [
-                                  CircularProgressIndicator(),
-                                  SizedBox(width: 20),
-                                  Text('Descargando PDF...'),
-                                ],
-                              ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade200,
+                            foregroundColor: Colors.black,
+                          ),
+                          onPressed: () async {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (BuildContext context) {
+                                return const AlertDialog(
+                                  content: Row(
+                                    children: [
+                                      CircularProgressIndicator(),
+                                      SizedBox(width: 20),
+                                      Text('Descargando PDF...'),
+                                    ],
+                                  ),
+                                );
+                              },
                             );
+
+                            try {
+                              await Funciones.descargarPdf(
+                                titulo: 'Favorito ${index + 1}',
+                                contenido: recommendation,
+                                context: context,
+                              );
+
+                              if (mounted) {
+                                Navigator.of(context, rootNavigator: true)
+                                    .pop();
+                                showCustomSnackBar(
+                                    context,
+                                    'PDF descargado con éxito.',
+                                    SnackBarType.confirmation);
+                              }
+                            } catch (e) {
+                              debugPrint('Error al descargar PDF: $e');
+
+                              if (mounted) {
+                                Navigator.of(context, rootNavigator: true)
+                                    .pop();
+                                showCustomSnackBar(
+                                    context,
+                                    'Error al descargar el PDF.',
+                                    SnackBarType.error);
+                              }
+                            }
                           },
-                        );
+                          icon: const FaIcon(FontAwesomeIcons.filePdf),
+                          label: const Text('Descargar PDF'),
+                        ),
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Confirmar eliminación'),
+                                  content: const Text(
+                                      '¿Estás seguro de que deseas eliminar este favorito?'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancelar'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text('Eliminar'),
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
 
-                        try {
-                          await Funciones.descargarPdf(
-                            titulo: 'Favorito ${index + 1}',
-                            contenido: recommendation,
-                            context: context,
-                          );
-
-                          // Cerrar el diálogo después de la descarga exitosa
-                          if (mounted) {
-                            Navigator.of(context, rootNavigator: true).pop();
-                            showCustomSnackBar(context,'PDF descargado con éxito.',SnackBarType.confirmation);
-                          }
-                        } catch (e) {
-                          debugPrint('Error al descargar PDF: $e');
-
-                          // Cerrar el diálogo en caso de error
-                          if (mounted) {
-                            Navigator.of(context, rootNavigator: true).pop();
-                            showCustomSnackBar(context,'Error al descargar el PDF.',SnackBarType.error);
-                          }
-                        }
-                      },
-                      icon: const FaIcon(FontAwesomeIcons.filePdf),
-                      label: const Text('Descargar PDF'),
+                            if (confirm == true) {
+                              try {
+                                debugPrint(
+                                    'Intentando eliminar documento con ID: $docId');
+                                await _firestoreService
+                                    .deleteUserRecommendation(
+                                        widget.userEmail, docId);
+                                debugPrint(
+                                    'Documento eliminado correctamente por ID.');
+                                setState(() {}); // Refresca la interfaz
+                                showCustomSnackBar(
+                                    context,
+                                    'Favorito eliminado.',
+                                    SnackBarType.confirmation);
+                              } catch (e) {
+                                debugPrint('Error al eliminar favorito: $e');
+                                showCustomSnackBar(
+                                    context,
+                                    'Error al eliminar el favorito.',
+                                    SnackBarType.error);
+                              }
+                            }
+                          },
+                          icon: const FaIcon(FontAwesomeIcons.trash),
+                          label: const Text('Eliminar'),
+                        ),
+                      ],
                     ),
                   ],
                 ),
