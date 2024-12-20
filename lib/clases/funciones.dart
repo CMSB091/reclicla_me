@@ -842,7 +842,6 @@ class Funciones {
 
   static Future<List<String>> getDistinctMaterials(String email) async {
     List<String> materials = [];
-    print('Email del usuario: $email');
 
     try {
       // Realiza la consulta filtrando por el campo 'email' pasado como parámetro
@@ -860,7 +859,7 @@ class Funciones {
       } else {
         // Extrae los valores únicos de la columna 'material'
         Set<String> uniqueMaterials =
-            snapshot.docs.map((doc) => doc['material'] as String).toSet();
+            snapshot.docs.map((doc) => doc['item'] as String).toSet();
 
         materials = uniqueMaterials.toList();
         print('Materiales únicos recuperados: $materials');
@@ -879,7 +878,7 @@ class Funciones {
       // Realiza la consulta para contar los documentos del material y el email especificados
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('historial')
-          .where('material', isEqualTo: material)
+          .where('item', isEqualTo: material)
           .where('email', isEqualTo: email) // Filtra por el email pasado
           .get();
 
