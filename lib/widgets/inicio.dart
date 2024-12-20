@@ -369,18 +369,21 @@ class _MyInicioState extends State<MyInicio> {
     switch (index) {
       case 0:
         return const MySplash(
-            nextScreen: ObjectDetectionScreen(),
-            lottieAnimation: "assets/animations/scan_objects2.json");
+          nextScreen: ObjectDetectionScreen(),
+          lottieAnimation: "assets/animations/scan_objects2.json",
+        );
       case 1:
-        return const MySplash(
-            nextScreen: NoticiasChatGPT(
-              initialPrompt: '',
-            ),
-            lottieAnimation: "assets/animations/lottie-robot.json");
+        return MySplash(
+          nextScreen: NoticiasChatGPT(
+            initialPrompt: '',
+          ),
+          lottieAnimation: "assets/animations/lottie-robot.json",
+        );
       case 2:
-      return const HistorialPage(
-        detectedItem: '',
-      ); 
+        return const HistorialPage(
+          detectedItem: '',
+          initialDescription: '',
+        );
       case 3:
         return MySplash(
           nextScreen: ReusableCountSplashScreen(

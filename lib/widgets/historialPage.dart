@@ -4,8 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class HistorialPage extends StatefulWidget {
   final String detectedItem;
+  final String initialDescription;
 
-  const HistorialPage({Key? key, required this.detectedItem}) : super(key: key);
+  const HistorialPage({
+    Key? key,
+    required this.detectedItem,
+    required this.initialDescription,
+  }) : super(key: key);
 
   @override
   State<HistorialPage> createState() => _HistorialPageState();
@@ -13,16 +18,20 @@ class HistorialPage extends StatefulWidget {
 
 class _HistorialPageState extends State<HistorialPage> {
   final TextEditingController _materialController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// Guarda los datos en Firestore
+  @override
+  void initState() {
+    super.initState();
+    // Configura los campos iniciales
+    _materialController.text = ''; // Inicializa vacío
+  }
+
   Future<void> _saveToFirestore() async {
     try {
       final user = _auth.currentUser;
 
       if (user == null) {
-        // Manejo si no hay un usuario logueado
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("No se encontró usuario logueado.")),
         );
@@ -32,22 +41,20 @@ class _HistorialPageState extends State<HistorialPage> {
       final email = user.email;
       final currentTime = DateTime.now();
 
-      // Valida los campos antes de guardar
-      if (_materialController.text.trim().isEmpty ||
-          _descriptionController.text.trim().isEmpty) {
+      // Validar campos antes de guardar
+      if (_materialController.text.trim().isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Todos los campos son obligatorios.")),
+          const SnackBar(content: Text("El campo Material es obligatorio.")),
         );
         return;
       }
 
-      // Guarda los datos en Firestore en la colección "historial"
       await FirebaseFirestore.instance.collection('historial').add({
-        'item': widget.detectedItem,
-        'material': _materialController.text.trim(),
-        'descripcion': _descriptionController.text.trim(),
-        'email': email,
-        'fecha': currentTime.toIso8601String(),
+        'item': widget.detectedItem, // Objeto escaneado
+        'material': _materialController.text.trim(), // Material cargado por el usuario
+        'descripcion': widget.initialDescription.trim(), // Recomendación de ChatGPT
+        'email': email, // Email del usuario logueado
+        'fecha': currentTime.toIso8601String(), // Fecha actual
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -57,10 +64,8 @@ class _HistorialPageState extends State<HistorialPage> {
       // Limpia los campos después de guardar
       setState(() {
         _materialController.clear();
-        _descriptionController.clear();
       });
     } catch (e) {
-      print("Error al guardar en Firestore: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error al guardar: $e")),
       );
@@ -70,7 +75,6 @@ class _HistorialPageState extends State<HistorialPage> {
   @override
   void dispose() {
     _materialController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -88,6 +92,7 @@ class _HistorialPageState extends State<HistorialPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Campo para el ítem detectado (Texto no editable)
               Text(
                 'Ítem Detectado:',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -104,6 +109,7 @@ class _HistorialPageState extends State<HistorialPage> {
                 ),
               ),
               const SizedBox(height: 20),
+              // Campo editable para Material
               TextField(
                 controller: _materialController,
                 decoration: const InputDecoration(
@@ -112,15 +118,23 @@ class _HistorialPageState extends State<HistorialPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              TextField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Descripción',
-                  border: OutlineInputBorder(),
+              // Campo no editable para la Descripción
+              Text(
+                'Descripción:',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                widget.initialDescription,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
                 ),
-                maxLines: 3,
               ),
               const SizedBox(height: 30),
+              // Botón de Guardar
               Center(
                 child: ElevatedButton(
                   onPressed: _saveToFirestore,

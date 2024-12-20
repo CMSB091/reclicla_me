@@ -9,7 +9,7 @@ import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:recila_me/widgets/historialPage.dart';
 
 class NoticiasChatGPT extends StatefulWidget {
   final String initialPrompt;
@@ -58,6 +58,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user == null) {
+        // Mostrar error si no hay un usuario logueado
         showCustomSnackBar(
           context,
           'No se encontró un usuario logueado.',
@@ -66,7 +67,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         return;
       }
 
-      // Nos aseguramos de que hay algo en chatResponse para guardar.
+      // Validar que haya una recomendación del chat para guardar
       if (chatResponse.trim().isEmpty) {
         showCustomSnackBar(
           context,
@@ -76,23 +77,21 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         return;
       }
 
-      await FirebaseFirestore.instance.collection('recommendations').add({
-        'recommendation': chatResponse,
-        'userEmail': user.email,
-        'timestamp': Timestamp.now(),
-      });
+      // Extrae solo el ítem detectado del initialPrompt
+      final detectedItem = widget.initialPrompt.split(': ').last.trim();
 
-      showCustomSnackBar(
+      // Navega a la página de Historial con los datos relevantes
+      Navigator.push(
         context,
-        'Recomendación guardada exitosamente.',
-        SnackBarType.confirmation,
+        MaterialPageRoute(
+          builder: (context) => HistorialPage(
+            detectedItem: detectedItem, // Pasa solo el ítem detectado
+            initialDescription: chatResponse.trim(), // Respuesta del ChatGPT
+          ),
+        ),
       );
-
-      // Limpia el chatResponse si se desea.
-      setState(() {
-        chatResponse = '';
-      });
     } catch (e) {
+      // Mostrar un mensaje de error si algo falla
       showCustomSnackBar(
         context,
         'Error al guardar recomendación: $e',
@@ -403,16 +402,14 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                 },
               ),
             ),
-            if (chatResponse
-                .isNotEmpty) // Muestra el botón solo si hay una respuesta del chat
+            if (chatResponse.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ElevatedButton(
                   onPressed: _saveRecommendation,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 40, vertical: 15),
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                   ),
                   child: const Text(
                     'Guardar Recomendación',
