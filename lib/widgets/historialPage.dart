@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 
 class HistorialPage extends StatefulWidget {
   final String detectedItem;
   final String initialDescription;
 
-  const HistorialPage({
-    Key? key,
-    required this.detectedItem,
-    required this.initialDescription,
-  }) : super(key: key);
+  const HistorialPage({super.key, required this.detectedItem, required this.initialDescription});
 
   @override
   State<HistorialPage> createState() => _HistorialPageState();
@@ -32,20 +29,21 @@ class _HistorialPageState extends State<HistorialPage> {
       final user = _auth.currentUser;
 
       if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("No se encontró usuario logueado.")),
-        );
+        // Manejo si no hay un usuario logueado
+        showCustomSnackBar(
+            context, 'No se encontró usuario logueado.', SnackBarType.error,
+            durationInMilliseconds: 2000);
         return;
       }
 
       final email = user.email;
       final currentTime = DateTime.now();
 
-      // Validar campos antes de guardar
+      // Valida los campos antes de guardar
       if (_materialController.text.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("El campo Material es obligatorio.")),
-        );
+        showCustomSnackBar(
+            context, 'Todos los campos son obligatorios.', SnackBarType.error,
+            durationInMilliseconds: 3000);
         return;
       }
 
@@ -56,19 +54,18 @@ class _HistorialPageState extends State<HistorialPage> {
         'email': email, // Email del usuario logueado
         'fecha': currentTime.toIso8601String(), // Fecha actual
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Datos guardados exitosamente.")),
-      );
+      showCustomSnackBar(
+          context, 'Datos guardados exitosamente.', SnackBarType.confirmation,
+          durationInMilliseconds: 3000);
 
       // Limpia los campos después de guardar
       setState(() {
         _materialController.clear();
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error al guardar: $e")),
-      );
+      showCustomSnackBar(
+            context, 'Error al guardar: $e', SnackBarType.error,
+            durationInMilliseconds: 3000);
     }
   }
 

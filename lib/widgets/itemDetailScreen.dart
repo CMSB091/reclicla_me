@@ -33,6 +33,7 @@ class ItemDetailScreen extends StatefulWidget {
   });
 
   @override
+  // ignore: library_private_types_in_public_api
   _ItemDetailScreenState createState() => _ItemDetailScreenState();
 }
 
@@ -219,10 +220,10 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  !widget.estado ? 'Disponible' : 'No Disponible',
+                  widget.estado ? 'Disponible' : 'No Disponible',
                   style: TextStyle(
                     fontSize: 16,
-                    color: !widget.estado
+                    color: widget.estado
                         ? const Color.fromARGB(255, 6, 128, 10)
                         : Colors.red,
                     fontWeight: FontWeight.bold,

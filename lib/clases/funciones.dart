@@ -8,6 +8,7 @@ import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dart_seq/dart_seq.dart';
 import 'package:dart_seq_http_client/dart_seq_http_client.dart';
+import 'package:dio/dio.dart';
 import 'package:excel/excel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -16,6 +17,7 @@ import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/configuracion/config.dart';
@@ -24,6 +26,7 @@ import 'package:recila_me/widgets/itemDetailScreen.dart';
 import 'package:recila_me/widgets/login.dart';
 import 'package:http/http.dart' as http;
 import 'package:recila_me/widgets/resumenes.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -125,7 +128,7 @@ class Funciones {
       // Cierra la sesión del usuario
       await FirebaseAuth.instance.signOut();
     } catch (e) {
-      await SeqLog('error', 'Error al cerrar sesión: $e');
+      await Funciones.saveDebugInfo('Error al cerrar sesión: $e');
     } finally {
       // Cierra el diálogo
       if (context.mounted) {
@@ -165,8 +168,7 @@ class Funciones {
           jsonDecode(utf8.decode(response.bodyBytes));
       return data['choices'][0]['message']['content'];
     } else {
-      await SeqLog('error',
-          'Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
+      await Funciones.saveDebugInfo('Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
       throw Exception('Failed to load ChatGPT response');
     }
   }
@@ -212,8 +214,7 @@ class Funciones {
       final imageUrlGenerated = data['data'][0]['url'];
       return imageUrlGenerated;
     } else {
-      await SeqLog(
-          'error', 'Error al generar la imagen: ${response.statusCode}');
+      await Funciones.saveDebugInfo('Error al generar la imagen: ${response.statusCode}');
       return '';
     }
   }
@@ -231,62 +232,6 @@ class Funciones {
         'App': 'ReciclaMe',
       },
     );
-  }
-
-  // Función que registra los acontecimientos en el SEQ log
-  static Future<void> SeqLog(String status, String message) async {
-    try {
-      await _initializeLogger(); // Asegura que el logger se inicialice solo una vez
-
-      if (_logger == null) return;
-
-      // Ejecutar la operación con timeout de 1 segundo
-      await _logWithTimeout(status, message, const Duration(seconds: 3));
-    } catch (e) {
-      print('Se produjo un error al intentar acceder al SEQ $e');
-    }
-  }
-
-// Función auxiliar que maneja el timeout
-  static Future<void> _logWithTimeout(
-      String status, String message, Duration timeout) async {
-    try {
-      // Convertir el string `status` a `SeqLogLevel`
-      SeqLogLevel logLevel = _mapStringToSeqLogLevel(status);
-
-      await _logger!.log(logLevel, message).timeout(timeout, onTimeout: () {
-        print(
-            'La conexión a SEQ ha sido cancelada después de ${timeout.inSeconds} segundos');
-        return; // Cancelar la operación si el tiempo de espera excede
-      });
-
-      await Future(() async {
-        switch (logLevel) {
-          case SeqLogLevel.information:
-          case SeqLogLevel.warning:
-          case SeqLogLevel.error:
-          case SeqLogLevel.debug:
-            await _logger!.log(
-              logLevel,
-              message,
-              null,
-              {'Timestamp': DateTime.now().toUtc().toIso8601String()},
-            );
-            break;
-          default:
-            print('Nivel de log no reconocido');
-        }
-
-        await _logger!.flush();
-      }).timeout(const Duration(seconds: 3)); // Timeout de 3 segundos
-    } catch (e) {
-      if (e is TimeoutException) {
-        print(
-            'El log de SEQ excedió el tiempo límite de 10 segundos y se abortó.');
-      } else {
-        print('Se produjo un error al registrar el log en SEQ: $e');
-      }
-    }
   }
 
 // Función auxiliar para convertir un String a SeqLogLevel
@@ -333,8 +278,7 @@ class Funciones {
         telefonoController.text = userData['telefono'] ?? '';
       }
     } catch (e) {
-      SeqLog('error',
-          'Se ha producido un error al cargar los datos del usuario $e');
+      await Funciones.saveDebugInfo('Se ha producido un error al cargar los datos del usuario $e');
     } finally {
       setLoadingState(false);
     }
@@ -412,16 +356,16 @@ class Funciones {
           }
         } else {
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Error al guardar los datos.')),
-            );
+            showCustomSnackBar(
+            context, 'Error al guardar los datos.', SnackBarType.error,
+            durationInMilliseconds: 3000);
           }
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')),
-          );
+          showCustomSnackBar(
+            context, 'Error: $e', SnackBarType.error,
+            durationInMilliseconds: 3000);
         }
       } finally {
         setSavingState(false);
@@ -452,15 +396,14 @@ class Funciones {
         onImageUploaded(downloadUrl);
 
         // Mostrar éxito
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Imagen de perfil actualizada correctamente')),
-        );
+        showCustomSnackBar(
+            context, 'Imagen de perfil actualizada correctamente', SnackBarType.confirmation,
+            durationInMilliseconds: 3000);
       } catch (e) {
         // Mostrar error
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al subir la imagen: $e')),
-        );
+        showCustomSnackBar(
+            context, 'Error al subir la imagen: $e', SnackBarType.error,
+            durationInMilliseconds: 3000);
       }
     }
   }
@@ -505,7 +448,6 @@ class Funciones {
     try {
       // Eliminar caracteres no numéricos y formatear el número
       String phoneNumber = contact.replaceAll(RegExp(r'[^\d+]'), '');
-      print(country);
 
       // Mapa de códigos de país según el país
       Map<String, String> countryCodes = {
@@ -518,10 +460,9 @@ class Funciones {
 
       // Verificar si el país está en la lista de códigos y agregar el código de país si no está presente
       if (!countryCodes.containsKey(country)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('El país no está soportado para WhatsApp')),
-        );
+        showCustomSnackBar(
+            context, 'El país no está soportado para WhatsApp', SnackBarType.error,
+            durationInMilliseconds: 3000);
         return; // Si no hay código para el país, salir de la función
       }
 
@@ -542,18 +483,15 @@ class Funciones {
       if (await canLaunchUrl(whatsappWebUri)) {
         await launchUrl(whatsappWebUri, mode: LaunchMode.externalApplication);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text(
-                  'No se pudo abrir WhatsApp con el esquema web. Asegúrate de que está instalado.')),
-        );
+        showCustomSnackBar(
+            context, 'No se pudo abrir WhatsApp con el esquema web. Asegúrate de que está instalado.', SnackBarType.error,
+            durationInMilliseconds: 3000);
       }
     } catch (e) {
       // Manejo de errores
-      debugPrint('Error al intentar abrir WhatsApp: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al intentar abrir WhatsApp: $e')),
-      );
+      showCustomSnackBar(
+            context, 'Error al intentar abrir WhatsApp: $e', SnackBarType.error,
+            durationInMilliseconds: 3000);
     }
   }
 
@@ -563,13 +501,13 @@ class Funciones {
         await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedImage != null) {
-      SeqLog('information', 'Imagen seleccionada: ${pickedImage.path}');
+      await Funciones.saveDebugInfo('Imagen seleccionada: ${pickedImage.path}');
       return File(pickedImage.path); // Devolver el archivo seleccionado
     } else {
       // Mostrar SnackBar si no se selecciona imagen
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No se seleccionó ninguna imagen.')),
-      );
+      showCustomSnackBar(
+            context, 'No se seleccionó ninguna imagen.', SnackBarType.error,
+            durationInMilliseconds: 3000);
       return null; // Devolver null si no se seleccionó ninguna imagen
     }
   }
@@ -687,10 +625,8 @@ class Funciones {
       // Crea el archivo y escribe el contenido JSON
       final file = File(filePath);
       await file.writeAsString(json.encode(content), flush: true);
-
-      print("Archivo de debug escrito en: $filePath");
     } catch (e) {
-      print("Error al escribir el archivo de debug: $e");
+      await Funciones.saveDebugInfo("Error al escribir el archivo de debug: $e");
     }
   }
 
@@ -725,10 +661,8 @@ class Funciones {
 
       // Escribe el archivo con la nueva entrada
       await file.writeAsString(json.encode(debugLog), flush: true);
-
-      print("Información de depuración guardada en: $filePath");
     } catch (e) {
-      print("Error al guardar la información de depuración: $e");
+      await Funciones.saveDebugInfo("Error al guardar la información de depuración: $e");
     }
   }
 
@@ -852,20 +786,19 @@ class Funciones {
           .get();
 
       // Verifica si hay documentos en el snapshot
-      print('Cantidad de documentos recuperados: ${snapshot.docs.length}');
+      await Funciones.saveDebugInfo('Cantidad de documentos recuperados: ${snapshot.docs.length}');
 
       if (snapshot.docs.isEmpty) {
-        print('No se encontraron documentos para el email proporcionado.');
+        await Funciones.saveDebugInfo('No se encontraron documentos para el email proporcionado.');
       } else {
         // Extrae los valores únicos de la columna 'material'
         Set<String> uniqueMaterials =
             snapshot.docs.map((doc) => doc['item'] as String).toSet();
 
         materials = uniqueMaterials.toList();
-        print('Materiales únicos recuperados: $materials');
       }
     } catch (e) {
-      print('Error obteniendo materiales: $e');
+      await Funciones.saveDebugInfo('Error obteniendo materiales: $e');
     }
 
     return materials;
@@ -885,7 +818,7 @@ class Funciones {
       // La cantidad de documentos en el snapshot representa la cantidad de registros
       count = snapshot.docs.length;
     } catch (e) {
-      print('Error contando registros para el material $material: $e');
+      await Funciones.saveDebugInfo('Error contando registros para el material $material: $e');
     }
 
     return count;
@@ -897,7 +830,7 @@ class Funciones {
       String? userEmail = FirebaseAuth.instance.currentUser?.email;
       return userEmail;
     } catch (e) {
-      print('Error obteniendo el email del usuario: $e');
+      await Funciones.saveDebugInfo('Error obteniendo el email del usuario: $e');
       return null;
     }
   }
@@ -935,7 +868,6 @@ class Funciones {
   }
 
   static String getMaterialIconPath(String material) {
-    print('material $material');
     switch (material.toLowerCase()) {
       case 'plastico':
         return 'assets/icons/Plastico.png';
@@ -1065,7 +997,7 @@ class Funciones {
                 pw.SizedBox(height: 8),
                 pw.Text(
                   conceptoHuella,
-                  style: pw.TextStyle(fontSize: 14),
+                  style: const pw.TextStyle(fontSize: 14),
                 ),
                 pw.SizedBox(height: 20),
 
@@ -1080,7 +1012,7 @@ class Funciones {
                 pw.SizedBox(height: 8),
                 pw.Text(
                   detallesInforme,
-                  style: pw.TextStyle(fontSize: 14),
+                  style: const pw.TextStyle(fontSize: 14),
                 ),
                 pw.SizedBox(height: 20),
 
@@ -1231,4 +1163,129 @@ class Funciones {
 
     return totalUnidades > 0 ? totalImpacto / totalUnidades : 0.0;
   }
+
+  static Future<bool> guardarFeedback({
+    required String nombre,
+    required String apellido,
+    required String comentarios,
+    required String emailUsuario,
+    required DateTime fecha,
+  }) async {
+    try {
+      await FirebaseFirestore.instance.collection('feedbacks').add({
+        'nombre': nombre,
+        'apellido': apellido,
+        'comentarios': comentarios,
+        'emailUsuario': emailUsuario,
+        'fecha': fecha.toIso8601String(),
+      });
+      return true;
+    } catch (e) {
+      print('Error al guardar feedback: $e');
+      return false;
+    }
+  }
+
+  /// Muestra un modal de ayuda reutilizable.
+  static void mostrarModalDeAyuda({
+    required BuildContext context,
+    required String titulo,
+    required String mensaje,
+    String textoBoton = 'Cerrar',
+  }) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(titulo),
+          content: Text(mensaje),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text(textoBoton),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Genera un PDF y lo descarga en la carpeta Downloads
+  static Future<void> descargarPdf({
+    required String titulo,
+    required String contenido,
+    required BuildContext context,
+  }) async {
+    final pdf = pw.Document();
+
+    // Crear el contenido del PDF
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                titulo,
+                style: pw.TextStyle(
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 20),
+              pw.Text(
+                contenido,
+                style: const pw.TextStyle(fontSize: 16),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    try {
+      // Obtener la ruta de la carpeta Downloads
+      final directory = Directory('/storage/emulated/0/Download');
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
+      }
+      final filePath = '${directory.path}/$titulo.pdf';
+
+      // Guardar el archivo PDF
+      final file = File(filePath);
+      await file.writeAsBytes(await pdf.save());
+
+      // Notificar al sistema de la descarga
+      await mostrarDescargaEnSistema(filePath);
+    } catch (e) {
+      // Manejo de errores
+      showCustomSnackBar(context,'Error al guardar el PDF: $e',SnackBarType.error);
+    }
+  }
+
+  /// Notifica al sistema que el archivo ha sido descargado
+  static Future<void> mostrarDescargaEnSistema(String filePath) async {
+    try {
+      final dio = Dio();
+      final url = 'file://$filePath';
+      final savePath = filePath;
+
+      // Simula una descarga para que el sistema gestione la notificación
+      await dio.download(
+        url,
+        savePath,
+        onReceiveProgress: (received, total) {
+          // Aquí puedes agregar una barra de progreso si es necesario
+        },
+      );
+
+      debugPrint('Descarga completada: $savePath');
+    } catch (e) {
+      debugPrint('Error al notificar descarga al sistema: $e');
+    }
+  }
 }
+

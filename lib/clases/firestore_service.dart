@@ -27,7 +27,8 @@ class FirestoreService {
         return true;
       }
     } catch (e) {
-      Funciones.SeqLog('error', 'Se produjo un error en la autenticación $e');
+      await Funciones.saveDebugInfo(
+          'Se produjo un error en la autenticación $e');
       return false;
     }
   }
@@ -40,7 +41,7 @@ class FirestoreService {
       });
       return true;
     } catch (e) {
-      await Funciones.SeqLog('error', 'Error creating user: $e');
+      await Funciones.saveDebugInfo('Error creating user: $e');
       return false;
     }
   }
@@ -81,12 +82,12 @@ class FirestoreService {
         });
         return true;
       } else {
-        await Funciones.SeqLog('information',
+        await Funciones.saveDebugInfo(
             'No se encontró ningún usuario con el correo electrónico proporcionado');
         return false;
       }
     } catch (e) {
-      await Funciones.SeqLog('error', 'Error updating user: $e');
+      await Funciones.saveDebugInfo('Error updating user: $e');
       return false;
     }
   }
@@ -107,90 +108,67 @@ class FirestoreService {
           .limit(1)
           .get();
 
-      await Funciones.SeqLog(
-          'debug', 'Query snapshot count: ${query.docs.length}');
-
       if (query.docs.isNotEmpty) {
         String docId = query.docs.first.id;
-        await Funciones.SeqLog('debug', 'Document ID: $docId');
 
         DocumentSnapshot doc = await FirebaseFirestore.instance
             .collection('usuario')
             .doc(docId)
             .get();
-
-        await Funciones.SeqLog('debug', 'Document exists: ${doc.exists}');
-
         if (doc.exists) {
           // Valida que se haya recuperado los datos
           Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-
-          await Funciones.SeqLog('debug', 'Document data: $data');
-
           if (data != null && data.containsKey('nombre')) {
             String firstName = data['nombre'] ?? correo;
-            await Funciones.SeqLog('debug', 'Document firstName: $firstName');
             return firstName;
           } else {
-            await Funciones.SeqLog(
-                'information', 'Field "nombre" not found in the document.');
+            await Funciones.saveDebugInfo(
+                'Field "nombre" not found in the document.');
             return correo; // Valor por defecto
           }
         } else {
-          await Funciones.SeqLog('information', 'Document does not exist.');
+          await Funciones.saveDebugInfo('Document does not exist.');
           return correo; // Valor por defecto
         }
       } else {
-        await Funciones.SeqLog(
-            'information', 'No document found with the provided email.');
+        await Funciones.saveDebugInfo(
+            'No document found with the provided email.');
         return correo; // Valor por defecto
       }
     } catch (e) {
-      await Funciones.SeqLog('error', 'Error retrieving user data: $e');
+      await Funciones.saveDebugInfo('Error retrieving user data: $e');
       return correo;
     }
   }
 
   //Método que recupera todos los datos del usuario
   Future<Map<String, dynamic>?> getUserData(String correo) async {
-    await Funciones.SeqLog('debug', 'EMAIL INGREASADO: $correo}');
     try {
       QuerySnapshot query = await _db
           .collection('usuario')
           .where('correo', isEqualTo: correo)
           .limit(1)
           .get();
-
-      await Funciones.SeqLog(
-          'debug', 'Query snapshot count: ${query.docs.length}');
-
       if (query.docs.isNotEmpty) {
         String docId = query.docs.first.id;
-        await Funciones.SeqLog('debug', 'Document ID: $docId');
-
         DocumentSnapshot doc = await FirebaseFirestore.instance
             .collection('usuario')
             .doc(docId)
             .get();
-
-        await Funciones.SeqLog('debug', 'Document exists: ${doc.exists}');
-
         if (doc.exists) {
           Map<String, dynamic>? data = doc.data() as Map<String, dynamic>?;
-          await Funciones.SeqLog('debug', 'Document data: $data');
-
           return data; // Retorna los datos del usuario
         } else {
-          await Funciones.SeqLog('information', 'Document does not exist.');
+          await Funciones.saveDebugInfo('Document does not exist.');
           return null; // Retorna null si el documento no existe
         }
       } else {
-        await Funciones.SeqLog(
-            'information', 'No document found with the provided email.');
+        await Funciones.saveDebugInfo(
+            'No document found with the provided email.');
         return null; // Retorna null si no se encuentra el documento
       }
     } catch (e) {
-      await Funciones.SeqLog('error', 'Error retrieving user data: $e');
+      await Funciones.saveDebugInfo('Error retrieving user data: $e');
       return null;
     }
   }
@@ -206,23 +184,23 @@ class FirestoreService {
       if (userSnapshot.docs.isNotEmpty) {
         DocumentSnapshot userDoc = userSnapshot.docs.first;
         String? imageUrl = userDoc['imageUrl'];
-        print('imageUrl $imageUrl');
-
         if (imageUrl!.startsWith('https://firebasestorage.googleapis.com')) {
           try {
             // Crear una referencia a partir de la URL
             Reference storageRef =
                 FirebaseStorage.instance.refFromURL(imageUrl);
             await storageRef.delete();
-            print('Imagen de perfil eliminada: $imageUrl');
           } catch (e) {
-            print('Error al eliminar la imagen de perfil: $e');
+            await Funciones.saveDebugInfo(
+                'Error al eliminar la imagen de perfil: $e');
           }
         } else {
-          print('URL de imagen de perfil no válida o no presente');
+          await Funciones.saveDebugInfo(
+              'URL de imagen de perfil no válida o no presente');
         }
       } else {
-        print('Usuario no encontrado para el correo proporcionado');
+        await Funciones.saveDebugInfo(
+            'Usuario no encontrado para el correo proporcionado');
       }
 
       // Eliminar imágenes relacionadas con el usuario desde la colección 'items'
@@ -231,24 +209,23 @@ class FirestoreService {
 
       for (DocumentSnapshot itemDoc in itemsSnapshot.docs) {
         String? storagePath = itemDoc['storagePath'];
-        print('storagePath $storagePath');
-
         if (storagePath!.isNotEmpty) {
           try {
             // Crear una referencia a partir del storagePath
             Reference storageRef = FirebaseStorage.instance.ref(storagePath);
             await storageRef.delete();
-            print('Imagen del item eliminada: $storagePath');
           } catch (e) {
-            print('Error al eliminar la imagen del item: $e');
+            await Funciones.saveDebugInfo(
+                'Error al eliminar la imagen del item: $e');
           }
         } else {
-          print(
+          await Funciones.saveDebugInfo(
               'No se encontró storagePath para el item con ID: ${itemDoc.id}');
         }
       }
     } catch (e) {
-      print('Error al eliminar las imágenes de Firebase Storage: $e');
+      await Funciones.saveDebugInfo(
+          'Error al eliminar las imágenes de Firebase Storage: $e');
     }
   }
 
@@ -280,7 +257,8 @@ class FirestoreService {
 
       // Añadir otras colecciones según sea necesario
     } catch (e) {
-      print('Error al eliminar los datos relacionados: $e');
+      await Funciones.saveDebugInfo(
+          'Error al eliminar los datos relacionados: $e');
     }
   }
 
@@ -309,7 +287,7 @@ class FirestoreService {
         return false; // No se encontró el usuario con el correo especificado
       }
     } catch (e) {
-      print('Error al eliminar el usuario: $e');
+      await Funciones.saveDebugInfo('Error al eliminar el usuario: $e');
       return false;
     }
   }
@@ -320,8 +298,7 @@ class FirestoreService {
       final snapshot = await _db.collection('paises').get();
       return snapshot.docs.map((doc) => doc['nombre'] as String).toList();
     } catch (e) {
-      //await Funciones.SeqLog('error', 'Error al obtener países: $e');
-      print('Error al obtener países: $e');
+      await Funciones.saveDebugInfo('Error al obtener países: $e');
       return [];
     }
   }
@@ -340,8 +317,7 @@ class FirestoreService {
 
       return ciudades;
     } catch (e) {
-      //await Funciones.SeqLog('error', 'Error al cargar las ciudades: $e');
-      print('Error al cargar las ciudades: $e');
+      await Funciones.saveDebugInfo('Error al cargar las ciudades: $e');
       throw Exception('Error al cargar las ciudades: $e');
     }
   }
@@ -389,7 +365,8 @@ class FirestoreService {
         };
       }).toList();
     } catch (e) {
-      Funciones.SeqLog('error', 'Error al recuperar el historial de chat: $e');
+      await Funciones.saveDebugInfo(
+          'Error al recuperar el historial de chat: $e');
       return [];
     }
   }
@@ -416,8 +393,8 @@ class FirestoreService {
         });
       }
     } catch (e) {
-      await Funciones.SeqLog(
-          'error', 'Error fetching interactions from Firestore: $e');
+      await Funciones.saveDebugInfo(
+          'Error fetching interactions from Firestore: $e');
     }
 
     return interactions;
@@ -427,7 +404,7 @@ class FirestoreService {
   Future<void> deleteChatById(String? chatId) async {
     // Verificar si chatId es null o vacío
     if (chatId == null || chatId.isEmpty) {
-      Funciones.SeqLog('warning', 'ID de chat no válido: null o vacío.');
+      await Funciones.saveDebugInfo('ID de chat no válido: null o vacío.');
       return;
     }
 
@@ -443,15 +420,15 @@ class FirestoreService {
             .collection('chat_interactions')
             .doc(chatId)
             .delete();
-        Funciones.SeqLog(
-            'information', 'Chat con ID $chatId eliminado correctamente.');
+        await Funciones.saveDebugInfo(
+            'Chat con ID $chatId eliminado correctamente.');
       } else {
         // Si el documento no existe
-        Funciones.SeqLog('warning',
+        await Funciones.saveDebugInfo(
             'No se encontró un chat con el ID $chatId para eliminar.');
       }
     } catch (e) {
-      Funciones.SeqLog('error', 'Error al eliminar el chat: $e');
+      await Funciones.saveDebugInfo('Error al eliminar el chat: $e');
     }
   }
 
@@ -472,7 +449,8 @@ class FirestoreService {
         throw ('No se ha autenticado ningún usuario');
       }
     } catch (e) {
-      print('Error al recuperar la imagen de perfil: $e');
+      await Funciones.saveDebugInfo(
+          'Error al recuperar la imagen de perfil: $e');
       return null; // Devuelve null si no hay imagen o si ocurre un error
     }
   }
@@ -507,12 +485,14 @@ class FirestoreService {
 
       // Update the user's profile with the new image URL (if needed)
       // Example: Save to Firestore or update Firebase Auth profile
-      print('Nueva URL de la imagen: $downloadUrl');
+      await Funciones.saveDebugInfo('Nueva URL de la imagen: $downloadUrl');
 
       // Return success
-      print('Imagen de perfil actualizada correctamente');
+      await Funciones.saveDebugInfo(
+          'Imagen de perfil actualizada correctamente');
     } catch (e) {
-      print('Error al actualizar la imagen de perfil: $e');
+      await Funciones.saveDebugInfo(
+          'Error al actualizar la imagen de perfil: $e');
     }
   }
 
@@ -532,13 +512,13 @@ class FirestoreService {
       required bool estado,
       required int idpub}) async {
     // Verificar conexión a Internet antes de subir la imagen
-    print('Paso 1');
+
     bool isConnected = await checkInternetConnection();
     if (!isConnected) {
       showSnackBar(scaffoldKey, 'No tienes conexión a Internet.');
       return;
     }
-    print('Paso 2');
+
     try {
       // Verificar si el archivo existe
       if (!await imageFile.exists()) {
@@ -546,9 +526,6 @@ class FirestoreService {
             scaffoldKey, 'El archivo no existe en la ruta especificada.');
         return;
       }
-      print('Paso 3');
-      print('Subiendo imagen, por favor espera...');
-
       // Generar una referencia única para la imagen en Firebase Storage
       final ref = FirebaseStorage.instance
           .ref()
@@ -559,11 +536,10 @@ class FirestoreService {
 
       // Monitorear el progreso de la subida
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-        print(
+        Funciones.saveDebugInfo(
             'Progreso: ${(snapshot.bytesTransferred / snapshot.totalBytes) * 100} %');
       }, onError: (e) {
         showSnackBar(scaffoldKey, 'Error durante la subida de la imagen.');
-        print('Error durante la subida: $e');
       });
 
       // Esperar hasta que la subida se complete
@@ -572,9 +548,6 @@ class FirestoreService {
         // Obtener la URL de descarga solo si la subida fue exitosa
         final imageUrl = await ref.getDownloadURL();
         final storagePath = ref.fullPath; // Obtener el storagePath
-
-        print('URL de la imagen subida: $imageUrl');
-        print('Storage path de la imagen subida: $storagePath');
 
         // Guardar los datos en Firestore, en la colección 'items'
         await FirebaseFirestore.instance.collection('items').add({
@@ -589,12 +562,13 @@ class FirestoreService {
           'idpub': idpub,
         });
       } else {
-        print('Error: La subida no fue exitosa.');
+        await Funciones.saveDebugInfo('Error: La subida no fue exitosa.');
       }
     } catch (e) {
       showSnackBar(
           scaffoldKey, 'Error al subir la imagen y guardar en Firestore.');
-      print('Error al subir la imagen y guardar en Firestore: $e');
+      await Funciones.saveDebugInfo(
+          'Error al subir la imagen y guardar en Firestore: $e');
     }
   }
 
@@ -611,8 +585,6 @@ class FirestoreService {
     try {
       // Eliminar el post de la colección "items"
       await FirebaseFirestore.instance.collection('items').doc(itemId).delete();
-      print('Post eliminado, intentando eliminar los comentarios...');
-      print('imageUrl $imageUrl');
 
       // Eliminar los comentarios asociados al post (filtrados por imageUrl)
       QuerySnapshot comentariosSnapshot = await FirebaseFirestore.instance
@@ -620,15 +592,13 @@ class FirestoreService {
           .where('imageUrl', isEqualTo: imageUrl)
           .get();
 
-      print('Comentarios recuperados: ${comentariosSnapshot.docs.length}');
-
       if (comentariosSnapshot.docs.isNotEmpty) {
         for (var doc in comentariosSnapshot.docs) {
-          print('Eliminando comentario con ID: ${doc.id}');
           await doc.reference.delete(); // Eliminar cada comentario
         }
       } else {
-        print('No se encontraron comentarios asociados a la imagen: $imageUrl');
+        await Funciones.saveDebugInfo(
+            'No se encontraron comentarios asociados a la imagen: $imageUrl');
       }
 
       // Eliminar la imagen de Firebase Storage
@@ -644,21 +614,18 @@ class FirestoreService {
             .first;
         String storagePath = Uri.decodeFull(fullPath);
 
-        print('Storage path: $storagePath');
-
         Reference storageRef =
             FirebaseStorage.instance.ref().child(storagePath);
         await storageRef.delete();
-        print('Imagen eliminada de Firebase Storage');
       } catch (e) {
-        print('Error al eliminar la imagen de Firebase Storage: $e');
+        await Funciones.saveDebugInfo(
+            'Error al eliminar la imagen de Firebase Storage: $e');
         // Opcional: Mostrar un mensaje al usuario o manejar el error según sea necesario
       }
-      // Mostrar un mensaje de éxito
-      print('Post, comentarios y imagen eliminados correctamente');
     } catch (e) {
       // Manejar errores generales
-      print('Error al eliminar el post o los comentarios: $e');
+      await Funciones.saveDebugInfo(
+          'Error al eliminar el post o los comentarios: $e');
       // Opcional: Mostrar un mensaje al usuario
     }
   }
@@ -693,7 +660,7 @@ class FirestoreService {
         'timestamp': Timestamp.now(), // Agregar marca de tiempo
       });
     } catch (e) {
-      print('Error al agregar comentario: $e');
+      await Funciones.saveDebugInfo('Error al agregar comentario: $e');
     }
   }
 
@@ -710,7 +677,7 @@ class FirestoreService {
       return url;
     } catch (e) {
       // Si ocurre un error, retornar null y manejar la imagen predeterminada en el UI
-      debugPrint('Error al obtener la URL de la imagen: $e');
+      await Funciones.saveDebugInfo('Error al obtener la URL de la imagen: $e');
       return null;
     }
   }
@@ -722,9 +689,8 @@ class FirestoreService {
           .collection('comentarios')
           .doc(commentId)
           .delete();
-      print('Comentario eliminado con éxito.');
     } catch (e) {
-      print('Error al eliminar el comentario: $e');
+      await Funciones.saveDebugInfo('Error al eliminar el comentario: $e');
     }
   }
 
@@ -743,7 +709,7 @@ class FirestoreService {
             'Desconocido'; // Recuperar el campo 'pais'
       }
     } catch (e) {
-      print('Error al obtener el país del usuario: $e');
+      await Funciones.saveDebugInfo('Error al obtener el país del usuario: $e');
     }
     return 'Desconocido'; // Devolver 'Desconocido' en caso de error
   }
@@ -778,10 +744,8 @@ class FirestoreService {
 
       // Actualizar los datos en Firestore
       await _db.collection('items').doc(itemId).update(dataToUpdate);
-
-      print("Publicación actualizada con éxito");
     } catch (e) {
-      print("Error al actualizar la publicación: $e");
+      await Funciones.saveDebugInfo("Error al actualizar la publicación: $e");
     }
   }
 
@@ -789,9 +753,8 @@ class FirestoreService {
     try {
       // Obtener la referencia de la imagen en Firebase Storage
       await FirebaseStorage.instance.refFromURL(imageUrl).delete();
-      print("Imagen anterior eliminada con éxito.");
     } catch (e) {
-      print("Error al eliminar la imagen anterior: $e");
+      await Funciones.saveDebugInfo("Error al eliminar la imagen anterior: $e");
     }
   }
 
@@ -830,7 +793,7 @@ class FirestoreService {
         return 'assets/images/perfil.png';
       }
     } catch (e) {
-      print('Error al cargar la imagen de perfil: $e');
+      await Funciones.saveDebugInfo('Error al cargar la imagen de perfil: $e');
       return 'assets/images/perfil.png'; // En caso de error, usar imagen por defecto
     }
   }
@@ -839,10 +802,9 @@ class FirestoreService {
   Future<List<String>> cargarPaises() async {
     try {
       List<String> paises = await getPaises();
-      Funciones.SeqLog('information', paises.toString());
       return paises;
     } catch (e) {
-      Funciones.SeqLog('error', 'Error al cargar países: $e');
+      await Funciones.saveDebugInfo('Error al cargar países: $e');
       return [];
     }
   }
@@ -878,23 +840,22 @@ class FirestoreService {
             'fecha': DateTime.now(),
           });
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('¡Puntaje guardado correctamente!')),
-            );
+            showCustomSnackBar(
+                context, '¡Puntaje guardado correctamente!', SnackBarType.error,
+                durationInMilliseconds: 3000);
           }
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error al guardar puntaje: $e')),
-          );
+          showCustomSnackBar(
+              context, 'Error al guardar puntaje: $e', SnackBarType.error,
+              durationInMilliseconds: 3000);
         }
       }
     } else {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuario no logueado')),
-        );
+        showCustomSnackBar(context, 'Usuario no logueado', SnackBarType.error,
+            durationInMilliseconds: 3000);
       }
     }
   }
@@ -907,7 +868,6 @@ class FirestoreService {
         throw Exception('Usuario no logueado');
       }
       String userEmail = user.email!;
-      print('Email del usuario logueado: $userEmail');
 
       // Consultar Firestore para obtener el puntaje del usuario usando el campo "email"
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -922,24 +882,26 @@ class FirestoreService {
         Map<String, dynamic> userData =
             userScoreSnapshot.data() as Map<String, dynamic>;
 
-        print('Datos del documento: $userData');
-
         // Verificar si el campo "puntos" está presente en los datos
         if (userData.containsKey('puntos')) {
-          print('Puntaje encontrado: ${userData['puntos']}');
+          await Funciones.saveDebugInfo(
+              'Puntaje encontrado: ${userData['puntos']}');
           return userData['puntos'] as int;
         } else {
-          print('El campo "puntos" no se encuentra en los datos.');
+          await Funciones.saveDebugInfo(
+              'El campo "puntos" no se encuentra en los datos.');
         }
       } else {
-        print('No se encontró ningún documento para el email: $userEmail');
+        await Funciones.saveDebugInfo(
+            'No se encontró ningún documento para el email: $userEmail');
       }
 
       // Retornar 0 si no hay puntaje guardado o el documento no existe
       return 0;
     } catch (e) {
       // Manejar errores y retornar 0 en caso de fallo
-      print('Error al obtener el puntaje del usuario: $e');
+      await Funciones.saveDebugInfo(
+          'Error al obtener el puntaje del usuario: $e');
       return 0;
     }
   }
@@ -952,35 +914,63 @@ class FirestoreService {
 
     Map<String, int> resumen = {};
     for (var doc in querySnapshot.docs) {
-      String material = doc['material'];
+      String material = doc['item'];
       resumen[material] = (resumen[material] ?? 0) + 1;
     }
     return resumen;
   }
 
   Future<Map<String, int>> getTotalesPorFecha(
-    String email, DateTime inicio, DateTime fin) async {
-  // Obtener documentos del rango de fechas y del usuario especificado
-  final query = await FirebaseFirestore.instance
-      .collection('historial')
-      .where('email', isEqualTo: email)
-      .where('fecha', isGreaterThanOrEqualTo: inicio)
-      .where('fecha', isLessThanOrEqualTo: fin)
-      .get();
+      String email, DateTime inicio, DateTime fin) async {
+    // Obtener documentos del rango de fechas y del usuario especificado
+    final query = await FirebaseFirestore.instance
+        .collection('historial')
+        .where('email', isEqualTo: email)
+        .where('fecha', isGreaterThanOrEqualTo: inicio)
+        .where('fecha', isLessThanOrEqualTo: fin)
+        .get();
 
-  // Crear un mapa para contar los elementos agrupados por material
-  final Map<String, int> totales = {};
-  for (var doc in query.docs) {
-    final material = doc['material'] as String;
+    // Crear un mapa para contar los elementos agrupados por material
+    final Map<String, int> totales = {};
+    for (var doc in query.docs) {
+      final material = doc['item'] as String;
 
-    if (!totales.containsKey(material)) {
-      totales[material] = 0;
+      if (!totales.containsKey(material)) {
+        totales[material] = 0;
+      }
+      // Incrementar el conteo por cada documento del material
+      totales[material] = totales[material]! + 1;
     }
-    // Incrementar el conteo por cada documento del material
-    totales[material] = totales[material]! + 1;
+
+    return totales;
   }
 
-  return totales;
-}
+  /// Recupera las recomendaciones del usuario ordenadas por timestamp.
+  Stream<QuerySnapshot> getUserRecommendations(String userEmail) {
+    return _db
+        .collection('recommendations')
+        .where('userEmail', isEqualTo: userEmail)
+        .snapshots();
+  }
 
+  Future<void> deleteUserRecommendation(String userEmail, String docId) async {
+    try {
+      final path = 'recommendations/$docId';
+      final docRef = FirebaseFirestore.instance.doc(path);
+
+      // Verifica si el documento existe
+      final docSnapshot = await docRef.get();
+      if (!docSnapshot.exists) {
+        debugPrint('El documento con ID $docId no existe en Firestore.');
+        return;
+      }
+
+      debugPrint('Eliminando documento en ruta: $path');
+      await docRef.delete();
+      debugPrint('Documento eliminado correctamente en Firestore.');
+    } catch (e) {
+      debugPrint('Error al eliminar documento: $e');
+      rethrow;
+    }
+  }
 }

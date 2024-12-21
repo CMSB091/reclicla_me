@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/ResumenGrafico.dart';
@@ -10,10 +9,10 @@ import 'package:visibility_detector/visibility_detector.dart';
 class HuellaCarbonoScreen extends StatefulWidget {
   final Map<String, int> resumen;
 
-  const HuellaCarbonoScreen({Key? key, required this.resumen})
-      : super(key: key);
+  const HuellaCarbonoScreen({super.key, required this.resumen});
 
   @override
+  // ignore: library_private_types_in_public_api
   _HuellaCarbonoScreenState createState() => _HuellaCarbonoScreenState();
 }
 
@@ -43,15 +42,15 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
           'Huella de Carbono',
           style: TextStyle(
             fontFamily: 'Artwork',
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
+            fontWeight: FontWeight.w400,
+            fontSize: 24,
           ),
         ),
         backgroundColor: Colors.green.shade200,
         leading: IconButton(
           icon: const FaIcon(FontAwesomeIcons.house, color: Colors.black),
           onPressed: () {
-            Navigator.of(context).pop();
+            Funciones.navigateToHome(context);
           },
         ),
         actions: [
@@ -72,9 +71,10 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
             return Center(
               child: Text(
                 'Error: ${snapshot.error}',
-                style: GoogleFonts.montserrat(
-                  fontSize: 18,
-                  color: Colors.red,
+                style: const TextStyle(
+                  fontFamily: 'Artwork',
+                  fontWeight: FontWeight.normal,
+                  fontSize: 22,
                 ),
               ),
             );
@@ -116,16 +116,21 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
                             Text(
                               descSnapshot.data ??
                                   'No se pudo obtener la información.',
-                              style: GoogleFonts.montserrat(fontSize: 14),
+                              style: const TextStyle(
+                                fontFamily: 'NotoSans',
+                                fontWeight: FontWeight.normal,
+                                fontSize: 14,
+                              ),
                             ),
                           );
                         }
                       },
                     ),
                     const SizedBox(height: 20),
-                    Text(
+                    const Text(
                       'Impacto de tu Reciclaje',
-                      style: GoogleFonts.montserrat(
+                      style: TextStyle(
+                        fontFamily: 'Artwork',
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
@@ -136,25 +141,36 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
                       'Detalles del Informe',
                       RichText(
                         text: TextSpan(
-                          style: GoogleFonts.montserrat(
+                          style: const TextStyle(
+                            fontFamily: 'Artwork',
+                            fontWeight: FontWeight.bold,
                             fontSize: 14,
-                            color: Colors.black,
                           ),
                           children: [
                             const TextSpan(
                               text:
                                   'Con tu reciclaje has reducido un estimado de ',
+                                  style: TextStyle(
+                                  fontFamily: 'Artwork',
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18,
+                                  color: Colors.black),
                             ),
                             TextSpan(
                               text: '${reduccionTotal.toStringAsFixed(2)}%',
-                              style: GoogleFonts.montserrat(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green,
-                              ),
+                              style: const TextStyle(
+                                  fontFamily: 'Artwork',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 22,
+                                  color: Colors.green),
                             ),
                             const TextSpan(
                               text: ' de tu huella de carbono en el año.',
+                              style: TextStyle(
+                                  fontFamily: 'Artwork',
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 18,
+                                  color: Colors.black),
                             ),
                           ],
                         ),
@@ -234,7 +250,7 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
   }
 
   void _mostrarModalDeAyuda(BuildContext context) {
-    final Future<String> _ayudaFuture = Funciones.getChatGPTResponse(
+    final Future<String> ayudaFuture = Funciones.getChatGPTResponse(
         "Explica de manera breve y clara cómo se calculan los porcentajes de ahorro de carbono en función del reciclaje de materiales.");
 
     showDialog(
@@ -243,7 +259,7 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
         return AlertDialog(
           title: const Text('¿Cómo se calculan los porcentajes?'),
           content: FutureBuilder<String>(
-            future: _ayudaFuture,
+            future: ayudaFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const Center(
@@ -260,7 +276,11 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
                 return SingleChildScrollView(
                   child: Text(
                     snapshot.data ?? 'No se pudo obtener la información.',
-                    style: GoogleFonts.montserrat(fontSize: 14),
+                    style: const TextStyle(
+                      fontFamily: 'NotoSans',
+                      fontWeight: FontWeight.normal,
+                      fontSize: 14,
+                    ),
                   ),
                 );
               }
@@ -289,7 +309,8 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
           children: [
             Text(
               titulo,
-              style: GoogleFonts.montserrat(
+              style: const TextStyle(
+                fontFamily: 'Artwork',
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),

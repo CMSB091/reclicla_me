@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/servicios/dynamicLinkService.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
@@ -69,6 +68,7 @@ class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _LoginPageState createState() => _LoginPageState();
 }
 
@@ -91,8 +91,6 @@ class _LoginPageState extends State<LoginPage> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
       try {
-        Funciones.SeqLog('information',
-            'Iniciando sesión con el email: ${_emailController.text}');
         // ignore: unused_local_variable
         UserCredential userCredential =
             await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -100,10 +98,9 @@ class _LoginPageState extends State<LoginPage> {
           password: _passwordController.text,
         );
 
+        // ignore: unused_local_variable
         final nombreUsuario =
             await _firestoreService.getUserName(_emailController.text);
-        Funciones.SeqLog('information',
-            'Sesión iniciada correctamente para el usuario: $nombreUsuario');
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -118,7 +115,6 @@ class _LoginPageState extends State<LoginPage> {
             : e.code == 'wrong-password'
                 ? 'Contraseña incorrecta.'
                 : 'Error en la autenticación.';
-        Funciones.SeqLog('error', 'Error en la autenticación: $message');
         showCustomSnackBar(context,message,SnackBarType.error);
       } finally {
         if (mounted) {

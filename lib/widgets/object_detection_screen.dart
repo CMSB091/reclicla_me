@@ -217,8 +217,10 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                         nextScreen: NoticiasChatGPT(
                           initialPrompt:
                               "Quiero que me recomiendes cómo reciclar este producto escaneado: $label",
+                              detectedObject: label
                         ),
                         lottieAnimation: 'assets/animations/lottie-robot.json',
+                        
                       ),
                     ),
                   );

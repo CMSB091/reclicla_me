@@ -134,7 +134,8 @@ class _CameraDetectionState extends State<CameraDetection> {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                NoticiasChatGPT(detectedObject: label, initialPrompt: 'initialPrompt: "Quiero que me recomiendes cómo reciclar este producto escaneado: $label}',),
+                                NoticiasChatGPT(initialPrompt: 'initialPrompt: "Quiero que me recomiendes cómo reciclar este producto escaneado: $label}',
+                                detectedObject: label,),
                           ),
                         );
                       } else {

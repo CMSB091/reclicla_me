@@ -159,7 +159,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
         });
       }
     } catch (e) {
-      Funciones.SeqLog('error', 'Error al cargar ciudades: $e');
+      await Funciones.saveDebugInfo('Error al cargar ciudades: $e');
     }
   }
 
@@ -514,7 +514,10 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                             _mostrarCiudades(_paisController
                                 .text); // Llamar a la función que carga las ciudades
                           } else {
-                            showCustomSnackBar(context,'Selecciona un país primero.',SnackBarType.error);
+                            showCustomSnackBar(
+                                context,
+                                'Selecciona un país primero.',
+                                SnackBarType.error);
                           }
                         },
                         child: AbsorbPointer(

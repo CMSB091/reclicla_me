@@ -7,16 +7,18 @@ import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
+import 'package:recila_me/widgets/historialPage.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:recila_me/widgets/historialPage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NoticiasChatGPT extends StatefulWidget {
   final String initialPrompt;
+  final String detectedObject;
 
   // ignore: use_super_parameters
   const NoticiasChatGPT(
-      {Key? key, required this.initialPrompt, String? detectedObject})
+      {Key? key, required this.initialPrompt, required this.detectedObject})
       : super(key: key);
 
   @override
@@ -54,7 +56,17 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   }
 
   Future<void> _saveRecommendation() async {
-    try {
+    Navigator.push(
+   context,
+   MaterialPageRoute(
+     builder: (context) => HistorialPage(
+       detectedItem: widget.detectedObject,
+       initialDescription: chatResponse.trim(),
+     ),
+   ),
+);
+
+    /*try {
       final user = FirebaseAuth.instance.currentUser;
 
       if (user == null) {
@@ -77,19 +89,19 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         return;
       }
 
-      // Extrae solo el ítem detectado del initialPrompt
-      final detectedItem = widget.initialPrompt.split(': ').last.trim();
+      await FirebaseFirestore.instance.collection('recommendations').add({
+        'recommendation': chatResponse,
+        'userEmail': user.email,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
 
-      // Navega a la página de Historial con los datos relevantes
-      Navigator.push(
-        context,
+      
         MaterialPageRoute(
           builder: (context) => HistorialPage(
-            detectedItem: detectedItem, // Pasa solo el ítem detectado
+            detectedItem: widget.detectedObject, // Pasa solo el ítem detectado
             initialDescription: chatResponse.trim(), // Respuesta del ChatGPT
           ),
-        ),
-      );
+        );
     } catch (e) {
       // Mostrar un mensaje de error si algo falla
       showCustomSnackBar(
@@ -97,13 +109,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         'Error al guardar recomendación: $e',
         SnackBarType.error,
       );
-    }
-  }
-
-  void _setupTextListeners() {
-    _controller.addListener(() {
-      setState(() {}); // Redibujar para actualizar el contador
-    });
+    }*/
   }
 
   void _startTypingAnimation() {
@@ -402,14 +408,16 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                 },
               ),
             ),
-            if (chatResponse.isNotEmpty)
+            if (chatResponse
+                .isNotEmpty) // Muestra el botón solo si hay una respuesta del chat
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ElevatedButton(
                   onPressed: _saveRecommendation,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 40, vertical: 15),
                   ),
                   child: const Text(
                     'Guardar Recomendación',
