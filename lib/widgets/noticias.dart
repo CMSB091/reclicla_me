@@ -101,12 +101,6 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     }
   }
 
-  void _setupTextListeners() {
-    _controller.addListener(() {
-      setState(() {}); // Redibujar para actualizar el contador
-    });
-  }
-
   void _startTypingAnimation() {
     setState(() {
       isTyping = true;

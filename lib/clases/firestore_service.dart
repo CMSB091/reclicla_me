@@ -914,7 +914,7 @@ class FirestoreService {
 
     Map<String, int> resumen = {};
     for (var doc in querySnapshot.docs) {
-      String material = doc['material'];
+      String material = doc['item'];
       resumen[material] = (resumen[material] ?? 0) + 1;
     }
     return resumen;
@@ -933,7 +933,7 @@ class FirestoreService {
     // Crear un mapa para contar los elementos agrupados por material
     final Map<String, int> totales = {};
     for (var doc in query.docs) {
-      final material = doc['material'] as String;
+      final material = doc['item'] as String;
 
       if (!totales.containsKey(material)) {
         totales[material] = 0;
