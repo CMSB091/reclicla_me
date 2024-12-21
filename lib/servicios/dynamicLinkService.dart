@@ -10,7 +10,7 @@ class DynamicLinkService {
     FirebaseDynamicLinks.instance.onLink.listen((dynamicLinkData) {
       _handleDeepLink(dynamicLinkData, context);
     }).onError((error) {
-      print('Error handling dynamic link: $error');
+      debugPrint('Error handling dynamic link: $error');
     });
   }
 

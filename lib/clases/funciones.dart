@@ -1181,7 +1181,7 @@ class Funciones {
       });
       return true;
     } catch (e) {
-      print('Error al guardar feedback: $e');
+      debugPrint('Error al guardar feedback: $e');
       return false;
     }
   }

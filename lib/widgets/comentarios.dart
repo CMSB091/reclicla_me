@@ -36,7 +36,7 @@ class _ComentariosState extends State<Comentarios> {
     final packageInfo = await PackageInfo.fromPlatform();
     setState(() {
       _buildNumber = packageInfo.buildNumber;
-      print('hola ${packageInfo.version}');
+      debugPrint('hola ${packageInfo.version}');
     });
   }
 

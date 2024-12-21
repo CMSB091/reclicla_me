@@ -139,7 +139,7 @@ class _CameraDetectionState extends State<CameraDetection> {
                           ),
                         );
                       } else {
-                        print("Error: No se detectó ningún objeto.");
+                        debugPrint("Error: No se detectó ningún objeto.");
                       }
                     },
                     child: const Text('Consultar sobre reciclaje'),
