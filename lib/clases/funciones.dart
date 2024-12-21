@@ -29,6 +29,7 @@ import 'package:recila_me/widgets/resumenes.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:image/image.dart' as img;
 
 final FirestoreService firestoreService = FirestoreService();
 
@@ -168,7 +169,8 @@ class Funciones {
           jsonDecode(utf8.decode(response.bodyBytes));
       return data['choices'][0]['message']['content'];
     } else {
-      await Funciones.saveDebugInfo('Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
+      await Funciones.saveDebugInfo(
+          'Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
       throw Exception('Failed to load ChatGPT response');
     }
   }
@@ -214,7 +216,8 @@ class Funciones {
       final imageUrlGenerated = data['data'][0]['url'];
       return imageUrlGenerated;
     } else {
-      await Funciones.saveDebugInfo('Error al generar la imagen: ${response.statusCode}');
+      await Funciones.saveDebugInfo(
+          'Error al generar la imagen: ${response.statusCode}');
       return '';
     }
   }
@@ -278,7 +281,8 @@ class Funciones {
         telefonoController.text = userData['telefono'] ?? '';
       }
     } catch (e) {
-      await Funciones.saveDebugInfo('Se ha producido un error al cargar los datos del usuario $e');
+      await Funciones.saveDebugInfo(
+          'Se ha producido un error al cargar los datos del usuario $e');
     } finally {
       setLoadingState(false);
     }
@@ -357,15 +361,14 @@ class Funciones {
         } else {
           if (context.mounted) {
             showCustomSnackBar(
-            context, 'Error al guardar los datos.', SnackBarType.error,
-            durationInMilliseconds: 3000);
+                context, 'Error al guardar los datos.', SnackBarType.error,
+                durationInMilliseconds: 3000);
           }
         }
       } catch (e) {
         if (context.mounted) {
-          showCustomSnackBar(
-            context, 'Error: $e', SnackBarType.error,
-            durationInMilliseconds: 3000);
+          showCustomSnackBar(context, 'Error: $e', SnackBarType.error,
+              durationInMilliseconds: 3000);
         }
       } finally {
         setSavingState(false);
@@ -397,7 +400,9 @@ class Funciones {
 
         // Mostrar éxito
         showCustomSnackBar(
-            context, 'Imagen de perfil actualizada correctamente', SnackBarType.confirmation,
+            context,
+            'Imagen de perfil actualizada correctamente',
+            SnackBarType.confirmation,
             durationInMilliseconds: 3000);
       } catch (e) {
         // Mostrar error
@@ -460,8 +465,8 @@ class Funciones {
 
       // Verificar si el país está en la lista de códigos y agregar el código de país si no está presente
       if (!countryCodes.containsKey(country)) {
-        showCustomSnackBar(
-            context, 'El país no está soportado para WhatsApp', SnackBarType.error,
+        showCustomSnackBar(context, 'El país no está soportado para WhatsApp',
+            SnackBarType.error,
             durationInMilliseconds: 3000);
         return; // Si no hay código para el país, salir de la función
       }
@@ -484,14 +489,16 @@ class Funciones {
         await launchUrl(whatsappWebUri, mode: LaunchMode.externalApplication);
       } else {
         showCustomSnackBar(
-            context, 'No se pudo abrir WhatsApp con el esquema web. Asegúrate de que está instalado.', SnackBarType.error,
+            context,
+            'No se pudo abrir WhatsApp con el esquema web. Asegúrate de que está instalado.',
+            SnackBarType.error,
             durationInMilliseconds: 3000);
       }
     } catch (e) {
       // Manejo de errores
       showCustomSnackBar(
-            context, 'Error al intentar abrir WhatsApp: $e', SnackBarType.error,
-            durationInMilliseconds: 3000);
+          context, 'Error al intentar abrir WhatsApp: $e', SnackBarType.error,
+          durationInMilliseconds: 3000);
     }
   }
 
@@ -506,8 +513,8 @@ class Funciones {
     } else {
       // Mostrar SnackBar si no se selecciona imagen
       showCustomSnackBar(
-            context, 'No se seleccionó ninguna imagen.', SnackBarType.error,
-            durationInMilliseconds: 3000);
+          context, 'No se seleccionó ninguna imagen.', SnackBarType.error,
+          durationInMilliseconds: 3000);
       return null; // Devolver null si no se seleccionó ninguna imagen
     }
   }
@@ -626,7 +633,8 @@ class Funciones {
       final file = File(filePath);
       await file.writeAsString(json.encode(content), flush: true);
     } catch (e) {
-      await Funciones.saveDebugInfo("Error al escribir el archivo de debug: $e");
+      await Funciones.saveDebugInfo(
+          "Error al escribir el archivo de debug: $e");
     }
   }
 
@@ -662,7 +670,8 @@ class Funciones {
       // Escribe el archivo con la nueva entrada
       await file.writeAsString(json.encode(debugLog), flush: true);
     } catch (e) {
-      await Funciones.saveDebugInfo("Error al guardar la información de depuración: $e");
+      await Funciones.saveDebugInfo(
+          "Error al guardar la información de depuración: $e");
     }
   }
 
@@ -786,10 +795,12 @@ class Funciones {
           .get();
 
       // Verifica si hay documentos en el snapshot
-      await Funciones.saveDebugInfo('Cantidad de documentos recuperados: ${snapshot.docs.length}');
+      await Funciones.saveDebugInfo(
+          'Cantidad de documentos recuperados: ${snapshot.docs.length}');
 
       if (snapshot.docs.isEmpty) {
-        await Funciones.saveDebugInfo('No se encontraron documentos para el email proporcionado.');
+        await Funciones.saveDebugInfo(
+            'No se encontraron documentos para el email proporcionado.');
       } else {
         // Extrae los valores únicos de la columna 'material'
         Set<String> uniqueMaterials =
@@ -818,7 +829,8 @@ class Funciones {
       // La cantidad de documentos en el snapshot representa la cantidad de registros
       count = snapshot.docs.length;
     } catch (e) {
-      await Funciones.saveDebugInfo('Error contando registros para el material $material: $e');
+      await Funciones.saveDebugInfo(
+          'Error contando registros para el material $material: $e');
     }
 
     return count;
@@ -830,7 +842,8 @@ class Funciones {
       String? userEmail = FirebaseAuth.instance.currentUser?.email;
       return userEmail;
     } catch (e) {
-      await Funciones.saveDebugInfo('Error obteniendo el email del usuario: $e');
+      await Funciones.saveDebugInfo(
+          'Error obteniendo el email del usuario: $e');
       return null;
     }
   }
@@ -1262,7 +1275,8 @@ class Funciones {
       await mostrarDescargaEnSistema(filePath);
     } catch (e) {
       // Manejo de errores
-      showCustomSnackBar(context,'Error al guardar el PDF: $e',SnackBarType.error);
+      showCustomSnackBar(
+          context, 'Error al guardar el PDF: $e', SnackBarType.error);
     }
   }
 
@@ -1287,5 +1301,50 @@ class Funciones {
       debugPrint('Error al notificar descarga al sistema: $e');
     }
   }
-}
 
+  Future<File> compressImage(File imageFile, {int quality = 75}) async {
+    try {
+      // Leer la imagen original como bytes
+      final imageBytes = await imageFile.readAsBytes();
+
+      // Decodificar la imagen usando el paquete `image`
+      final decodedImage = img.decodeImage(imageBytes);
+
+      if (decodedImage == null) {
+        throw Exception('No se pudo decodificar la imagen.');
+      }
+
+      // Guardar la imagen comprimida en un archivo temporal
+      final tempDir = Directory.systemTemp;
+      final compressedFile = File('${tempDir.path}/compressed_image.jpg');
+
+      // Exportar la imagen con calidad ajustada
+      await compressedFile.writeAsBytes(
+        img.encodeJpg(decodedImage, quality: quality),
+      );
+
+      return compressedFile;
+    } catch (e) {
+      debugPrint('Error al comprimir la imagen: $e');
+      throw Exception('Error al comprimir la imagen.');
+    }
+  }
+
+  Future<ImageProvider?> compressNetworkImage(String imageUrl) async {
+    try {
+      // Descargar la imagen como bytes
+      final response = await http.get(Uri.parse(imageUrl));
+      if (response.statusCode == 200) {
+        // Decodificar y comprimir la imagen
+        final decodedImage = img.decodeImage(response.bodyBytes);
+        if (decodedImage != null) {
+          final compressedBytes = img.encodeJpg(decodedImage, quality: 75);
+          return MemoryImage(Uint8List.fromList(compressedBytes));
+        }
+      }
+    } catch (e) {
+      debugPrint('Error al comprimir la imagen de red: $e');
+    }
+    return null;
+  }
+}

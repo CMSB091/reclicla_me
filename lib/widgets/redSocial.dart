@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadUserEmail(String email) async {
+
     final nombre = await firestoreService.getUserName(email);
     setState(() {
       nombreUsuario = nombre;
