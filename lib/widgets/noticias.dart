@@ -8,9 +8,6 @@ import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/historialPage.dart';
-import 'package:recila_me/widgets/showCustomSnackBar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class NoticiasChatGPT extends StatefulWidget {
   final String initialPrompt;
@@ -57,60 +54,26 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
 
   Future<void> _saveRecommendation() async {
     Navigator.push(
-   context,
-   MaterialPageRoute(
-     builder: (context) => HistorialPage(
-       detectedItem: widget.detectedObject,
-       initialDescription: chatResponse.trim(),
-     ),
-   ),
-);
-
-    /*try {
-      final user = FirebaseAuth.instance.currentUser;
-
-      if (user == null) {
-        // Mostrar error si no hay un usuario logueado
-        showCustomSnackBar(
-          context,
-          'No se encontró un usuario logueado.',
-          SnackBarType.error,
-        );
-        return;
-      }
-
-      // Validar que haya una recomendación del chat para guardar
-      if (chatResponse.trim().isEmpty) {
-        showCustomSnackBar(
-          context,
-          'No hay recomendación para guardar.',
-          SnackBarType.error,
-        );
-        return;
-      }
-
-      await FirebaseFirestore.instance.collection('recommendations').add({
-        'recommendation': chatResponse,
-        'userEmail': user.email,
-        'timestamp': DateTime.now().toIso8601String(),
-      });
-
-      
-        MaterialPageRoute(
-          builder: (context) => HistorialPage(
-            detectedItem: widget.detectedObject, // Pasa solo el ítem detectado
-            initialDescription: chatResponse.trim(), // Respuesta del ChatGPT
-          ),
-        );
-    } catch (e) {
-      // Mostrar un mensaje de error si algo falla
-      showCustomSnackBar(
-        context,
-        'Error al guardar recomendación: $e',
-        SnackBarType.error,
-      );
-    }*/
+      context,
+      MaterialPageRoute(
+        builder: (context) => HistorialPage(
+          detectedItem: widget.detectedObject,
+          initialDescription: chatResponse.trim(),
+        ),
+      ),
+    );
   }
+
+  void mostrarAyudaGeneral(BuildContext context) {
+      Funciones.mostrarModalDeAyuda(
+        context: context,
+        titulo: 'Ayuda',
+        mensaje:
+            'Escribe una consulta al chatBot especializado en reciclaje.\n'
+            'Si tienes dudas específicas, consulta las secciones correspondientes.',
+        textoBoton: 'Entendido',
+      );
+    }
 
   void _startTypingAnimation() {
     setState(() {
@@ -215,115 +178,6 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     });
   }
 
-  void _loadSelectedChat(Map<String, dynamic> chat) {
-    setState(() {
-      chatHistory.clear();
-      if (chat['userPrompt'] != null && chat['chatResponse'] != null) {
-        chatHistory.add({'message': chat['userPrompt'], 'isUser': true});
-        chatHistory.add({'message': chat['chatResponse'], 'isUser': false});
-      } else {
-        Funciones.saveDebugInfo(
-            'Datos del chat seleccionados están incompletos');
-      }
-    });
-  }
-
-  Future<void> _showChatHistory() async {
-    try {
-      List<Map<String, dynamic>> chatHistoryList =
-          await firestoreService.fetchChatHistoryByEmail(userEmail);
-
-      if (chatHistoryList.isEmpty) {
-        if (mounted) {
-          showCustomSnackBar(
-              context,
-              'No se encontraron interacciones previas para este usuario.',
-              SnackBarType.error);
-        }
-        return;
-      }
-
-      if (mounted) {
-        await showDialog(
-          context: context,
-          builder: (context) {
-            return StatefulBuilder(
-              builder: (context, setState) {
-                return AlertDialog(
-                  title: const Text('Historial de Chat'),
-                  content: SizedBox(
-                    width: double.maxFinite,
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      itemCount: chatHistoryList.length,
-                      itemBuilder: (context, index) {
-                        // Validación para evitar errores de rango
-                        if (index < 0 ||
-                            index >= chatHistory.length + (isTyping ? 3 : 2)) {
-                          return const SizedBox.shrink();
-                        }
-
-                        if (index == chatHistory.length + (isTyping ? 2 : 1)) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(
-                                vertical: 8.0, horizontal: 16.0),
-                            child: Text(
-                              '¡Hola! Soy Recyclops, estoy aquí para ayudarte a reciclar de manera creativa y sostenible.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontFamily: 'Artwork',
-                                  fontSize: 22,
-                                  color: Colors.black54,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          );
-                        }
-
-                        if (index == chatHistory.length + (isTyping ? 1 : 0)) {
-                          return Center(
-                            child: Lottie.asset(
-                              'assets/animations/lottie-chat-bot.json',
-                              width: 500,
-                              height: 500,
-                              repeat: true,
-                            ),
-                          );
-                        }
-
-                        if (isTyping && index == 0) {
-                          return ChatBubble(
-                            message: typingIndicator,
-                            isUser: false,
-                          );
-                        }
-
-                        final message = chatHistory[chatHistory.length -
-                            1 -
-                            (isTyping ? index - 1 : index)];
-                        return ChatBubble(
-                          message: message['message'] ?? 'Mensaje vacío',
-                          isUser: message['isUser'] as bool,
-                        );
-                      },
-                    ),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        showCustomSnackBar(
-          context,
-          'Error al recuperar el historial de chat: $e',
-          SnackBarType.error,
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -347,10 +201,11 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         ),
         actions: [
           IconButton(
-            icon: const FaIcon(FontAwesomeIcons.clockRotateLeft,
-                color: Colors.black),
+            icon:
+                // ignore: deprecated_member_use
+                const FaIcon(FontAwesomeIcons.infoCircle, color: Colors.black),
             onPressed: () {
-              _showChatHistory();
+               mostrarAyudaGeneral(context);
             },
           ),
         ],
