@@ -850,33 +850,51 @@ class Funciones {
 
   static Future<void> exportToExcel(
       Map<String, int> residuos, Function(String) showSuccessMessage) async {
-    var status = await Permission.storage.request();
-
-    if (status.isGranted) {
+    try {
+      // Crear el archivo Excel
       var excel = Excel.createExcel();
       Sheet sheetObject = excel['Resumen'];
 
-      sheetObject.appendRow(['Material', 'Cantidad']);
+      sheetObject.appendRow(['Item', 'Cantidad']);
       residuos.forEach((material, cantidad) {
         sheetObject.appendRow([material, cantidad]);
       });
       sheetObject.appendRow(['Total', residuos.values.reduce((a, b) => a + b)]);
 
-      final directory = Directory('/storage/emulated/0/Download');
-      if (!directory.existsSync()) {
-        directory.createSync(recursive: true);
+      // Obtener los datos binarios del archivo Excel
+      Uint8List? excelBytes = excel.save() as Uint8List?;
+
+      if (excelBytes == null) {
+        throw Exception('No se pudo generar el archivo Excel.');
       }
-      String filePath = '${directory.path}/resumen_reciclado.xlsx';
 
-      File(filePath)
-        ..createSync(recursive: true)
-        ..writeAsBytesSync(excel.save()!);
+      if (Platform.isAndroid) {
+        // Usar MediaStore para guardar en la carpeta Downloads
+        final directory = Directory('/storage/emulated/0/Download');
+        final filePath = '${directory.path}/resumen_reciclado.xlsx';
 
-      showSuccessMessage(filePath);
-    } else if (status.isPermanentlyDenied) {
-      openAppSettings();
-    } else {
-      throw Exception('Permiso de almacenamiento denegado');
+        if (!directory.existsSync()) {
+          directory.createSync(recursive: true);
+        }
+
+        final file = File(filePath);
+        file.writeAsBytesSync(excelBytes);
+
+        showSuccessMessage('Archivo guardado correctamente en Descargas.');
+      } else {
+        // Para otras plataformas
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/resumen_reciclado.xlsx';
+
+        final file = File(filePath);
+        file.writeAsBytesSync(excelBytes);
+
+        showSuccessMessage(
+            'Archivo guardado correctamente en Documentos: $filePath');
+      }
+    } catch (e, stacktrace) {
+      debugPrint('Error al guardar el archivo: $e\n$stacktrace');
+      throw Exception('Error al guardar el archivo.');
     }
   }
 
@@ -975,13 +993,14 @@ class Funciones {
     Uint8List chartImageBytes, // Nueva imagen del gráfico
     Function(String) showSuccessMessage,
   ) async {
-    var status = await Permission.storage.request();
-
-    if (!status.isGranted) {
-      throw Exception('Permiso de almacenamiento denegado');
-    }
-
     try {
+      // Solicitar permisos
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        throw Exception('Permiso de almacenamiento denegado');
+      }
+
+      // Crear el documento PDF
       final pdf = pw.Document();
 
       // Agregar contenido al PDF
@@ -1050,9 +1069,7 @@ class Funciones {
       );
 
       // Guardar el archivo PDF
-      const downloadPath = '/storage/emulated/0/Download';
-      final directory = Directory(downloadPath);
-
+      final directory = Directory('/storage/emulated/0/Download');
       if (!directory.existsSync()) {
         directory.createSync(recursive: true);
       }
@@ -1069,8 +1086,7 @@ class Funciones {
     } catch (e) {
       throw Exception('Error al generar el PDF: $e');
     }
-  }
-
+  } 
   /// Obtiene una descripción de la huella de carbono utilizando IA.
   static Future<String> obtenerDescripcionHuella() async {
     const prompt = '''
@@ -1226,7 +1242,7 @@ class Funciones {
   }
 
   /// Genera un PDF y lo descarga en la carpeta Downloads
-  static Future<void> descargarPdf({
+ static Future<void> descargarPdf({
     required String titulo,
     required String contenido,
     required BuildContext context,
@@ -1272,7 +1288,7 @@ class Funciones {
       await file.writeAsBytes(await pdf.save());
 
       // Notificar al sistema de la descarga
-      await mostrarDescargaEnSistema(filePath);
+      showCustomSnackBar(context, 'PDF guardado en: $filePath', SnackBarType.confirmation);
     } catch (e) {
       // Manejo de errores
       showCustomSnackBar(
@@ -1346,5 +1362,16 @@ class Funciones {
       debugPrint('Error al comprimir la imagen de red: $e');
     }
     return null;
+  }
+
+  Future<bool> verificarPermisosAlmacenamiento() async {
+    // Verifica el permiso de almacenamiento.
+    if (await Permission.storage.isGranted) {
+      return true; // Permiso ya concedido.
+    }
+
+    // Solicita el permiso si no está concedido.
+    final status = await Permission.storage.request();
+    return status.isGranted; // Devuelve true si el permiso es concedido.
   }
 }

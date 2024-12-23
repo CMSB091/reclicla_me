@@ -257,15 +257,31 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
                   IconButton(
                     onPressed: () async {
                       if (resumen.isNotEmpty) {
-                        await Funciones.exportToExcel(
-                          resumen,
-                          (filePath) {
+                        final tienePermiso =
+                            await Funciones().verificarPermisosAlmacenamiento();
+                        if (tienePermiso) {
+                          try {
+                            await Funciones.exportToExcel(
+                              resumen,
+                              (filePath) {
+                                Funciones.showSnackBar(
+                                  context,
+                                  'El archivo se guardó correctamente en $filePath',
+                                );
+                              },
+                            );
+                          } catch (e) {
                             Funciones.showSnackBar(
                               context,
-                              'El archivo se guardó correctamente en $filePath',
+                              'Error al exportar el archivo: $e',
                             );
-                          },
-                        );
+                          }
+                        } else {
+                          Funciones.showSnackBar(
+                            context,
+                            'Permiso de almacenamiento denegado. No se puede exportar el archivo.',
+                          );
+                        }
                       } else {
                         Funciones.showSnackBar(
                           context,
