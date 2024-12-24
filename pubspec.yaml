@@ -207,6 +207,7 @@ flutter:
     - assets/icons/Papel.png
     - assets/icons/Residuos.png
     - assets/icons/excel_icon.png
+    - assets/images/fondoVerdeDisenho.jpg
 
   fonts:
     - family: Artwork

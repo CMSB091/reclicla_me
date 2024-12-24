@@ -303,172 +303,174 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const FaIcon(FontAwesomeIcons.arrowLeft),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          'Mini Juego de Residuos',
-          style: TextStyle(
-            fontFamily: 'Artwork',
-            fontSize: 22,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.green.shade200,
-        actions: [
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.info),
+    return BlurredBackground(
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const FaIcon(FontAwesomeIcons.arrowLeft),
             onPressed: () {
-              funciones.showGameRules(context,'Reglas del Juego','1. Arrastra los residuos hacia el basurero correcto (Plástico, Papel, Orgánico, Vidrio o Materiales Peligrosos).\n'
-              '2. Ganas puntos por cada residuo correctamente clasificado.\n'
-              '3. Pierdes puntos por clasificaciones incorrectas.\n'
-              '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n5. Diviértete Aprendiendo!!'); // Mostrar las reglas del juego
+              Navigator.pop(context);
             },
           ),
-        ],
-      ),
-      body: _showCountdown
-          ? BlurredBackground(
-              child: Center(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: TweenAnimationBuilder(
-                    key: ValueKey<String>(_countdownText),
-                    tween: Tween<double>(begin: 0.5, end: _textScale),
-                    duration: const Duration(milliseconds: 300),
-                    builder: (context, double scale, child) {
-                      return Transform.scale(
-                        scale: scale,
-                        child: Text(
-                          _countdownText,
-                          style: TextStyle(
-                            fontSize:
-                                _countdownText == '¡A reciclar!' ? 64 : 120,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Artwork',
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            )
-          : Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Mostrar puntos y tiempo restante
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'Puntos: ',
-                      style: TextStyle(
-                          fontSize: 24), // La palabra "Puntos" siempre en negro
-                    ),
-                    Text(
-                      '$puntos',
-                      style: TextStyle(
-                          fontSize: 24,
-                          color:
-                              _puntosColor), // Solo el número cambia de color
-                    ),
-                    const SizedBox(width: 40),
-                    Text(
-                      'Tiempo: ${_timeLeft}s',
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // Mostrar botón de empezar si el juego no ha comenzado
-                if (!_isGameStarted)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        icon: const FaIcon(FontAwesomeIcons.flag),
-                        onPressed: _startGame,
-                        label: const Text('Empezar Juego'),
-                      ),
-                      const SizedBox(width: 20),
-                      ElevatedButton.icon(
-                        icon: const FaIcon(FontAwesomeIcons.eye),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const PuntajesScreen(),
-                            ),
-                          );
-                        },
-                        label: const Text('Ver Puntajes'),
-                      )
-                    ],
-                  ),
-
-                if (_isGameStarted)
-                  Expanded(
-                    child: Center(
-                      child: Draggable<String>(
-                        data: residuoActual,
-                        feedback: buildResiduoWidget({
-                          'imagen': imagenActual
-                        }), // Usamos la función para construir el widget adecuado
-                        childWhenDragging:
-                            const FaIcon(FontAwesomeIcons.trashCan, size: 80),
-                        child: buildResiduoWidget({
-                          'imagen': imagenActual
-                        }), // Mostramos el widget según el residuo actual
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 20),
-                // Primera fila de basureros: Metales y Vidrio
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildBasurero('vidrio',
-                        'assets/images/miniJuego/green_trash_bin.png'),
-                    _buildBasurero('peligrosos',
-                        'assets/images/miniJuego/red_trash_bin.png'),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // Basureros centrados con tamaño ajustado
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center, // Los centramos manualmente
-                  children: [
-                    _buildBasurero(
-                        'papel', 'assets/images/miniJuego/blue_trash_bin.png'),
-                    _buildBasurero('plastico',
-                        'assets/images/miniJuego/yellow_trash_bin.png'),
-                    _buildBasurero('organico',
-                        'assets/images/miniJuego/maroon_trash_bin.png'),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                // Mostrar botón de guardar puntaje si el juego terminó
-                if (_showSaveButton)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      ElevatedButton.icon(
-                        icon: const FaIcon(FontAwesomeIcons.upload),
-                        onPressed: _saveScore,
-                        label: const Text('Guardar Puntaje'),
-                      ),
-                    ],
-                  ),
-              ],
+          title: const Text(
+            'Aprendo Jugando!!',
+            style: TextStyle(
+              fontFamily: 'Artwork',
+              fontSize: 22,
             ),
+          ),
+          centerTitle: true,
+          backgroundColor: Colors.green.shade200,
+          actions: [
+            IconButton(
+              icon: const FaIcon(FontAwesomeIcons.infoCircle),
+              onPressed: () {
+                funciones.showGameRules(context,'Reglas del Juego','1. Arrastra los residuos hacia el basurero correcto (Plástico, Papel, Orgánico, Vidrio o Materiales Peligrosos).\n'
+                '2. Ganas puntos por cada residuo correctamente clasificado.\n'
+                '3. Pierdes puntos por clasificaciones incorrectas.\n'
+                '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n5. Diviértete Aprendiendo!!'); // Mostrar las reglas del juego
+              },
+            ),
+          ],
+        ),
+        body: _showCountdown
+            ? BlurredBackground(
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: TweenAnimationBuilder(
+                      key: ValueKey<String>(_countdownText),
+                      tween: Tween<double>(begin: 0.5, end: _textScale),
+                      duration: const Duration(milliseconds: 300),
+                      builder: (context, double scale, child) {
+                        return Transform.scale(
+                          scale: scale,
+                          child: Text(
+                            _countdownText,
+                            style: TextStyle(
+                              fontSize:
+                                  _countdownText == '¡A reciclar!' ? 64 : 120,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Artwork',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              )
+            : Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Mostrar puntos y tiempo restante
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'Puntos: ',
+                        style: TextStyle(
+                            fontSize: 24), // La palabra "Puntos" siempre en negro
+                      ),
+                      Text(
+                        '$puntos',
+                        style: TextStyle(
+                            fontSize: 24,
+                            color:
+                                _puntosColor), // Solo el número cambia de color
+                      ),
+                      const SizedBox(width: 40),
+                      Text(
+                        'Tiempo: ${_timeLeft}s',
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Mostrar botón de empezar si el juego no ha comenzado
+                  if (!_isGameStarted)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const FaIcon(FontAwesomeIcons.flag),
+                          onPressed: _startGame,
+                          label: const Text('Empezar Juego'),
+                        ),
+                        const SizedBox(width: 20),
+                        ElevatedButton.icon(
+                          icon: const FaIcon(FontAwesomeIcons.eye),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PuntajesScreen(),
+                              ),
+                            );
+                          },
+                          label: const Text('Ver Puntajes'),
+                        )
+                      ],
+                    ),
+      
+                  if (_isGameStarted)
+                    Expanded(
+                      child: Center(
+                        child: Draggable<String>(
+                          data: residuoActual,
+                          feedback: buildResiduoWidget({
+                            'imagen': imagenActual
+                          }), // Usamos la función para construir el widget adecuado
+                          childWhenDragging:
+                              const FaIcon(FontAwesomeIcons.trashCan, size: 80),
+                          child: buildResiduoWidget({
+                            'imagen': imagenActual
+                          }), // Mostramos el widget según el residuo actual
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 20),
+                  // Primera fila de basureros: Metales y Vidrio
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _buildBasurero('vidrio',
+                          'assets/images/miniJuego/green_trash_bin.png'),
+                      _buildBasurero('peligrosos',
+                          'assets/images/miniJuego/red_trash_bin.png'),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Basureros centrados con tamaño ajustado
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.center, // Los centramos manualmente
+                    children: [
+                      _buildBasurero(
+                          'papel', 'assets/images/miniJuego/blue_trash_bin.png'),
+                      _buildBasurero('plastico',
+                          'assets/images/miniJuego/yellow_trash_bin.png'),
+                      _buildBasurero('organico',
+                          'assets/images/miniJuego/maroon_trash_bin.png'),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Mostrar botón de guardar puntaje si el juego terminó
+                  if (_showSaveButton)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const FaIcon(FontAwesomeIcons.upload),
+                          onPressed: _saveScore,
+                          label: const Text('Guardar Puntaje'),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+      ),
     );
   }
 }

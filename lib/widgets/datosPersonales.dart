@@ -412,7 +412,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       body: Stack(
         children: [
           BlurredBackground(
-            blurStrength: 20.0,
+            blurStrength: 0.0,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: SingleChildScrollView(

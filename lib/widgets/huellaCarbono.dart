@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/ResumenGrafico.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:visibility_detector/visibility_detector.dart';
@@ -62,189 +63,191 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<String>(
-        future: _informeFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                style: const TextStyle(
-                  fontFamily: 'Artwork',
-                  fontWeight: FontWeight.normal,
-                  fontSize: 22,
+      body: BlurredBackground(
+        child: FutureBuilder<String>(
+          future: _informeFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text(
+                  'Error: ${snapshot.error}',
+                  style: const TextStyle(
+                    fontFamily: 'Artwork',
+                    fontWeight: FontWeight.normal,
+                    fontSize: 22,
+                  ),
                 ),
-              ),
-            );
-          } else {
-            final double reduccionTotal =
-                _calcularReduccionTotal(widget.resumen);
-
-            return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    buildLottieAnimation(
-                      path: 'assets/animations/factory.json',
-                      width: 200,
-                      height: 200,
-                      repetir: true,
-                    ),
-                    const SizedBox(height: 20),
-                    FutureBuilder<String>(
-                      future: _descripcionHuellaFuture,
-                      builder: (context, descSnapshot) {
-                        if (descSnapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else if (descSnapshot.hasError) {
-                          return _buildResumenTarjeta(
-                            '¿Qué es la Huella de Carbono?',
-                            const Text(
-                              'Error al cargar la descripción.',
-                              style: TextStyle(color: Colors.red),
-                            ),
-                          );
-                        } else {
-                          return _buildResumenTarjeta(
-                            '¿Qué es la Huella de Carbono?',
-                            Text(
-                              descSnapshot.data ??
-                                  'No se pudo obtener la información.',
-                              style: const TextStyle(
-                                fontFamily: 'NotoSans',
-                                fontWeight: FontWeight.normal,
-                                fontSize: 14,
+              );
+            } else {
+              final double reduccionTotal =
+                  _calcularReduccionTotal(widget.resumen);
+        
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      buildLottieAnimation(
+                        path: 'assets/animations/factory.json',
+                        width: 200,
+                        height: 200,
+                        repetir: true,
+                      ),
+                      const SizedBox(height: 20),
+                      FutureBuilder<String>(
+                        future: _descripcionHuellaFuture,
+                        builder: (context, descSnapshot) {
+                          if (descSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (descSnapshot.hasError) {
+                            return _buildResumenTarjeta(
+                              '¿Qué es la Huella de Carbono?',
+                              const Text(
+                                'Error al cargar la descripción.',
+                                style: TextStyle(color: Colors.red),
                               ),
-                            ),
-                          );
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Impacto de tu Reciclaje',
-                      style: TextStyle(
-                        fontFamily: 'Artwork',
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildResumenTarjeta(
-                      'Detalles del Informe',
-                      RichText(
-                        text: TextSpan(
-                          style: const TextStyle(
-                            fontFamily: 'Artwork',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          children: [
-                            const TextSpan(
-                              text:
-                                  'Con tu reciclaje has reducido un estimado de ',
-                                  style: TextStyle(
-                                  fontFamily: 'Artwork',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 18,
-                                  color: Colors.black),
-                            ),
-                            TextSpan(
-                              text: '${reduccionTotal.toStringAsFixed(2)}%',
-                              style: const TextStyle(
-                                  fontFamily: 'Artwork',
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 22,
-                                  color: Colors.green),
-                            ),
-                            const TextSpan(
-                              text: ' de tu huella de carbono en el año.',
-                              style: TextStyle(
-                                  fontFamily: 'Artwork',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 18,
-                                  color: Colors.black),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    VisibilityDetector(
-                      key: const Key('pie_chart_visibility'),
-                      onVisibilityChanged: (info) {
-                        if (info.visibleFraction > 0.5 && !_isChartVisible) {
-                          setState(() {
-                            _isChartVisible = true;
-                          });
-                        }
-                      },
-                      child: Screenshot(
-                        controller: _screenshotController,
-                        child: SizedBox(
-                          height: 400,
-                          child: ResumenGrafico(
-                            resumen: widget.resumen,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: () async {
-                        try {
-                          final conceptoHuella = await _descripcionHuellaFuture;
-                          final imageBytes =
-                              await _screenshotController.capture();
-
-                          if (imageBytes == null) {
-                            Funciones.showSnackBar(
-                              context,
-                              'No se pudo capturar el gráfico.',
-                              color: Colors.red,
                             );
-                            return;
+                          } else {
+                            return _buildResumenTarjeta(
+                              '¿Qué es la Huella de Carbono?',
+                              Text(
+                                descSnapshot.data ??
+                                    'No se pudo obtener la información.',
+                                style: const TextStyle(
+                                  fontFamily: 'NotoSans',
+                                  fontWeight: FontWeight.normal,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            );
                           }
-
-                          await Funciones.exportToPDFWithChart(
-                            conceptoHuella,
-                            'Con tu reciclaje has reducido un estimado de ${reduccionTotal.toStringAsFixed(2)}% de tu huella de carbono en el año',
-                            widget.resumen,
-                            imageBytes,
-                            (filePath) {
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Impacto de tu Reciclaje',
+                        style: TextStyle(
+                          fontFamily: 'Artwork',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildResumenTarjeta(
+                        'Detalles del Informe',
+                        RichText(
+                          text: TextSpan(
+                            style: const TextStyle(
+                              fontFamily: 'Artwork',
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                            children: [
+                              const TextSpan(
+                                text:
+                                    'Con tu reciclaje has reducido un estimado de ',
+                                    style: TextStyle(
+                                    fontFamily: 'Artwork',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 18,
+                                    color: Colors.black),
+                              ),
+                              TextSpan(
+                                text: '${reduccionTotal.toStringAsFixed(2)}%',
+                                style: const TextStyle(
+                                    fontFamily: 'Artwork',
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 22,
+                                    color: Colors.green),
+                              ),
+                              const TextSpan(
+                                text: ' de tu huella de carbono en el año.',
+                                style: TextStyle(
+                                    fontFamily: 'Artwork',
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 18,
+                                    color: Colors.black),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      VisibilityDetector(
+                        key: const Key('pie_chart_visibility'),
+                        onVisibilityChanged: (info) {
+                          if (info.visibleFraction > 0.5 && !_isChartVisible) {
+                            setState(() {
+                              _isChartVisible = true;
+                            });
+                          }
+                        },
+                        child: Screenshot(
+                          controller: _screenshotController,
+                          child: SizedBox(
+                            height: 400,
+                            child: ResumenGrafico(
+                              resumen: widget.resumen,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          try {
+                            final conceptoHuella = await _descripcionHuellaFuture;
+                            final imageBytes =
+                                await _screenshotController.capture();
+        
+                            if (imageBytes == null) {
                               Funciones.showSnackBar(
                                 context,
-                                'PDF generado en: $filePath',
+                                'No se pudo capturar el gráfico.',
+                                color: Colors.red,
                               );
-                            },
-                          );
-                        } catch (e) {
-                          Funciones.showSnackBar(
-                            context,
-                            'Error al exportar el PDF con gráfico: $e',
-                            color: Colors.red,
-                          );
-                        }
-                      },
-                      icon: const Icon(FontAwesomeIcons.filePdf),
-                      label: const Text('Exportar informe en formato PDF'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade400,
+                              return;
+                            }
+        
+                            await Funciones.exportToPDFWithChart(
+                              conceptoHuella,
+                              'Con tu reciclaje has reducido un estimado de ${reduccionTotal.toStringAsFixed(2)}% de tu huella de carbono en el año',
+                              widget.resumen,
+                              imageBytes,
+                              (filePath) {
+                                Funciones.showSnackBar(
+                                  context,
+                                  'PDF generado en: $filePath',
+                                );
+                              },
+                            );
+                          } catch (e) {
+                            Funciones.showSnackBar(
+                              context,
+                              'Error al exportar el PDF con gráfico: $e',
+                              color: Colors.red,
+                            );
+                          }
+                        },
+                        icon: const Icon(FontAwesomeIcons.filePdf),
+                        label: const Text('Exportar informe en formato PDF'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade400,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }
-        },
+              );
+            }
+          },
+        ),
       ),
     );
   }

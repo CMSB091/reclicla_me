@@ -343,6 +343,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
     _formKey.currentState!.reset();
   }
 
+   void _mostrarAyuda(BuildContext context) {
+    Funciones.mostrarModalDeAyuda(
+      context: context,
+      titulo: 'Ayuda',
+      mensaje:
+          'Agrega una publicación que luego se mostrará en la sección de de artículos disponibles. \n Las publicaciones pueden ser vistas por todos los usuarios de la aplicación',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -359,12 +368,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
           style: const TextStyle(fontFamily: 'Artwork', fontSize: 22),
         ),
         backgroundColor: Colors.green.shade200,
+        actions: [
+            IconButton(
+              icon: const FaIcon(FontAwesomeIcons.infoCircle),
+              onPressed: () {
+                _mostrarAyuda(context);
+              },
+            ),
+          ],
       ),
+      
       body: Stack(
         children: [
           AbsorbPointer(
             absorbing: _isLoading,
             child: BlurredBackground(
+              blurStrength: 3.0,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(15.0),
                 child: Form(

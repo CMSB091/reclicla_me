@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/huellaCarbono.dart';
 import 'package:recila_me/widgets/inicio.dart';
 
@@ -102,220 +103,223 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<Map<String, int>>(
-        future: _resumenFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Lottie.asset(
-                  'assets/animations/recycling3.json',
-                  width: 400,
-                  height: 400,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  '¡Aún no has reciclado nada!',
-                  style: GoogleFonts.montserrat(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+      body: BlurredBackground(
+        blurStrength: 20.0,
+        child: FutureBuilder<Map<String, int>>(
+          future: _resumenFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Lottie.asset(
+                    'assets/animations/recycling3.json',
+                    width: 400,
+                    height: 400,
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Empieza hoy y ayuda a cuidar el planeta 🌍',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.montserrat(
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MyInicio(cameras: []),
-                      ),
-                    );
-                  },
-                  icon: const FaIcon(FontAwesomeIcons.recycle),
-                  label: const Text('¡Empieza a reciclar ahora!'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade400,
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 12.0, horizontal: 20.0),
-                    textStyle: GoogleFonts.montserrat(
+                  const SizedBox(height: 20),
+                  Text(
+                    '¡Aún no has reciclado nada!',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
                   ),
-                ),
-              ],
-            );
-          }
-
-          final resumen = snapshot.data!;
-          final total = resumen.values.reduce((a, b) => a + b);
-          final mensajeComparacion = generarMensajeComparacion(resumen);
-
-          return Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(16.0),
-                  children: resumen.entries.map((entry) {
-                    return Card(
-                      elevation: 4,
-                      margin: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: ListTile(
-                        leading: Image.asset(
-                          Funciones.getMaterialIconPath(entry.key),
-                          width: 50,
-                          height: 50,
+                  const SizedBox(height: 10),
+                  Text(
+                    'Empieza hoy y ayuda a cuidar el planeta 🌍',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyInicio(cameras: []),
                         ),
-                        title: Text(
-                          entry.key.toUpperCase(),
-                          style: GoogleFonts.montserrat(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        trailing: Text(
-                          entry.value == 1
-                              ? '${entry.value} Unidad'
-                              : '${entry.value} Unidades',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        onTap: () => Funciones.showResiduoInfoModal(
-                          context,
-                          Funciones.getMaterialIconPath(entry.key),
-                          entry.key,
-                        ),
+                      );
+                    },
+                    icon: const FaIcon(FontAwesomeIcons.recycle),
+                    label: const Text('¡Empieza a reciclar ahora!'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade400,
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 12.0, horizontal: 20.0),
+                      textStyle: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
-                    );
-                  }).toList()
-                    ..add(
-                      Card(
-                        color: Colors.lightGreen.shade100,
+                    ),
+                  ),
+                ],
+              );
+            }
+        
+            final resumen = snapshot.data!;
+            final total = resumen.values.reduce((a, b) => a + b);
+            final mensajeComparacion = generarMensajeComparacion(resumen);
+        
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.all(16.0),
+                    children: resumen.entries.map((entry) {
+                      return Card(
                         elevation: 4,
-                        child: Column(
-                          children: [
-                            ListTile(
-                              title: Text(
-                                'TOTAL RECICLADO',
-                                style: GoogleFonts.montserrat(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
+                        margin: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: ListTile(
+                          leading: Image.asset(
+                            Funciones.getMaterialIconPath(entry.key),
+                            width: 50,
+                            height: 50,
+                          ),
+                          title: Text(
+                            entry.key.toUpperCase(),
+                            style: GoogleFonts.montserrat(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          trailing: Text(
+                            entry.value == 1
+                                ? '${entry.value} Unidad'
+                                : '${entry.value} Unidades',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          onTap: () => Funciones.showResiduoInfoModal(
+                            context,
+                            Funciones.getMaterialIconPath(entry.key),
+                            entry.key,
+                          ),
+                        ),
+                      );
+                    }).toList()
+                      ..add(
+                        Card(
+                          color: Colors.lightGreen.shade100,
+                          elevation: 4,
+                          child: Column(
+                            children: [
+                              ListTile(
+                                title: Text(
+                                  'TOTAL RECICLADO',
+                                  style: GoogleFonts.montserrat(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                                trailing: TweenAnimationBuilder<int>(
+                                  duration: const Duration(seconds: 2),
+                                  tween: IntTween(begin: 0, end: total),
+                                  builder: (context, value, child) {
+                                    return Text(
+                                      '$value',
+                                      style: GoogleFonts.montserrat(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
-                              trailing: TweenAnimationBuilder<int>(
-                                duration: const Duration(seconds: 2),
-                                tween: IntTween(begin: 0, end: total),
-                                builder: (context, value, child) {
-                                  return Text(
-                                    '$value',
-                                    style: GoogleFonts.montserrat(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green,
-                                    ),
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  mensajeComparacion,
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 14,
+                                    fontStyle: FontStyle.italic,
+                                    color: Colors.black54,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      onPressed: () async {
+                        if (resumen.isNotEmpty) {
+                          final tienePermiso =
+                              await Funciones().verificarPermisosAlmacenamiento();
+                          if (tienePermiso) {
+                            try {
+                              await Funciones.exportToExcel(
+                                resumen,
+                                (filePath) {
+                                  Funciones.showSnackBar(
+                                    context,
+                                    'El archivo se guardó correctamente en $filePath',
                                   );
                                 },
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(
-                                mensajeComparacion,
-                                style: GoogleFonts.montserrat(
-                                  fontSize: 14,
-                                  fontStyle: FontStyle.italic,
-                                  color: Colors.black54,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed: () async {
-                      if (resumen.isNotEmpty) {
-                        final tienePermiso =
-                            await Funciones().verificarPermisosAlmacenamiento();
-                        if (tienePermiso) {
-                          try {
-                            await Funciones.exportToExcel(
-                              resumen,
-                              (filePath) {
-                                Funciones.showSnackBar(
-                                  context,
-                                  'El archivo se guardó correctamente en $filePath',
-                                );
-                              },
-                            );
-                          } catch (e) {
+                              );
+                            } catch (e) {
+                              Funciones.showSnackBar(
+                                context,
+                                'Error al exportar el archivo: $e',
+                              );
+                            }
+                          } else {
                             Funciones.showSnackBar(
                               context,
-                              'Error al exportar el archivo: $e',
+                              'Permiso de almacenamiento denegado. No se puede exportar el archivo.',
                             );
                           }
                         } else {
                           Funciones.showSnackBar(
                             context,
-                            'Permiso de almacenamiento denegado. No se puede exportar el archivo.',
+                            'No hay datos para exportar.',
                           );
                         }
-                      } else {
-                        Funciones.showSnackBar(
+                      },
+                      icon: Image.asset(
+                        'assets/icons/excel_icon.png',
+                        height: 50,
+                        width: 50,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const FaIcon(
+                        FontAwesomeIcons.arrowRight,
+                        size: 50,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        Navigator.push(
                           context,
-                          'No hay datos para exportar.',
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                HuellaCarbonoScreen(resumen: snapshot.data!),
+                          ),
                         );
-                      }
-                    },
-                    icon: Image.asset(
-                      'assets/icons/excel_icon.png',
-                      height: 50,
-                      width: 50,
+                      },
                     ),
-                  ),
-                  IconButton(
-                    icon: const FaIcon(
-                      FontAwesomeIcons.arrowRight,
-                      size: 50,
-                      color: Colors.black,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              HuellaCarbonoScreen(resumen: snapshot.data!),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
-          );
-        },
+                  ],
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
