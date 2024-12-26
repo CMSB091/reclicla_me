@@ -27,7 +27,6 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
   bool _showSaveButton = false; // Controla la visibilidad del botón para guardar puntaje
   Funciones funciones = Funciones();
   Color _puntosColor = Colors.black;
-// Comienza en 3
   bool _showCountdown = false;
   String _countdownText = '3'; // Inicializa con "3"
   double _textScale = 3.0;
@@ -86,13 +85,11 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
 
   void _startGame() {
     setState(() {
-// Inicializamos la cuenta regresiva en 3
       _showCountdown = true;
       _countdownText = '3'; // Inicializamos el texto
       _textScale = 1.0; // Restablecemos el escalado
     });
 
-    // Realizar la cuenta regresiva con un Future y un delay
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         _countdownText = '2';
@@ -130,7 +127,6 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                 _showSaveButton = false; // Ocultar el botón de guardar puntaje
               });
 
-              // Iniciar el temporizador
               _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
                 setState(() {
                   _timeLeft--;
@@ -148,43 +144,33 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
   }
 
   void _saveScore() async {
-    // Mostrar el spinner de carga mientras se verifica el puntaje
     funciones.showLoadingSpinner(context);
 
     try {
-      // Obtener el puntaje actual del usuario desde Firestore
       int currentScore = await firestoreService.getCurrentUserScore(context);
 
-      // Cerrar el spinner después de obtener el puntaje si el widget sigue montado
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
-      // Verificar si el puntaje actual en la base de datos es mayor o igual al puntaje obtenido en el juego
       if (currentScore >= puntos) {
         bool shouldSave = false;
-        // Mostrar el diálogo de confirmación
         if (mounted) {
           shouldSave = await funciones.showConfirmationDialog(context);
         }
-        // Si el usuario decide no guardar, retornar
         if (!shouldSave) {
           return;
         }
       }
       if (mounted) {
-        // Mostrar el spinner de carga nuevamente mientras se guarda el puntaje
         funciones.showLoadingSpinner(context);
 
-        // Guardar el nuevo puntaje en la base de datos
         await firestoreService.saveOrUpdateScore(context, puntos);
       }
-      // Cerrar el spinner una vez que se complete la operación si el widget sigue montado
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
-      // Mostrar un snackbar de confirmación
       if (mounted) {
         showCustomSnackBar(
           context,
@@ -194,11 +180,9 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
         );
       }
     } catch (e) {
-      // Cerrar el spinner en caso de error si el widget sigue montado
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
 
-        // Mostrar un snackbar de error
         showCustomSnackBar(
           context,
           'Error al guardar el puntaje',
@@ -210,14 +194,12 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
   }
 
   Widget _buildBasurero(String tipo, String assetPath) {
-    // Obtenemos el ancho de la pantalla para ajustar el tamaño de las imágenes dinámicamente
     final screenWidth = MediaQuery.of(context).size.width;
     final trashBinWidth =
         screenWidth / 3.5; // Ajustamos el ancho para que entren bien
     final trashBinHeight =
         screenWidth / 3; // Aumentamos el alto para hacerlo más grande
 
-    // Variable para controlar si el basurero está resaltado
     bool isHighlighted = false;
 
     return StatefulBuilder(
@@ -230,20 +212,17 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
             height: trashBinHeight, // Aumentamos el alto
             child: DragTarget<String>(
               onWillAcceptWithDetails: (data) {
-                // Resaltar el basurero al pasar el residuo por encima
                 setState(() {
                   isHighlighted = true;
                 });
                 return true;
               },
               onLeave: (data) {
-                // Dejar de resaltar si el residuo se aleja
                 setState(() {
                   isHighlighted = false;
                 });
               },
               onAcceptWithDetails: (data) {
-                // Verificar si el residuo es el correcto y dejar de resaltar
                 verificarRespuesta(tipo);
                 setState(() {
                   isHighlighted = false;
@@ -279,7 +258,6 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
 
   Widget buildResiduoWidget(Map<String, dynamic> residuo) {
     if (residuo['imagen'] is String) {
-      // Si es una ruta de imagen (String), mostramos la imagen desde assets
       return Image.asset(
         residuo['imagen'],
         width: 150,
@@ -287,13 +265,12 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
         fit: BoxFit.contain,
       );
     } else if (residuo['imagen'] is IconData) {
-      // Si es un ícono (como FontAwesome), lo mostramos
       return FaIcon(
         residuo['imagen'],
         size: 80,
       );
     } else {
-      return Container(); // Devolvemos un widget vacío si no es imagen ni ícono
+      return Container();
     }
   }
 
@@ -325,10 +302,11 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
             IconButton(
               icon: const FaIcon(FontAwesomeIcons.infoCircle),
               onPressed: () {
-                funciones.showGameRules(context,'Reglas del Juego','1. Arrastra los residuos hacia el basurero correcto (Plástico, Papel, Orgánico, Vidrio o Materiales Peligrosos).\n'
-                '2. Ganas puntos por cada residuo correctamente clasificado.\n'
-                '3. Pierdes puntos por clasificaciones incorrectas.\n'
-                '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n5. Diviértete Aprendiendo!!'); // Mostrar las reglas del juego
+                funciones.showGameRules(context, 'Reglas del Juego',
+                    '1. Arrastra los residuos hacia el basurero correcto (Plástico, Papel, Orgánico, Vidrio o Materiales Peligrosos).\n'
+                    '2. Ganas puntos por cada residuo correctamente clasificado.\n'
+                    '3. Pierdes puntos por clasificaciones incorrectas.\n'
+                    '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n5. Diviértete Aprendiendo!!');
               },
             ),
           ],
@@ -364,7 +342,6 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Mostrar puntos y tiempo restante
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -388,7 +365,6 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  // Mostrar botón de empezar si el juego no ha comenzado
                   if (!_isGameStarted)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -413,7 +389,6 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                         )
                       ],
                     ),
-      
                   if (_isGameStarted)
                     Expanded(
                       child: Center(
@@ -421,17 +396,16 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                           data: residuoActual,
                           feedback: buildResiduoWidget({
                             'imagen': imagenActual
-                          }), // Usamos la función para construir el widget adecuado
+                          }),
                           childWhenDragging:
                               const FaIcon(FontAwesomeIcons.trashCan, size: 80),
                           child: buildResiduoWidget({
                             'imagen': imagenActual
-                          }), // Mostramos el widget según el residuo actual
+                          }),
                         ),
                       ),
                     ),
                   const SizedBox(height: 20),
-                  // Primera fila de basureros: Metales y Vidrio
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -442,10 +416,9 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  // Basureros centrados con tamaño ajustado
                   Row(
                     mainAxisAlignment:
-                        MainAxisAlignment.center, // Los centramos manualmente
+                        MainAxisAlignment.center,
                     children: [
                       _buildBasurero(
                           'papel', 'assets/images/miniJuego/blue_trash_bin.png'),
@@ -456,7 +429,6 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  // Mostrar botón de guardar puntaje si el juego terminó
                   if (_showSaveButton)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,

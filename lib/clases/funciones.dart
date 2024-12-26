@@ -1198,7 +1198,7 @@ class Funciones {
     required String apellido,
     required String comentarios,
     required String emailUsuario,
-    required DateTime fecha,
+    required String fecha,
   }) async {
     try {
       await FirebaseFirestore.instance.collection('feedbacks').add({
@@ -1206,7 +1206,7 @@ class Funciones {
         'apellido': apellido,
         'comentarios': comentarios,
         'emailUsuario': emailUsuario,
-        'fecha': fecha.toIso8601String(),
+        'fecha': fecha,
       });
       return true;
     } catch (e) {

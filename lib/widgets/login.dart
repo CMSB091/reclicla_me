@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:password_strength/password_strength.dart';
 import 'package:recila_me/servicios/dynamicLinkService.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'registerPage.dart';
@@ -115,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
             : e.code == 'wrong-password'
                 ? 'Contraseña incorrecta.'
                 : 'Error en la autenticación.';
-        showCustomSnackBar(context,message,SnackBarType.error);
+        showCustomSnackBar(context, message, SnackBarType.error);
       } finally {
         if (mounted) {
           setState(() => _isLoading = false);

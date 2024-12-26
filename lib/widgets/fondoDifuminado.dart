@@ -10,7 +10,7 @@ class BlurredBackground extends StatelessWidget {
   const BlurredBackground({
     super.key,
     required this.child,  // El widget hijo que se coloca sobre el fondo
-    this.imagePath = 'assets/images/fondoVerdeDisenho.jpg',  // Imagen predeterminada de fondo
+    this.imagePath = 'assets/images/verdeFondo.jpg',  // Imagen predeterminada de fondo
     this.blurStrength = 1.0,  // Nivel de desenfoque predeterminado
     this.opacity = 0.1,  // Opacidad predeterminada de la capa sobre el fondo
   });
