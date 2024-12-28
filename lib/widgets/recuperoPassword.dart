@@ -43,6 +43,8 @@ class _RecuperoPasswordState extends State<RecuperoPassword> {
     }
   }
 
+  
+
   Widget buildLottieAnimation({
     required String path,
     double width = 100.0,
