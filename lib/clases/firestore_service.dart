@@ -248,11 +248,36 @@ class FirestoreService {
           .where('email', isEqualTo: correo)
           .get();
 
+      // Eliminar 'puntajes'
+      QuerySnapshot puntajesSnapshot = await _db
+          .collection('puntajes')
+          .where('email', isEqualTo: correo)
+          .get();
+
+      QuerySnapshot feedbackSnapshot = await _db
+          .collection('feedbacks')
+          .where('emailUsuario', isEqualTo: correo)
+          .get();
+
+      QuerySnapshot historialSnapshot = await _db
+          .collection('historial')
+          .where('email', isEqualTo: correo)
+          .get();
+
+          QuerySnapshot recommendatiosSnapshot = await _db
+          .collection('recommendations')
+          .where('UserEmail', isEqualTo: correo)
+          .get();
+
       // Eliminar todos los documentos en paralelo
       await Future.wait([
         ...postsSnapshot.docs.map((doc) => doc.reference.delete()),
         ...commentsSnapshot.docs.map((doc) => doc.reference.delete()),
         ...chatsSnapshot.docs.map((doc) => doc.reference.delete()),
+        ...puntajesSnapshot.docs.map((doc) => doc.reference.delete()),
+        ...feedbackSnapshot.docs.map((doc) => doc.reference.delete()),
+        ...historialSnapshot.docs.map((doc) => doc.reference.delete()),
+        ...recommendatiosSnapshot.docs.map((doc) => doc.reference.delete()),
       ]);
 
       // Añadir otras colecciones según sea necesario
