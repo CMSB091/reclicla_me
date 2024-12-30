@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/mensajeInicio.dart';
 
 class ReciclaMeApp extends StatelessWidget {
@@ -36,12 +37,23 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   double _progress = 0;
   late BuildContext _context;
+  String _tipMessage = "";
 
   @override
   void initState() {
     super.initState();
     _context = context;
-    Timer(const Duration(seconds: 2), _startLoading);
+    _fetchTipAndStartLoading();
+  }
+
+  Future<void> _fetchTipAndStartLoading() async {
+    try {
+      _tipMessage = await Funciones.getChatGPTResponse("Proporciona un consejo corto y útil sobre reciclaje o un recordatorio para fomentar prácticas amigables con el medio ambiente. Responde únicamente con el consejo, sin introducción ni explicaciones adicionales. Actua como un experto en el cuidado del medio ambiente y en el reciclaje de residuos domésticos.");
+    } catch (e) {
+      _tipMessage = "No se pudo cargar el consejo de reciclaje. Inténtalo de nuevo más tarde.";
+    } finally {
+      _startLoading();
+    }
   }
 
   void _startLoading() {
@@ -52,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> {
           // Navega a la siguiente pantalla cuando la carga está completa
           Navigator.of(_context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => mensajeInicio(widget.cameras), // Pasa las cámaras a la próxima pantalla
+              builder: (context) => mensajeInicio(widget.cameras, tipMessage: _tipMessage), // Pasa el mensaje como parámetro
             ),
           );
         } else {

@@ -24,7 +24,8 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
   Timer? _timer;
   int _timeLeft = 60; // 60 segundos para el temporizador
   final Random random = Random();
-  bool _showSaveButton = false; // Controla la visibilidad del botón para guardar puntaje
+  bool _showSaveButton =
+      false; // Controla la visibilidad del botón para guardar puntaje
   Funciones funciones = Funciones();
   Color _puntosColor = Colors.black;
   bool _showCountdown = false;
@@ -195,21 +196,24 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
 
   Widget _buildBasurero(String tipo, String assetPath) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final trashBinWidth =
-        screenWidth / 3.5; // Ajustamos el ancho para que entren bien
-    final trashBinHeight =
-        screenWidth / 3; // Aumentamos el alto para hacerlo más grande
+    final isLandscape =
+        MediaQuery.of(context).orientation == Orientation.landscape;
+
+    // Ajustamos el tamaño según la orientación y el ancho de la pantalla
+    final trashBinWidth = min(screenWidth / (isLandscape ? 4.0 : 3.5),
+        120.0); // Máximo 120px de ancho
+    final trashBinHeight = min(
+        screenWidth / (isLandscape ? 3.5 : 3.0), 150.0); // Máximo 150px de alto
 
     bool isHighlighted = false;
 
     return StatefulBuilder(
       builder: (BuildContext context, StateSetter setState) {
         return Padding(
-          padding: const EdgeInsets.symmetric(
-              horizontal: 5.0), // Reducimos el espacio entre los basureros
+          padding: const EdgeInsets.symmetric(horizontal: 5.0),
           child: SizedBox(
-            width: trashBinWidth, // Mantenemos un ancho ajustado
-            height: trashBinHeight, // Aumentamos el alto
+            width: trashBinWidth,
+            height: trashBinHeight,
             child: DragTarget<String>(
               onWillAcceptWithDetails: (data) {
                 setState(() {
@@ -236,15 +240,15 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                       border: Border.all(
                         color: isHighlighted
                             ? Colors.lightGreen
-                            : Colors.transparent, // Resaltar con borde verde
+                            : Colors.transparent,
                         width: 4.0,
                       ),
                     ),
                     child: Image.asset(
-                      assetPath, // Ruta de la imagen del basurero
-                      width: trashBinWidth, // Ajuste del ancho
-                      height: trashBinHeight, // Ajuste del alto
-                      fit: BoxFit.contain, // Ajusta cómo se adapta la imagen
+                      assetPath,
+                      width: trashBinWidth,
+                      height: trashBinHeight,
+                      fit: BoxFit.contain,
                     ),
                   ),
                 );
@@ -302,11 +306,13 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
             IconButton(
               icon: const FaIcon(FontAwesomeIcons.infoCircle),
               onPressed: () {
-                funciones.showGameRules(context, 'Reglas del Juego',
+                funciones.showGameRules(
+                    context,
+                    'Reglas del Juego',
                     '1. Arrastra los residuos hacia el basurero correcto (Plástico, Papel, Orgánico, Vidrio o Materiales Peligrosos).\n'
-                    '2. Ganas puntos por cada residuo correctamente clasificado.\n'
-                    '3. Pierdes puntos por clasificaciones incorrectas.\n'
-                    '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n5. Diviértete Aprendiendo!!');
+                        '2. Ganas puntos por cada residuo correctamente clasificado.\n'
+                        '3. Pierdes puntos por clasificaciones incorrectas.\n'
+                        '4. El tiempo es limitado, ¡intenta clasificar tantos residuos como puedas antes de que el tiempo se agote!\n5. Diviértete Aprendiendo!!');
               },
             ),
           ],
@@ -348,7 +354,8 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                       const Text(
                         'Puntos: ',
                         style: TextStyle(
-                            fontSize: 24), // La palabra "Puntos" siempre en negro
+                            fontSize:
+                                24), // La palabra "Puntos" siempre en negro
                       ),
                       Text(
                         '$puntos',
@@ -394,14 +401,11 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                       child: Center(
                         child: Draggable<String>(
                           data: residuoActual,
-                          feedback: buildResiduoWidget({
-                            'imagen': imagenActual
-                          }),
+                          feedback:
+                              buildResiduoWidget({'imagen': imagenActual}),
                           childWhenDragging:
                               const FaIcon(FontAwesomeIcons.trashCan, size: 80),
-                          child: buildResiduoWidget({
-                            'imagen': imagenActual
-                          }),
+                          child: buildResiduoWidget({'imagen': imagenActual}),
                         ),
                       ),
                     ),
@@ -409,23 +413,32 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildBasurero('vidrio',
-                          'assets/images/miniJuego/green_trash_bin.png'),
-                      _buildBasurero('peligrosos',
-                          'assets/images/miniJuego/red_trash_bin.png'),
+                      Flexible(
+                        child: _buildBasurero('vidrio',
+                            'assets/images/miniJuego/green_trash_bin.png'),
+                      ),
+                      Flexible(
+                        child: _buildBasurero('peligrosos',
+                            'assets/images/miniJuego/red_trash_bin.png'),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
                   Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildBasurero(
-                          'papel', 'assets/images/miniJuego/blue_trash_bin.png'),
-                      _buildBasurero('plastico',
-                          'assets/images/miniJuego/yellow_trash_bin.png'),
-                      _buildBasurero('organico',
-                          'assets/images/miniJuego/maroon_trash_bin.png'),
+                      Flexible(
+                        child: _buildBasurero('papel',
+                            'assets/images/miniJuego/blue_trash_bin.png'),
+                      ),
+                      Flexible(
+                        child: _buildBasurero('plastico',
+                            'assets/images/miniJuego/yellow_trash_bin.png'),
+                      ),
+                      Flexible(
+                        child: _buildBasurero('organico',
+                            'assets/images/miniJuego/maroon_trash_bin.png'),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
