@@ -8,6 +8,9 @@ import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/historialPage.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class NoticiasChatGPT extends StatefulWidget {
   final String initialPrompt;
@@ -53,15 +56,59 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   }
 
   Future<void> _saveRecommendation() async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => HistorialPage(
-          detectedItem: widget.detectedObject,
-          initialDescription: chatResponse.trim(),
+    try {
+      // Obtiene el usuario actual
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user == null) {
+        // Muestra un mensaje si no hay usuario logueado
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("No se encontró un usuario logueado."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Valida que haya una recomendación del ChatGPT para guardar
+      if (chatResponse.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("No hay recomendación para guardar."),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Extrae solo el ítem detectado del initialPrompt
+      final detectedItem = widget.initialPrompt.split(': ').last.trim();
+
+      // Inserta los datos directamente en la colección "historial"
+      await FirebaseFirestore.instance.collection('historial').add({
+        'item': detectedItem, // Objeto escaneado
+        'descripcion': chatResponse.trim(), // Respuesta del ChatGPT
+        'email': user.email, // Email del usuario logueado
+        'fecha': DateTime.now().toIso8601String(), // Fecha actual
+      });
+
+      // Muestra una notificación de éxito
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Recomendación guardada exitosamente."),
+          backgroundColor: Colors.green,
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      // Muestra un mensaje de error si algo falla
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Error al guardar recomendación: $e"),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void mostrarAyudaGeneral(BuildContext context) {

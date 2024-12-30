@@ -398,9 +398,7 @@ class _MyInicioState extends State<MyInicio> {
           lottieAnimation: "assets/animations/lottie-robot.json",
         );
       case 2:
-        return const HistorialPage(
-          detectedItem: '', initialDescription: '',
-        );
+        return const HistorialPage();
       case 3:
         return MySplash(
           nextScreen: ReusableCountSplashScreen(
