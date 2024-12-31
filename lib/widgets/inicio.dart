@@ -364,8 +364,8 @@ class _MyInicioState extends State<MyInicio> {
   Widget _getPageForIndex(int index) {
     switch (index) {
       case 0:
-        return const MySplash(
-          nextScreen: ObjectDetectionScreen(),
+        return MySplash(
+          nextScreen: ObjectDetectionScreen(userEmail: emailUsuario ?? ''),
           lottieAnimation: "assets/animations/scan_objects2.json",
         );
       case 1:

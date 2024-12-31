@@ -1,12 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tflite/flutter_tflite.dart';
+import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/clases/funciones.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/mySplashScreen.dart';
 import 'package:recila_me/widgets/noticias.dart';
 
 class ObjectDetectionScreen extends StatefulWidget {
-  const ObjectDetectionScreen({super.key});
+  final String userEmail; // Email del usuario
+  const ObjectDetectionScreen({super.key, required this.userEmail});
 
   @override
   _ObjectDetectionScreenState createState() => _ObjectDetectionScreenState();
@@ -85,159 +90,208 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
     });
   }
 
+  void _mostrarAyuda(BuildContext context) {
+    Funciones.mostrarModalDeAyuda(
+      context: context,
+      titulo: 'Ayuda',
+      mensaje:
+          'Utiliza la cámara del celular para escanear objetos reciclables.\n'
+          'También puedes seleccionar imagenes de objetos desde la galería\n'
+          'Puedes obtener recomendaciones del objeto escaneado, como así también\n'
+          'guardarlos en la base de datos para luego obtener un resumen tu huella\n'
+          'de carbono.',
+    );
+  }
+
+  Future<void> _guardarItemSeleccionado(
+      BuildContext context, String detectedItem) async {
+    await FirestoreService.saveScannedItem(
+      context: context,
+      detectedItem: detectedItem,
+      userEmail: widget.userEmail, // Usa el email pasado al widget
+    );
+
+    setState(() {
+      filePath = null;
+      label = '';
+      confidence = 0.0;
+      objectDetected = false;
+      _loading = true;
+    });
+  }
+
   @override
   void dispose() {
     Tflite.close();
     super.dispose();
   }
 
-  Widget _buildStyledButton(String text, VoidCallback onPressed) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        height: 60,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(15),
-          color: Colors.white,
-          boxShadow: const [
-            BoxShadow(
-              blurRadius: 5,
-              offset: Offset(0, 2),
-              color: Colors.black26,
-            ),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 18,
-              color: Theme.of(context).primaryColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detección de Objetos'),
-        centerTitle: true,
+        title: const Text(
+          'Detección de Objetos',
+          style: TextStyle(
+            fontFamily: 'Artwork',
+            fontWeight: FontWeight.w400,
+            fontSize: 24,
+          ),
+        ),
+        backgroundColor: Colors.green.shade200,
+        leading: IconButton(
+          icon: const FaIcon(FontAwesomeIcons.house, color: Colors.black),
+          onPressed: () {
+            Funciones.navigateToHome(context);
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.infoCircle),
+            onPressed: () {
+              _mostrarAyuda(context);
+            },
+          ),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            const Spacer(), // Agrega un espacio flexible para empujar hacia abajo
-            Center(
-              child: _loading
-                  ? SizedBox(
-                      width: 280,
-                      child: Column(
-                        children: <Widget>[
-                          Image.asset(
-                            'assets/images/recycle-icons8.png',
-                            color: Theme.of(context).primaryColor,
-                          ),
-                          const SizedBox(height: 50),
-                        ],
+      body: BlurredBackground(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              const Spacer(), // Agrega un espacio flexible para empujar hacia abajo
+              Center(
+                child: _loading
+                    ? SizedBox(
+                        width: 280,
+                        child: Column(
+                          children: <Widget>[
+                            Image.asset(
+                              'assets/images/recycle-icons8.png',
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            const SizedBox(height: 50),
+                          ],
+                        ),
+                      )
+                    : Container(
+                        height: 250,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(15),
+                          child: Image.file(filePath!, fit: BoxFit.cover),
+                        ),
                       ),
-                    )
-                  : Container(
-                      height: 250,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 10,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+              ),
+              const SizedBox(height: 20),
+              Text(
+                label,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall!
+                    .copyWith(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Precisión: ${confidence.toStringAsFixed(0)}%",
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const Spacer(), // Este Spacer empuja hacia abajo los botones
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: pickImageGallery,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Theme.of(context).primaryColor,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(15),
-                        child: Image.file(filePath!, fit: BoxFit.cover),
-                      ),
+                      icon: const FaIcon(
+                          FontAwesomeIcons.images), // Ícono para galería
+                      label: const Text('Seleccionar desde Galería'),
                     ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall!
-                  .copyWith(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              "Precisión: ${confidence.toStringAsFixed(0)}%",
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const Spacer(), // Este Spacer empuja hacia abajo los botones
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: pickImageGallery,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Theme.of(context).primaryColor,
-                    ),
-                    child: const Text('Seleccionar desde Galería'),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: pickImageCamera,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Theme.of(context).primaryColor,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: pickImageCamera,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Theme.of(context).primaryColor,
+                      ),
+                      icon: const FaIcon(
+                          FontAwesomeIcons.camera), // Ícono para cámara
+                      label: const Text('Usar Cámara'),
                     ),
-                    child: const Text('Usar Cámara'),
                   ),
+                ],
+              ),
+
+              if (objectDetected) ...[
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => MySplash(
+                                nextScreen: NoticiasChatGPT(
+                                  initialPrompt:
+                                      "Quiero que me recomiendes cómo reciclar este producto escaneado: $label",
+                                  detectedObject: label,
+                                ),
+                                lottieAnimation:
+                                    'assets/animations/lottie-robot.json',
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Theme.of(context).primaryColor,
+                        ),
+                        icon: const FaIcon(FontAwesomeIcons
+                            .recycle), // Ícono para consultar reciclaje
+                        label: const Text('Consultar sobre reciclaje'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          _guardarItemSeleccionado(context, label);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Theme.of(context).primaryColor,
+                        ),
+                        icon: const FaIcon(
+                            FontAwesomeIcons.save), // Ícono para guardar
+                        label: const Text('Guardar Item'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-            if (objectDetected) ...[
+
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MySplash(
-                        nextScreen: NoticiasChatGPT(
-                          initialPrompt:
-                              "Quiero que me recomiendes cómo reciclar este producto escaneado: $label",
-                              detectedObject: label
-                        ),
-                        lottieAnimation: 'assets/animations/lottie-robot.json',
-                        
-                      ),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Theme.of(context).primaryColor,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                ),
-                child: const Text(
-                  'Consultar sobre reciclaje',
-                  style: TextStyle(fontSize: 16, color: Colors.black),
-                ),
-              ),
             ],
-            const SizedBox(height: 20),
-          ],
+          ),
         ),
       ),
     );

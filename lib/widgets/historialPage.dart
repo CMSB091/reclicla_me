@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class HistorialPage extends StatefulWidget {
-  const HistorialPage({Key? key}) : super(key: key);
+  const HistorialPage({super.key});
 
   @override
   State<HistorialPage> createState() => _HistorialPageState();

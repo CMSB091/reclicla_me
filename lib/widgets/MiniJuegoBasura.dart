@@ -13,6 +13,7 @@ class MiniJuegoBasura extends StatefulWidget {
   const MiniJuegoBasura({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _MiniJuegoBasuraState createState() => _MiniJuegoBasuraState();
 }
 

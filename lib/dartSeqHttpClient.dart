@@ -1,3 +1,4 @@
+// ignore: file_names
 /// `dart_seq_http_client` provides a HTTP client implementation for the
 /// `dart_seq` logging library and allows ingestion via HTTP in Seq.
 library dart_seq_http_client;

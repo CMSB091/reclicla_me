@@ -6,8 +6,6 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dart_seq/dart_seq.dart';
-import 'package:dart_seq_http_client/dart_seq_http_client.dart';
 import 'package:dio/dio.dart';
 import 'package:excel/excel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -75,15 +73,6 @@ class Funciones {
     'Residuos': 'assets/images/recycle_general.png',
     // Agrega más materiales y sus valores aquí
   };
-
-  static final logger = SeqHttpLogger.create(
-    host:
-        'http://192.168.100.16:43674', //'http://10.0.2.2:43674'para el emulador
-    apiKey: Config.openaiApiKey, //dotenv.env['SEQ_LOGGER'],
-    globalContext: {
-      'App': 'ReciclaMe',
-    },
-  );
   // Función que prepara el prompt parala API de la IA
   String generateImagePromptFromResponse(String chatGPTResponse) {
     if (chatGPTResponse.contains('plástico')) {
@@ -219,37 +208,6 @@ class Funciones {
       await Funciones.saveDebugInfo(
           'Error al generar la imagen: ${response.statusCode}');
       return '';
-    }
-  }
-
-  static SeqLogger? _logger;
-
-  // Implementación del Singleton para el logger
-  static Future<void> _initializeLogger() async {
-    _logger ??= SeqHttpLogger.create(
-      host: 'http://192.168.100.16:43674',
-      /*'http://10.0.2.2:43674',*/
-      /*para el emulador*/
-      apiKey: Config.seqLogger, //dotenv.env['SEQ_LOGGER'],
-      globalContext: {
-        'App': 'ReciclaMe',
-      },
-    );
-  }
-
-// Función auxiliar para convertir un String a SeqLogLevel
-  static SeqLogLevel _mapStringToSeqLogLevel(String status) {
-    switch (status.toLowerCase()) {
-      case 'information':
-        return SeqLogLevel.information;
-      case 'warning':
-        return SeqLogLevel.warning;
-      case 'error':
-        return SeqLogLevel.error;
-      case 'debug':
-        return SeqLogLevel.debug;
-      default:
-        throw ArgumentError('Nivel de log no reconocido: $status');
     }
   }
 

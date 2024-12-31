@@ -264,7 +264,7 @@ class FirestoreService {
           .where('email', isEqualTo: correo)
           .get();
 
-          QuerySnapshot recommendatiosSnapshot = await _db
+      QuerySnapshot recommendatiosSnapshot = await _db
           .collection('recommendations')
           .where('UserEmail', isEqualTo: correo)
           .get();
@@ -524,6 +524,7 @@ class FirestoreService {
   // Función para verificar conectividad a Internet
   Future<bool> checkInternetConnection() async {
     var connectivityResult = await (Connectivity().checkConnectivity());
+    // ignore: unrelated_type_equality_checks
     return connectivityResult != ConnectivityResult.none;
   }
 
@@ -996,6 +997,41 @@ class FirestoreService {
     } catch (e) {
       debugPrint('Error al eliminar documento: $e');
       rethrow;
+    }
+  }
+
+  static Future<void> saveScannedItem({
+    required BuildContext context,
+    required String detectedItem,
+    String? chatResponse,
+    required String userEmail,
+  }) async {
+    try {
+      // Formatear la fecha
+      final formattedDate =
+          DateFormat('dd/MM/yyyy HH:mm:ss').format(DateTime.now());
+
+      await FirebaseFirestore.instance.collection('historial').add({
+        'item': detectedItem, // Objeto escaneado
+        'descripcion': (chatResponse ?? 'Sin descripción disponible').trim(),
+        'email': userEmail, // Email del usuario logueado
+        'fecha': formattedDate, // Fecha formateada
+      });
+
+      // Mostrar SnackBar de confirmación
+      showCustomSnackBar(
+        context,
+        'Ítem guardado exitosamente',
+        SnackBarType.confirmation,
+      );
+    } catch (e) {
+      // Mostrar SnackBar de error
+      showCustomSnackBar(
+        context,
+        'Error al guardar el ítem: $e',
+        SnackBarType.error,
+      );
+      rethrow; // Lanza el error nuevamente si se necesita manejarlo más adelante
     }
   }
 }

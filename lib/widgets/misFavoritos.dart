@@ -11,6 +11,7 @@ class MisFavoritos extends StatefulWidget {
   const MisFavoritos({super.key, required this.userEmail});
 
   @override
+  // ignore: library_private_types_in_public_api
   _MisFavoritosState createState() => _MisFavoritosState();
 }
 

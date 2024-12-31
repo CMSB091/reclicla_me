@@ -8,7 +8,7 @@ import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 
 
 class NoticiasChatGPT extends StatefulWidget {
@@ -85,28 +85,18 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       final detectedItem = widget.initialPrompt.split(': ').last.trim();
 
       // Inserta los datos directamente en la colección "historial"
-      await FirebaseFirestore.instance.collection('historial').add({
-        'item': detectedItem, // Objeto escaneado
-        'descripcion': chatResponse.trim(), // Respuesta del ChatGPT
-        'email': user.email, // Email del usuario logueado
-        'fecha': DateTime.now().toIso8601String(), // Fecha actual
-      });
+      await FirestoreService.saveScannedItem(
+        context: context,
+        detectedItem: detectedItem, // El nombre o etiqueta del ítem detectado
+        chatResponse: chatResponse.trim(), // Respuesta del modelo
+        userEmail: user.email!, // Email del usuario logueado
+      );
 
       // Muestra una notificación de éxito
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Recomendación guardada exitosamente."),
-          backgroundColor: Colors.green,
-        ),
-      );
+      showCustomSnackBar(context,'Recomendación guardada exitosamente',SnackBarType.confirmation);
     } catch (e) {
       // Muestra un mensaje de error si algo falla
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Error al guardar recomendación: $e"),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showCustomSnackBar(context,'Recomendación guardada exitosamente',SnackBarType.error);
     }
   }
 
