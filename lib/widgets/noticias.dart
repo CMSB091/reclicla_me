@@ -7,7 +7,6 @@ import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
-import 'package:recila_me/widgets/historialPage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
