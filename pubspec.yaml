@@ -76,6 +76,7 @@ dependencies:
   package_info_plus: ^4.0.0
   dio: ^5.2.1
   password_strength: ^0.2.0
+  image_cropper: ^1.0.0
 
   
 dev_dependencies:

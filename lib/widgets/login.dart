@@ -41,18 +41,10 @@ class AuthenticationWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.active) {
-          if (snapshot.hasData) {
-            return MyInicio(
-              cameras: cameras ?? [],
-            );
-          } else {
-            return const LoginPage();
-          }
-        }
+  return StreamBuilder<User?>(
+    stream: FirebaseAuth.instance.authStateChanges(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
         return Center(
           child: buildLottieAnimation(
             path: 'assets/animations/lottie-recycle.json',
@@ -60,9 +52,24 @@ class AuthenticationWrapper extends StatelessWidget {
             height: 500,
           ),
         );
-      },
-    );
-  }
+      } else if (snapshot.connectionState == ConnectionState.active) {
+        if (snapshot.hasData) {
+          return MyInicio(
+            cameras: cameras ?? [],
+          );
+        } else {
+          return const LoginPage();
+        }
+      } else if (snapshot.hasError) {
+        return const Center(
+          child: Text('Ocurrió un error. Inténtalo nuevamente.'),
+        );
+      }
+      return const LoginPage();
+    },
+  );
+}
+
 }
 
 class LoginPage extends StatefulWidget {

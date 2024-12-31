@@ -10,7 +10,6 @@ import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
 
-
 class NoticiasChatGPT extends StatefulWidget {
   final String initialPrompt;
   final String detectedObject;
@@ -61,55 +60,66 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
 
       if (user == null) {
         // Muestra un mensaje si no hay usuario logueado
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("No se encontró un usuario logueado."),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showCustomSnackBar(
+            context, 'No se encontró un usuario logueado.', SnackBarType.error);
         return;
       }
 
       // Valida que haya una recomendación del ChatGPT para guardar
       if (chatResponse.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("No hay recomendación para guardar."),
-            backgroundColor: Colors.red,
-          ),
-        );
+        showCustomSnackBar(
+            context, "No hay recomendación para guardar.", SnackBarType.error);
         return;
       }
 
       // Extrae solo el ítem detectado del initialPrompt
       final detectedItem = widget.initialPrompt.split(': ').last.trim();
 
-      // Inserta los datos directamente en la colección "historial"
-      await FirestoreService.saveScannedItem(
+      // Guarda en la colección "recommendations"
+      await FirestoreService.saveRecommendation(
         context: context,
-        detectedItem: detectedItem, // El nombre o etiqueta del ítem detectado
         chatResponse: chatResponse.trim(), // Respuesta del modelo
         userEmail: user.email!, // Email del usuario logueado
+        item: detectedItem.isEmpty ? 'Sin item asociado' : detectedItem,
       );
 
-      // Muestra una notificación de éxito
-      showCustomSnackBar(context,'Recomendación guardada exitosamente',SnackBarType.confirmation);
+      // Si detectedItem tiene valor, guarda en la colección "historial"
+      if (detectedItem.isNotEmpty && detectedItem != 'Sin item asociado') {
+        await FirestoreService.saveScannedItem(
+          context: context,
+          detectedItem: detectedItem,
+          chatResponse: chatResponse.trim(),
+          userEmail: user.email!,
+          itemName: detectedItem
+        );
+        debugPrint('Elemento guardado en la tabla "historial".');
+      }
+
+      showCustomSnackBar(
+        context,
+        'Recomendación guardada exitosamente.',
+        SnackBarType.confirmation,
+      );
     } catch (e) {
       // Muestra un mensaje de error si algo falla
-      showCustomSnackBar(context,'Recomendación guardada exitosamente',SnackBarType.error);
+      debugPrint('Error al guardar la recomendación: $e');
+      showCustomSnackBar(
+        context,
+        'Ocurrió un error al guardar la recomendación.',
+        SnackBarType.error,
+      );
     }
   }
 
   void mostrarAyudaGeneral(BuildContext context) {
-      Funciones.mostrarModalDeAyuda(
-        context: context,
-        titulo: 'Ayuda',
-        mensaje:
-            'Escribe una consulta al chatBot especializado en reciclaje.\n'
-            'Si tienes dudas específicas, consulta las secciones correspondientes.',
-        textoBoton: 'Entendido',
-      );
-    }
+    Funciones.mostrarModalDeAyuda(
+      context: context,
+      titulo: 'Ayuda',
+      mensaje: 'Escribe una consulta al chatBot especializado en reciclaje.\n'
+          'Si tienes dudas específicas, consulta las secciones correspondientes.',
+      textoBoton: 'Entendido',
+    );
+  }
 
   void _startTypingAnimation() {
     setState(() {
@@ -167,7 +177,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
 
     // Construye el prompt con el contexto de la conversación
     String finalPrompt = isFirstMessage
-        ? 'Eres un experto en reciclaje de residuos comunes del hogar, incluyendo plásticos, metales, cartones, papeles, pilas y compostaje. Proporciona consejos prácticos y creativos sobre cómo reciclar o reutilizar estos materiales de manera sostenible en el hogar. Por favor, da la respuesta en no más de 200 palabras. Actúa como si fueses una persona real y teniendo en cuenta lo siguiente:\n\n$conversationContext\nTú: $prompt'
+        ? 'Eres un experto en reciclaje de residuos comunes del hogar, incluyendo plásticos, metales, cartones, papeles, pilas y compostaje. Proporciona consejos prácticos y creativos sobre cómo reciclar o reutilizar estos materiales de manera sostenible en el hogar. Por favor, da la respuesta en no más de 200 palabras, responde sin introducción ni explicaciones adicionales. Actúa como si fueses una persona real y teniendo en cuenta lo siguiente:\n\n$conversationContext\nTú: $prompt'
         : '$conversationContext\nTú: $prompt';
 
     try {
@@ -221,9 +231,11 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         backgroundColor: Colors.green.shade200,
         title: Column(
           children: [
-            const Text('ChatBot', style: TextStyle(color: Colors.black)),
+            const Text('ChatBot', style: TextStyle(
+              fontFamily: 'ArtWork',
+              color:  Colors.black)),
             Text(
-              'Logged in as: $userEmail',
+              'Usuario: $userEmail',
               style: const TextStyle(color: Colors.black, fontSize: 12),
             ),
           ],
@@ -241,7 +253,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                 // ignore: deprecated_member_use
                 const FaIcon(FontAwesomeIcons.infoCircle, color: Colors.black),
             onPressed: () {
-               mostrarAyudaGeneral(context);
+              mostrarAyudaGeneral(context);
             },
           ),
         ],

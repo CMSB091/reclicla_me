@@ -979,33 +979,12 @@ class FirestoreService {
         .snapshots();
   }
 
-  Future<void> deleteUserRecommendation(String userEmail, String docId) async {
-    try {
-      final path = 'recommendations/$docId';
-      final docRef = FirebaseFirestore.instance.doc(path);
-
-      // Verifica si el documento existe
-      final docSnapshot = await docRef.get();
-      if (!docSnapshot.exists) {
-        debugPrint('El documento con ID $docId no existe en Firestore.');
-        return;
-      }
-
-      debugPrint('Eliminando documento en ruta: $path');
-      await docRef.delete();
-      debugPrint('Documento eliminado correctamente en Firestore.');
-    } catch (e) {
-      debugPrint('Error al eliminar documento: $e');
-      rethrow;
-    }
-  }
-
-  static Future<void> saveScannedItem({
-    required BuildContext context,
-    required String detectedItem,
-    String? chatResponse,
-    required String userEmail,
-  }) async {
+  static Future<void> saveScannedItem(
+      {required BuildContext context,
+      required String detectedItem,
+      String? chatResponse,
+      required String userEmail,
+      required String itemName}) async {
     try {
       // Formatear la fecha
       final formattedDate =
@@ -1016,6 +995,7 @@ class FirestoreService {
         'descripcion': (chatResponse ?? 'Sin descripción disponible').trim(),
         'email': userEmail, // Email del usuario logueado
         'fecha': formattedDate, // Fecha formateada
+        'material': itemName
       });
 
       // Mostrar SnackBar de confirmación
@@ -1032,6 +1012,51 @@ class FirestoreService {
         SnackBarType.error,
       );
       rethrow; // Lanza el error nuevamente si se necesita manejarlo más adelante
+    }
+  }
+
+  static Future<void> saveRecommendation({
+    required BuildContext context,
+    required String chatResponse,
+    required String userEmail,
+    required String item,
+  }) async {
+    try {
+      final recommendationData = {
+        'recommendation': chatResponse,
+        'userEmail': userEmail,
+        'timestamp': FieldValue.serverTimestamp(),
+        'item': item,
+      };
+
+      await FirebaseFirestore.instance
+          .collection('recommendations')
+          .add(recommendationData);
+    } catch (e) {
+      debugPrint('Error al guardar la recomendación: $e');
+      throw Exception(
+          'No se pudo guardar la recomendación. Verifica tu conexión.');
+    }
+  }
+
+  Future<void> deleteUserRecommendation(String userEmail, String docId) async {
+    try {
+      final path = 'recommendations/$docId';
+      final docRef = FirebaseFirestore.instance.doc(path);
+
+      // Verifica si el documento existe
+      final docSnapshot = await docRef.get();
+      if (!docSnapshot.exists) {
+        debugPrint('El documento con ID $docId no existe en Firestore.');
+        throw Exception('El documento no existe.');
+      }
+
+      debugPrint('Eliminando documento en ruta: $path');
+      await docRef.delete();
+      debugPrint('Documento eliminado correctamente en Firestore.');
+    } catch (e) {
+      debugPrint('Error al eliminar documento: $e');
+      rethrow; // Propaga el error para que pueda ser manejado por la función que llama
     }
   }
 }

@@ -11,12 +11,12 @@ class MisFavoritos extends StatefulWidget {
   const MisFavoritos({super.key, required this.userEmail});
 
   @override
-  // ignore: library_private_types_in_public_api
   _MisFavoritosState createState() => _MisFavoritosState();
 }
 
 class _MisFavoritosState extends State<MisFavoritos> {
   final FirestoreService _firestoreService = FirestoreService();
+  bool _isDeleting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class _MisFavoritosState extends State<MisFavoritos> {
           style: TextStyle(
             fontFamily: 'Artwork',
             fontWeight: FontWeight.w400,
-            fontSize: 24,
+            fontSize: 26,
           ),
         ),
         backgroundColor: Colors.green.shade200,
@@ -51,216 +51,224 @@ class _MisFavoritosState extends State<MisFavoritos> {
           ),
         ],
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _firestoreService.getUserRecommendations(widget.userEmail),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Stack(
+        children: [
+          StreamBuilder<QuerySnapshot>(
+            stream: _firestoreService.getUserRecommendations(widget.userEmail),
+            builder: (context, snapshot) {
+              if (_isDeleting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          if (snapshot.hasError) {
-            debugPrint('Error en el flujo: ${snapshot.error}');
-            return const Center(
-              child: Text('Ocurrió un error al cargar las recomendaciones.'),
-            );
-          }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            debugPrint(
-                'No se encontraron recomendaciones para: ${widget.userEmail}');
-            return const Center(
-              child: Text('No tienes recomendaciones aún.'),
-            );
-          }
+              if (snapshot.hasError) {
+                debugPrint('Error en el flujo: ${snapshot.error}');
+                return const Center(
+                  child:
+                      Text('Ocurrió un error al cargar las recomendaciones.'),
+                );
+              }
 
-          final recommendations = snapshot.data!.docs;
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                debugPrint(
+                    'No se encontraron recomendaciones para: ${widget.userEmail}');
+                return const Center(
+                  child: Text('No tienes recomendaciones aún.'),
+                );
+              }
 
-          return PageView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: recommendations.length,
-            itemBuilder: (context, index) {
-              final data =
-                  recommendations[index].data() as Map<String, dynamic>;
-              final recommendation = data['recommendation'] ?? '';
-              final docId = recommendations[index].id;
+              final recommendations = snapshot.data!.docs;
 
-              return Container(
-                margin: const EdgeInsets.all(16.0),
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12.0),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.3),
-                      spreadRadius: 2,
-                      blurRadius: 5,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Text(
-                          recommendation,
-                          style: const TextStyle(
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.normal,
-                          ),
-                          textAlign: TextAlign.justify,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green.shade200,
-                            foregroundColor: Colors.black,
-                          ),
-                          onPressed: () async {
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (BuildContext context) {
-                                return const AlertDialog(
-                                  content: Row(
-                                    children: [
-                                      CircularProgressIndicator(),
-                                      SizedBox(width: 20),
-                                      Text('Descargando PDF...'),
-                                    ],
-                                  ),
-                                );
-                              },
-                            );
+              return PageView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: recommendations.length,
+                itemBuilder: (context, index) {
+                  final data =
+                      recommendations[index].data() as Map<String, dynamic>;
+                  final recommendation = data['recommendation'] ?? '';
+                  final item = data['item'] ?? 'Sin item asociado';
+                  final docId = recommendations[index].id;
 
-                            try {
-                              await Funciones.descargarPdf(
-                                titulo: 'Favorito ${index + 1}',
-                                contenido: recommendation,
-                                context: context,
-                              );
-
-                              if (mounted) {
-                                Navigator.of(context, rootNavigator: true)
-                                    .pop();
-                                showCustomSnackBar(
-                                    context,
-                                    'PDF descargado con éxito.',
-                                    SnackBarType.confirmation);
-                              }
-                            } catch (e) {
-                              debugPrint('Error al descargar PDF: $e');
-
-                              if (mounted) {
-                                Navigator.of(context, rootNavigator: true)
-                                    .pop();
-                                showCustomSnackBar(
-                                    context,
-                                    'Error al descargar el PDF.',
-                                    SnackBarType.error);
-                              }
-                            }
-                          },
-                          icon: const FaIcon(FontAwesomeIcons.filePdf),
-                          label: const Text('Descargar PDF'),
-                        ),
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  title: const Text('Confirmar eliminación'),
-                                  content: const Text(
-                                      '¿Estás seguro de que deseas eliminar este favorito?'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: const Text('Cancelar'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: const Text('Eliminar'),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-
-                            if (confirm == true) {
-                              // Muestra el spinner mientras se procesa la eliminación
-                              showDialog(
-                                context: context,
-                                barrierDismissible:
-                                    false, // Evita que el usuario cierre el diálogo
-                                builder: (BuildContext context) {
-                                  return const AlertDialog(
-                                    content: Row(
-                                      children: [
-                                        CircularProgressIndicator(),
-                                        SizedBox(width: 20),
-                                        Text('Eliminando favorito...'),
-                                      ],
-                                    ),
-                                  );
-                                },
-                              );
-
-                              try {
-                                debugPrint(
-                                    'Intentando eliminar documento con ID: $docId');
-                                await _firestoreService
-                                    .deleteUserRecommendation(
-                                        widget.userEmail, docId);
-                                debugPrint(
-                                    'Documento eliminado correctamente por ID.');
-
-                                if (mounted) {
-                                  Navigator.of(context, rootNavigator: true)
-                                      .pop(); // Cierra el spinner
-                                  setState(() {}); // Refresca la interfaz
-                                  showCustomSnackBar(
-                                      context,
-                                      'Favorito eliminado.',
-                                      SnackBarType.confirmation);
-                                }
-                              } catch (e) {
-                                debugPrint('Error al eliminar favorito: $e');
-
-                                if (mounted) {
-                                  Navigator.of(context, rootNavigator: true)
-                                      .pop(); // Cierra el spinner
-                                  showCustomSnackBar(
-                                      context,
-                                      'Error al eliminar el favorito.',
-                                      SnackBarType.error);
-                                }
-                              }
-                            }
-                          },
-                          icon: const FaIcon(FontAwesomeIcons.trash),
-                          label: const Text('Eliminar'),
+                  return Container(
+                    margin: const EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                    child: Column(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            child: Text(
+                              item != 'Sin item asociado'
+                                  ? 'Item Asociado: $item\n\n$recommendation'
+                                  : recommendation,
+                              style: const TextStyle(
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.normal,
+                              ),
+                              textAlign: TextAlign.justify,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green.shade200,
+                                foregroundColor: Colors.black,
+                              ),
+                              onPressed: () async {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (BuildContext context) {
+                                    return const AlertDialog(
+                                      content: Row(
+                                        children: [
+                                          CircularProgressIndicator(),
+                                          SizedBox(width: 20),
+                                          Text('Descargando PDF...'),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                );
+
+                                try {
+                                  await Funciones.descargarPdf(
+                                    titulo: 'Favorito ${index + 1}',
+                                    contenido: recommendation,
+                                    context: context,
+                                  );
+
+                                  if (mounted) {
+                                    Navigator.of(context, rootNavigator: true)
+                                        .pop();
+                                    showCustomSnackBar(
+                                        context,
+                                        'PDF descargado con éxito.',
+                                        SnackBarType.confirmation);
+                                  }
+                                } catch (e) {
+                                  debugPrint('Error al descargar PDF: $e');
+
+                                  if (mounted) {
+                                    Navigator.of(context, rootNavigator: true)
+                                        .pop();
+                                    showCustomSnackBar(
+                                        context,
+                                        'Error al descargar el PDF.',
+                                        SnackBarType.error);
+                                  }
+                                }
+                              },
+                              icon: const FaIcon(FontAwesomeIcons.filePdf),
+                              label: const Text('Descargar PDF'),
+                            ),
+                            ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                              ),
+                              onPressed: () async {
+                                final confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title:
+                                          const Text('Confirmar eliminación'),
+                                      content: const Text(
+                                          '¿Estás seguro de que deseas eliminar este favorito?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(false),
+                                          child: const Text('Cancelar'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(true),
+                                          child: const Text('Eliminar'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+
+                                if (confirm == true) {
+                                  setState(() {
+                                    _isDeleting = true;
+                                  });
+
+                                  try {
+                                    debugPrint(
+                                        'Intentando eliminar documento con ID: $docId');
+                                    await _firestoreService
+                                        .deleteUserRecommendation(
+                                            widget.userEmail, docId);
+                                    debugPrint(
+                                        'Documento eliminado correctamente por ID.');
+
+                                    if (mounted) {
+                                      setState(() {
+                                        _isDeleting = false;
+                                      });
+                                      showCustomSnackBar(
+                                          context,
+                                          'Favorito eliminado.',
+                                          SnackBarType.confirmation);
+                                    }
+                                  } catch (e) {
+                                    debugPrint(
+                                        'Error al eliminar favorito: $e');
+
+                                    if (mounted) {
+                                      setState(() {
+                                        _isDeleting = false;
+                                      });
+                                      showCustomSnackBar(
+                                          context,
+                                          'Error al eliminar el favorito.',
+                                          SnackBarType.error);
+                                    }
+                                  }
+                                }
+                              },
+                              icon: const FaIcon(FontAwesomeIcons.trash),
+                              label: const Text('Eliminar'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
               );
             },
-          );
-        },
+          ),
+          if (_isDeleting)
+            Container(
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+        ],
       ),
     );
   }

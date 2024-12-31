@@ -39,7 +39,7 @@ class _MyInicioState extends State<MyInicio> {
   String? emailUsuario;
   List<String> materials = [];
   Funciones funciones = Funciones();
-  late String ruta;
+  String ruta  = 'assets/images/empy_trash.png';
 
   @override
   void initState() {
