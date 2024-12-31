@@ -184,7 +184,10 @@ flutter:
     - assets/animations/fireworks.json
     - assets/animations/recycling3.json
     - assets/animations/factory.json
-    - assets/animations/forgotPassword.json
+    - assets/animations/forgotPassword.json 
+    - assets/animations/historialAnimation.json
+    - assets/animations/historialAnimation2.json
+    - assets/animations/historialAnimation3.json
     - assets/images/fondo.png
     - assets/images/reciclaje_botellas.png
     - assets/images/empy_trash.png

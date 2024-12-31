@@ -35,7 +35,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
   late Animation<double> _arrowOpacityAnimation;
   Funciones funciones = Funciones();
   final AudioPlayer _audioPlayer = AudioPlayer();
-  bool _showLottieAnimation = false;
+  final bool _showLottieAnimation = false;
   bool _showArrowIcon = false;
   List<String> materials = []; // Lista de materiales únicos
   late int cotador;

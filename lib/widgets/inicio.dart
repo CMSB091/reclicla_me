@@ -72,7 +72,7 @@ class _MyInicioState extends State<MyInicio> {
         });
       }
     }
-  } 
+  }
 
   @override
   void dispose() {
@@ -322,63 +322,43 @@ class _MyInicioState extends State<MyInicio> {
             }
           },
           child: Center(
-            child: index == 1 || index == 3 || index == 0
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: buildLottieAnimation(
-                          path: index == 1
-                              ? 'assets/animations/lottie-recomendations.json'
-                              : index == 3
-                                  ? 'assets/animations/resumen_animation2.json'
-                                  : 'assets/animations/scan_objects.json',
-                          width: 125,
-                          height: 125,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        index == 1
-                            ? 'Recomendaciones'
-                            : index == 3
-                                ? 'Resumen'
-                                : 'Escaneo de Objetos',
-                        style: const TextStyle(
-                          fontFamily: 'Artwork',
-                          fontSize: 16,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  )
-                : Text(
-                    _getMenuTitle(index),
-                    style: const TextStyle(
-                      fontSize: 22,
-                      color: Colors.black,
-                    ),
-                  ),
-          ),
+              child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: buildLottieAnimation(
+                  path: index == 1
+                      ? 'assets/animations/lottie-recomendations.json'
+                      : index == 3
+                          ? 'assets/animations/resumen_animation2.json'
+                          : index == 2
+                              ? 'assets/animations/historialAnimation2.json'
+                              : 'assets/animations/scan_objects.json',
+                  width: 125,
+                  height: 125,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                index == 1
+                    ? 'Recomendaciones'
+                    : index == 3
+                        ? 'Resumen'
+                        : index == 2
+                            ? 'Historial de Objetos'
+                            : 'Escaneo de Objetos',
+                style: const TextStyle(
+                  fontFamily: 'Artwork',
+                  fontSize: 16,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          )),
         ),
       ),
     );
-  }
-
-  String _getMenuTitle(int index) {
-    switch (index) {
-      case 0:
-        return 'Detección de objetos';
-      case 1:
-        return 'ChatGpt';
-      case 2:
-        return 'Historial de objetos';
-      case 3:
-        return 'Resumenes';
-      default:
-        return 'Menú ${index + 1}';
-    }
   }
 
   Widget _getPageForIndex(int index) {
@@ -397,7 +377,10 @@ class _MyInicioState extends State<MyInicio> {
           lottieAnimation: "assets/animations/lottie-robot.json",
         );
       case 2:
-        return const HistorialPage();
+        return const MySplash(
+          nextScreen: HistorialPage(),
+          lottieAnimation: "assets/animations/historialAnimation3.json",
+        );
       case 3:
         return MySplash(
           nextScreen: ReusableCountSplashScreen(
