@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:password_strength/password_strength.dart';
 import 'package:recila_me/clases/firestore_service.dart';
 import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
@@ -28,6 +29,7 @@ class _RegisterPageState extends State<RegisterPage> {
   // Variable para controlar la visibilidad de la contraseña
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+
   void _register() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
@@ -44,9 +46,8 @@ class _RegisterPageState extends State<RegisterPage> {
           setState(() {
             _isSubmitting = false;
           });
-          showCustomSnackBar(context,'El correo ya está registrado',SnackBarType.error);
+          showCustomSnackBar(context, 'El correo ya está registrado', SnackBarType.error);
           return;
-
         }
 
         // Registrar al usuario en Firebase Authentication
@@ -60,20 +61,21 @@ class _RegisterPageState extends State<RegisterPage> {
         if (userCredential.user != null) {
           bool userCreated = await firebase.createUser(email);
           if (userCreated) {
-            showCustomSnackBar(context,'Usuario registrado exitosamente',SnackBarType.confirmation);
+            showCustomSnackBar(
+                context, 'Usuario registrado exitosamente', SnackBarType.confirmation);
             // Redirigir a la página de DatosPersonales después de registrar
             List<CameraDescription> cameras = await availableCameras();
-            if(context.mounted){
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DatosPersonales(
-                  correo: email,
-                  desdeInicio: true,
-                  cameras: cameras, // Lista de cámaras disponible
+            if (context.mounted) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DatosPersonales(
+                    correo: email,
+                    desdeInicio: true,
+                    cameras: cameras, // Lista de cámaras disponible
+                  ),
                 ),
-              ),
-            );
+              );
             }
           }
         }
@@ -82,7 +84,7 @@ class _RegisterPageState extends State<RegisterPage> {
           _isSubmitting = false;
         });
         if (context.mounted) {
-          showCustomSnackBar(context,'Error al registrar usuario: $e',SnackBarType.error);
+          showCustomSnackBar(context, 'Error al registrar usuario: $e', SnackBarType.error);
         }
       } finally {
         setState(() {
@@ -164,6 +166,14 @@ class _RegisterPageState extends State<RegisterPage> {
                     validator: (value) {
                       if (value!.isEmpty) {
                         return 'Por favor ingrese su contraseña';
+                      } else if (value.length < 8) {
+                        return 'Debe tener al menos 8 caracteres';
+                      } else if (!RegExp(r'(?=.*[A-Z])').hasMatch(value)) {
+                        return 'Debe contener al menos una letra mayúscula';
+                      } else if (!RegExp(r'(?=.*[!@#\$&*~])').hasMatch(value)) {
+                        return 'Debe contener al menos un carácter especial';
+                      } else if (estimatePasswordStrength(value) < 0.5) {
+                        return 'La contraseña es demasiado débil';
                       }
                       return null;
                     },
@@ -198,9 +208,10 @@ class _RegisterPageState extends State<RegisterPage> {
                   const SizedBox(height: 20.0),
                   _isSubmitting
                       ? const CircularProgressIndicator()
-                      : ElevatedButton(
+                      : ElevatedButton.icon(
+                          icon: const FaIcon(FontAwesomeIcons.registered),
+                          label: const Text('Registrar'),
                           onPressed: _register,
-                          child: const Text('Registrar'),
                         ),
                 ],
               ),

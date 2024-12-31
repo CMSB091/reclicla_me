@@ -5,6 +5,7 @@ import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/buildTextField.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
+import 'package:intl/intl.dart';
 
 class Comentarios extends StatefulWidget {
   final String emailUsuario;
@@ -183,9 +184,9 @@ class _ComentariosState extends State<Comentarios> {
               child: Center(
                 child: buildLottieAnimation(
                   path:
-                      'assets/animations/loading.json', // Ruta del Lottie spinner
-                  width: 150,
-                  height: 150,
+                      'assets/animations/lotti-recycle.json', // Ruta del Lottie spinner
+                  width: 500,
+                  height: 500,
                   fit: BoxFit.contain,
                   repetir: true,
                 ),
@@ -240,13 +241,16 @@ class _ComentariosState extends State<Comentarios> {
       _isLoading = true;
     });
 
+    // Dentro de tu función
+    String fechaFormateada = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
+
     // Llamar a la función de guardado en Firestore
     bool success = await Funciones.guardarFeedback(
       nombre: nombre,
       apellido: apellido,
       comentarios: comentarios,
       emailUsuario: widget.emailUsuario,
-      fecha: DateTime.now(),
+      fecha: fechaFormateada,
     );
 
     setState(() {

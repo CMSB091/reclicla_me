@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadUserEmail(String email) async {
+
     final nombre = await firestoreService.getUserName(email);
     setState(() {
       nombreUsuario = nombre;
@@ -68,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Builder(
         builder: (BuildContext scaffoldContext) {
           return BlurredBackground(
+            blurStrength: 3.0,
             child: Column(
               children: [
                 Padding(
@@ -237,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                             color: isDonated
-                                                ? Colors.green
+                                                ? Colors.greenAccent
                                                 : Colors.red,
                                           ),
                                         ),

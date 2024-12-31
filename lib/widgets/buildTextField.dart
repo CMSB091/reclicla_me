@@ -30,7 +30,7 @@ import 'package:flutter/services.dart';
     required String labelText,
     required TextEditingController controller,
     required int maxLength,
-    required String? Function(String?)? validator,
+    String? Function(String?)? validator,
     TextInputType keyboardType = TextInputType.text,
     List<TextInputFormatter>? inputFormatters,
     bool isReadOnly = false,

@@ -11,6 +11,7 @@ import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/redSocial.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart'; // Para seleccionar imagen desde la galería
 
+
 class AddItemScreen extends StatefulWidget {
   final String? itemId;
   final String? titulo;
@@ -91,7 +92,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
-  Future<void> _handleUpload() async {
+ 
+  /*Future<void> _handleUpload() async {
     setState(() {
       _isLoading = true;
     });
@@ -176,6 +178,92 @@ class _AddItemScreenState extends State<AddItemScreen> {
         _isLoading = false;
       });
     }
+  }*/
+  Future<void> _handleUpload() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      if (!_formKey.currentState!.validate()) {
+        showCustomSnackBar(
+          context,
+          'Por favor, completa los campos correctamente.',
+          SnackBarType.error,
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      if (_imageFile == null) {
+        showCustomSnackBar(
+          context,
+          'Por favor, selecciona una imagen primero.',
+          SnackBarType.error,
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      _formKey.currentState!.save();
+
+      // Reducir el peso de la imagen
+      final compressedImage = await Funciones().compressImage(_imageFile!);
+
+      // Subir la imagen comprimida
+      if (_userEmail != null) {
+        int maxIdPub = 0;
+        QuerySnapshot snapshot = await FirebaseFirestore.instance
+            .collection('items')
+            .orderBy('idpub', descending: true)
+            .limit(1)
+            .get();
+
+        if (snapshot.docs.isNotEmpty) {
+          maxIdPub = snapshot.docs.first['idpub'];
+        }
+
+        int newIdPub = maxIdPub + 1;
+
+        await firestoreService.uploadImageAndSaveToFirestore(
+          imageFile: compressedImage,
+          description: _descriptionController.text,
+          contact: _contactController.text,
+          scaffoldKey: _scaffoldKey,
+          email: _userEmail!,
+          titulo: _tituloController.text,
+          estado: false,
+          idpub: newIdPub,
+        );
+
+        showCustomSnackBar(
+          context,
+          'Publicado correctamente',
+          SnackBarType.confirmation,
+        );
+        _resetForm();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        showCustomSnackBar(
+          context,
+          'No se pudo cargar el email del usuario.',
+          SnackBarType.error,
+        );
+      }
+    } catch (e) {
+      await Funciones.saveDebugInfo('Error en la función _handleUpload $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _updatePost() async {
@@ -255,6 +343,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
     _formKey.currentState!.reset();
   }
 
+   void _mostrarAyuda(BuildContext context) {
+    Funciones.mostrarModalDeAyuda(
+      context: context,
+      titulo: 'Ayuda',
+      mensaje:
+          'Agrega una publicación que luego se mostrará en la sección de de artículos disponibles. \n Las publicaciones pueden ser vistas por todos los usuarios de la aplicación',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -271,12 +368,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
           style: const TextStyle(fontFamily: 'Artwork', fontSize: 22),
         ),
         backgroundColor: Colors.green.shade200,
+        actions: [
+            IconButton(
+              icon: const FaIcon(FontAwesomeIcons.infoCircle),
+              onPressed: () {
+                _mostrarAyuda(context);
+              },
+            ),
+          ],
       ),
+      
       body: Stack(
         children: [
           AbsorbPointer(
             absorbing: _isLoading,
             child: BlurredBackground(
+              blurStrength: 3.0,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(15.0),
                 child: Form(

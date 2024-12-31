@@ -107,6 +107,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       ),
       resizeToAvoidBottomInset: true,
       body: BlurredBackground(
+        blurStrength: 5.0,
         opacity: 0.1,
         child: SingleChildScrollView(
           child: Padding(
@@ -224,7 +225,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     color: widget.estado
-                        ? const Color.fromARGB(255, 6, 128, 10)
+                        ? const Color.fromARGB(255, 3, 139, 8)
                         : Colors.red,
                     fontWeight: FontWeight.bold,
                   ),

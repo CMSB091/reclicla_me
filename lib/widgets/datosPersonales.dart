@@ -397,6 +397,51 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
     }
   }
 
+  void _guardarDatos() {
+    // Validación centralizada
+    if (_nombreController.text.trim().isEmpty) {
+      showCustomSnackBar(
+          context, 'El campo Nombre es obligatorio', SnackBarType.error);
+      return;
+    }
+    if (_apellidoController.text.trim().isEmpty) {
+      showCustomSnackBar(
+          context, 'El campo Apellido es obligatorio', SnackBarType.error);
+      return;
+    }
+    if (_edadController.text.trim().isEmpty) {
+      showCustomSnackBar(
+          context, 'El campo Edad es obligatorio', SnackBarType.error);
+      return;
+    }
+    final edad = int.tryParse(_edadController.text.trim());
+    if (edad == null || edad <= 0) {
+      showCustomSnackBar(
+          context, 'Por favor, ingresa una edad válida', SnackBarType.error);
+      return;
+    }
+
+    // Validación pasada, guardar datos
+    funciones.guardarDatos(
+      correo: widget.correo,
+      nombreController: _nombreController,
+      apellidoController: _apellidoController,
+      edadController: _edadController,
+      direccionController: _direccionController,
+      ciudadController: _ciudadController,
+      paisController: _paisController,
+      telefonoController: _telefonoController,
+      imageUrl: imageUrl,
+      setSavingState: (bool value) {
+        setState(() {
+          _isSaving = value;
+        });
+      },
+      context: context,
+      cameras: widget.cameras,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -412,7 +457,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       body: Stack(
         children: [
           BlurredBackground(
-            blurStrength: 20.0,
+            blurStrength: 0.0,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: SingleChildScrollView(
@@ -462,8 +507,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         controller: _nombreController,
                         maxLength: 30,
                         keyboardType: TextInputType.name,
-                        validator: (value) =>
-                            value!.isEmpty ? 'Ingrese su nombre' : null,
                       ),
                       const SizedBox(height: 5),
                       buildTextField(
@@ -471,8 +514,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         controller: _apellidoController,
                         maxLength: 30,
                         keyboardType: TextInputType.name,
-                        validator: (value) =>
-                            value!.isEmpty ? 'Ingrese su Apellido' : null,
                       ),
                       const SizedBox(height: 5),
                       buildTextField(
@@ -480,8 +521,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         controller: _edadController,
                         maxLength: 2,
                         keyboardType: TextInputType.number,
-                        validator: (value) =>
-                            value!.isEmpty ? 'Ingrese su Edad' : null,
                       ),
                       const SizedBox(height: 5),
                       buildTextField(
@@ -489,8 +528,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         controller: _direccionController,
                         maxLength: 80,
                         keyboardType: TextInputType.name,
-                        validator: (value) =>
-                            value!.isEmpty ? 'Ingrese su Direccion' : null,
                       ),
                       const SizedBox(height: 5),
                       GestureDetector(
@@ -501,9 +538,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                             controller: _paisController,
                             maxLength: 80,
                             keyboardType: TextInputType.name,
-                            validator: (value) =>
-                                value!.isEmpty ? 'Ingrese el país' : null,
-                            isReadOnly: true,
                           ),
                         ),
                       ),
@@ -538,7 +572,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
                         controller: _telefonoController,
                         maxLength: 20,
                         keyboardType: TextInputType.number,
-                        validator: (value) => null,
                       ),
                       const SizedBox(height: 25),
                     ],
@@ -577,28 +610,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             ElevatedButton.icon(
-              onPressed: _isLoading || _isSaving
-                  ? null
-                  : () {
-                      funciones.guardarDatos(
-                        correo: widget.correo,
-                        nombreController: _nombreController,
-                        apellidoController: _apellidoController,
-                        edadController: _edadController,
-                        direccionController: _direccionController,
-                        ciudadController: _ciudadController,
-                        paisController: _paisController,
-                        telefonoController: _telefonoController,
-                        imageUrl: imageUrl, // Pasar imageUrl aquí
-                        setSavingState: (bool value) {
-                          setState(() {
-                            _isSaving = value;
-                          });
-                        },
-                        context: context,
-                        cameras: widget.cameras,
-                      );
-                    },
+              onPressed: _isLoading || _isSaving ? null : _guardarDatos,
               icon: const FaIcon(FontAwesomeIcons.floppyDisk),
               label: const Text('Guardar'),
             ),

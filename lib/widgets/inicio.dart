@@ -72,7 +72,7 @@ class _MyInicioState extends State<MyInicio> {
         });
       }
     }
-  }
+  } 
 
   @override
   void dispose() {
@@ -178,7 +178,6 @@ class _MyInicioState extends State<MyInicio> {
       ),
       endDrawer: _buildDrawer(context),
       body: BlurredBackground(
-        blurStrength: 20.0,
         child: Center(
           child: isLoading
               ? buildLottieAnimation(

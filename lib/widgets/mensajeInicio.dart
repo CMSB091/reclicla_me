@@ -1,35 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:recila_me/clases/funciones.dart';
-import 'dart:async';
-import 'dart:convert';
 import 'package:recila_me/widgets/login.dart';
 import 'package:camera/camera.dart';
 
 // ignore: camel_case_types
 class mensajeInicio extends StatelessWidget {
   final List<CameraDescription>? cameras;
-  const mensajeInicio(camera, {super.key, this.cameras});
+  final String tipMessage;
+
+  const mensajeInicio(this.cameras, {super.key, required this.tipMessage});
+
   @override
   Widget build(BuildContext context) {
-    return SplashScreen(cameras: cameras);
-  }
-}
-
-class RecyclingTip {
-  final String message;
-  RecyclingTip({required this.message});
-
-  factory RecyclingTip.fromJson(Map<String, dynamic> json) {
-    return RecyclingTip(
-      message: json['message'],
-    );
+    return SplashScreen(cameras: cameras, tipMessage: tipMessage);
   }
 }
 
 class SplashScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
+  final String tipMessage;
 
-  const SplashScreen({super.key, this.cameras});
+  const SplashScreen({super.key, this.cameras, required this.tipMessage});
 
   @override
   // ignore: library_private_types_in_public_api
@@ -37,34 +27,15 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  List<RecyclingTip> _tips = [];
-
   @override
   void initState() {
     super.initState();
-    _loadTips();
-  }
-
-  Future<void> _loadTips() async {
-    try {
-      final String data = await DefaultAssetBundle.of(context).loadString('assets/json/recycling_tips.json');
-      final jsonData = json.decode(data);
-      _tips = List<RecyclingTip>.from(jsonData.map((x) => RecyclingTip.fromJson(x)));
-    } catch (e) {
-      await Funciones.saveDebugInfo('Error al cargar los consejos de reciclaje: $e');
-    } finally {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _showWelcomeDialog();
-    }
+    });
   }
 
   void _showWelcomeDialog() {
-    RecyclingTip random;
-    if (_tips.isNotEmpty) {
-      random = _tips[DateTime.now().microsecondsSinceEpoch % _tips.length];
-    } else {
-      random = RecyclingTip(message: "No se pudo cargar el consejo de reciclaje. Inténtalo de nuevo más tarde.");
-    }
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -114,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen> {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          random.message,
+                          widget.tipMessage,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             backgroundColor: Colors.transparent,

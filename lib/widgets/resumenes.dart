@@ -130,7 +130,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
       _countController,
       _countAnimation,
       () async {
-        await Funciones.playCompletionSound(_audioPlayer);
+        //await Funciones.playCompletionSound(_audioPlayer);
         await Funciones.vibrateOnCompletion();
         _showFireworks();
       },
@@ -139,13 +139,13 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
   }
 
   void _showFireworks() {
-    setState(() {
+    /*setState(() {
       _showLottieAnimation = true;
     });
-
+*/
     Timer(const Duration(seconds: 3), () {
       setState(() {
-        _showLottieAnimation = false;
+        //_showLottieAnimation = false;
         _showArrowIcon = true;
       });
       _arrowController.forward();

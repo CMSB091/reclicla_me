@@ -75,6 +75,7 @@ dependencies:
   screenshot: ^3.0.0
   package_info_plus: ^4.0.0
   dio: ^5.2.1
+  password_strength: ^0.2.0
 
   
 dev_dependencies:
@@ -183,6 +184,7 @@ flutter:
     - assets/animations/fireworks.json
     - assets/animations/recycling3.json
     - assets/animations/factory.json
+    - assets/animations/forgotPassword.json
     - assets/images/fondo.png
     - assets/images/reciclaje_botellas.png
     - assets/images/empy_trash.png
@@ -207,6 +209,8 @@ flutter:
     - assets/icons/Papel.png
     - assets/icons/Residuos.png
     - assets/icons/excel_icon.png
+    - assets/images/fondoVerdeDisenho.jpg
+    - assets/images/verdeFondo.jpg
 
   fonts:
     - family: Artwork

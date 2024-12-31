@@ -4,6 +4,7 @@ import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:recila_me/servicios/dynamicLinkService.dart';
+import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
 import 'registerPage.dart';
@@ -115,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
             : e.code == 'wrong-password'
                 ? 'Contraseña incorrecta.'
                 : 'Error en la autenticación.';
-        showCustomSnackBar(context,message,SnackBarType.error);
+        showCustomSnackBar(context, message, SnackBarType.error);
       } finally {
         if (mounted) {
           setState(() => _isLoading = false);
@@ -133,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarBrightness: Brightness.light,
         ),
-        backgroundColor: Colors.green.shade200,
+        backgroundColor: Colors.green.shade400,
         titleTextStyle: const TextStyle(
           color: Colors.black,
           fontSize: 18,
@@ -146,24 +147,26 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                height: MediaQuery.of(context).size.height * 0.5,
-                child: const ImageAsset(),
-              ),
-              const SizedBox(height: 20.0),
-              _buildLoginForm(),
-              if (_isLoading)
-                const Padding(
-                  padding: EdgeInsets.all(20.0),
-                  child: CircularProgressIndicator(),
+      body: BlurredBackground(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  child: const ImageAsset(),
                 ),
-            ],
+                const SizedBox(height: 20.0),
+                _buildLoginForm(),
+                if (_isLoading)
+                  const Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: CircularProgressIndicator(),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -232,9 +235,10 @@ class _LoginPageState extends State<LoginPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            ElevatedButton(
+            ElevatedButton.icon(
+              label: const Text('Iniciar Sesión'),
+              icon: const FaIcon(FontAwesomeIcons.lockOpen),
               onPressed: _login,
-              child: const Text('Iniciar Sesión'),
             ),
             TextButton(
               onPressed: () {
