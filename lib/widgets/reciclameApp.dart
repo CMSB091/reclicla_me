@@ -73,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
           final randomTip = (allTipsQuery.docs..shuffle()).first['message'];
           _tipMessage = randomTip;
         } else {
-          _tipMessage = "No se encontraron consejos disponibles.";
+          _tipMessage = "Antes de desechar un artículo, considera si se puede reciclar o reutilizar de alguna manera.";
         }
       } else {
         // Guarda el nuevo tip en Firestore si no existe
@@ -86,7 +86,7 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     } catch (e) {
       _tipMessage =
-          "No se pudo cargar el consejo de reciclaje. Inténtalo de nuevo más tarde.";
+          "Antes de desechar un artículo, considera si se puede reciclar o reutilizar de alguna manera.";
     } finally {
       _startLoading();
     }
