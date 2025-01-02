@@ -6,7 +6,6 @@ import 'dart:typed_data';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:dio/dio.dart';
 import 'package:excel/excel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -809,6 +808,12 @@ class Funciones {
   static Future<void> exportToExcel(
       Map<String, int> residuos, Function(String) showSuccessMessage) async {
     try {
+      // Solicitar permisos de almacenamiento
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        throw Exception('Permiso de almacenamiento denegado');
+      }
+
       // Crear el archivo Excel
       var excel = Excel.createExcel();
       Sheet sheetObject = excel['Resumen'];
@@ -821,31 +826,32 @@ class Funciones {
 
       // Obtener los datos binarios del archivo Excel
       Uint8List? excelBytes = excel.save() as Uint8List?;
-
       if (excelBytes == null) {
         throw Exception('No se pudo generar el archivo Excel.');
       }
 
       if (Platform.isAndroid) {
-        // Usar MediaStore para guardar en la carpeta Downloads
+        // Usar la carpeta Downloads en Android con un nombre único
         final directory = Directory('/storage/emulated/0/Download');
-        final filePath = '${directory.path}/resumen_reciclado.xlsx';
-
         if (!directory.existsSync()) {
           directory.createSync(recursive: true);
         }
 
-        final file = File(filePath);
-        file.writeAsBytesSync(excelBytes);
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filePath = '${directory.path}/resumen_reciclado_$timestamp.xlsx';
 
-        showSuccessMessage('Archivo guardado correctamente en Descargas.');
+        final file = File(filePath);
+        await file.writeAsBytes(excelBytes);
+
+        showSuccessMessage(
+            'Archivo guardado correctamente en Descargas: $filePath');
       } else {
-        // Para otras plataformas
+        // Para otras plataformas (ejemplo: iOS o escritorio)
         final directory = await getApplicationDocumentsDirectory();
         final filePath = '${directory.path}/resumen_reciclado.xlsx';
 
         final file = File(filePath);
-        file.writeAsBytesSync(excelBytes);
+        await file.writeAsBytes(excelBytes);
 
         showSuccessMessage(
             'Archivo guardado correctamente en Documentos: $filePath');
@@ -952,7 +958,7 @@ class Funciones {
     Function(String) showSuccessMessage,
   ) async {
     try {
-      // Solicitar permisos
+      // Solicitar permisos de almacenamiento
       var status = await Permission.storage.request();
       if (!status.isGranted) {
         throw Exception('Permiso de almacenamiento denegado');
@@ -964,19 +970,19 @@ class Funciones {
       // Agregar contenido al PDF
       pdf.addPage(
         pw.Page(
+          pageFormat: PdfPageFormat.a4,
           build: (pw.Context context) {
             return pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                // Título
                 pw.Text(
                   'Informe de Huella de Carbono',
                   style: pw.TextStyle(
-                      fontSize: 24, fontWeight: pw.FontWeight.bold),
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                 ),
                 pw.SizedBox(height: 16),
-
-                // Concepto
                 pw.Text(
                   '¿Qué es la Huella de Carbono?',
                   style: pw.TextStyle(
@@ -990,8 +996,6 @@ class Funciones {
                   style: const pw.TextStyle(fontSize: 14),
                 ),
                 pw.SizedBox(height: 20),
-
-                // Detalles
                 pw.Text(
                   'Detalles del Informe',
                   style: pw.TextStyle(
@@ -1005,8 +1009,6 @@ class Funciones {
                   style: const pw.TextStyle(fontSize: 14),
                 ),
                 pw.SizedBox(height: 20),
-
-                // Imagen del gráfico
                 pw.Text(
                   'Gráfico de Resumen',
                   style: pw.TextStyle(
@@ -1026,25 +1028,39 @@ class Funciones {
         ),
       );
 
-      // Guardar el archivo PDF
-      final directory = Directory('/storage/emulated/0/Download');
-      if (!directory.existsSync()) {
-        directory.createSync(recursive: true);
+      if (Platform.isAndroid) {
+        // Usar la carpeta Downloads en Android con un nombre único
+        final directory = Directory('/storage/emulated/0/Download');
+        if (!directory.existsSync()) {
+          directory.createSync(recursive: true);
+        }
+
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        final filePath =
+            '${directory.path}/informe_huella_carbono_$timestamp.pdf';
+
+        final file = File(filePath);
+        await file.writeAsBytes(await pdf.save());
+
+        showSuccessMessage(
+            'Archivo guardado correctamente en Descargas: $filePath');
+      } else {
+        // Para otras plataformas (ejemplo: iOS o escritorio)
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/informe_huella_carbono.pdf';
+
+        final file = File(filePath);
+        await file.writeAsBytes(await pdf.save());
+
+        showSuccessMessage(
+            'Archivo guardado correctamente en Documentos: $filePath');
       }
-
-      final finalFilePath = '${directory.path}/informe_huella_carbono.pdf';
-      final file = File(finalFilePath);
-
-      if (await file.exists()) {
-        await file.delete();
-      }
-
-      await file.writeAsBytes(await pdf.save());
-      showSuccessMessage(finalFilePath);
-    } catch (e) {
-      throw Exception('Error al generar el PDF: $e');
+    } catch (e, stacktrace) {
+      debugPrint('Error al guardar el archivo: $e\n$stacktrace');
+      throw Exception('Error al guardar el archivo.');
     }
-  } 
+  }
+
   /// Obtiene una descripción de la huella de carbono utilizando IA.
   static Future<String> obtenerDescripcionHuella() async {
     const prompt = '''
@@ -1200,7 +1216,7 @@ class Funciones {
   }
 
   /// Genera un PDF y lo descarga en la carpeta Downloads
- static Future<void> descargarPdf({
+  /*static Future<void> descargarPdf({
     required String titulo,
     required String contenido,
     required BuildContext context,
@@ -1273,6 +1289,66 @@ class Funciones {
       debugPrint('Descarga completada: $savePath');
     } catch (e) {
       debugPrint('Error al notificar descarga al sistema: $e');
+    }
+  }*/
+
+  static Future<void> descargarPdf({
+    required String titulo,
+    required String contenido,
+    required BuildContext context,
+  }) async {
+    try {
+      // Solicitar permisos
+      var status = await Permission.storage.request();
+      if (!status.isGranted) {
+        throw Exception('Permiso de almacenamiento denegado');
+      }
+
+      // Crear el documento PDF
+      final pdf = pw.Document();
+
+      // Agregar contenido al PDF
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  titulo,
+                  style: pw.TextStyle(
+                    fontSize: 24,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
+                pw.SizedBox(height: 20),
+                pw.Text(
+                  contenido,
+                  style: const pw.TextStyle(fontSize: 16),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+
+      // Definir ruta del archivo PDF
+      final directory = Directory('/storage/emulated/0/Download');
+      if (!directory.existsSync()) {
+        directory.createSync(recursive: true);
+      }
+
+      // Generar un nombre único para evitar conflictos
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${directory.path}/$titulo-$timestamp.pdf';
+
+      // Guardar el PDF sin intentar eliminar previamente
+      final file = File(filePath);
+      await file.writeAsBytes(await pdf.save());
+    } catch (e) {
+      // Manejo de errores
+      debugPrint('Error al guardar el PDF: $e');
     }
   }
 

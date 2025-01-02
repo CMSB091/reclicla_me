@@ -349,7 +349,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
       context: context,
       titulo: 'Ayuda',
       mensaje:
-          'Agrega una publicación que luego se mostrará en la sección de de artículos disponibles. \n Las publicaciones pueden ser vistas por todos los usuarios de la aplicación',
+          'Agrega una publicación que luego se mostrará en la sección de de artículos disponibles.\nLas publicaciones pueden ser vistas por todos los usuarios de la aplicación',
     );
   }
 

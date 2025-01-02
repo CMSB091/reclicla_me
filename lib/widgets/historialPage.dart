@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lottie/lottie.dart';
 import 'package:recila_me/clases/funciones.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
+import 'package:recila_me/widgets/object_detection_screen.dart';
+import 'package:recila_me/widgets/showCustomSnackBar.dart';
 
 class HistorialPage extends StatefulWidget {
   const HistorialPage({super.key});
@@ -16,12 +19,14 @@ class HistorialPage extends StatefulWidget {
 class _HistorialPageState extends State<HistorialPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isDeleting = false;
+  String? email;
 
   Future<User?> _getCurrentUser() async {
     return _auth.currentUser;
   }
 
-  void _showDetailsModal(BuildContext context, String item, String material, String description, String date) {
+  void _showDetailsModal(BuildContext context, String item, String material,
+      String description, String date) {
     showDialog(
       context: context,
       builder: (context) {
@@ -54,7 +59,8 @@ class _HistorialPageState extends State<HistorialPage> {
     );
   }
 
-  void _showDescriptionModal(BuildContext context, String item, String description) {
+  void _showDescriptionModal(
+      BuildContext context, String item, String description) {
     showDialog(
       context: context,
       builder: (context) {
@@ -88,7 +94,8 @@ class _HistorialPageState extends State<HistorialPage> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Confirmar Eliminación'),
-          content: const Text('¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.'),
+          content: const Text(
+              '¿Estás seguro de que deseas eliminar este elemento? Esta acción no se puede deshacer.'),
           actions: [
             TextButton(
               onPressed: () {
@@ -121,7 +128,8 @@ class _HistorialPageState extends State<HistorialPage> {
                   });
                 }
               },
-              child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+              child:
+                  const Text('Eliminar', style: TextStyle(color: Colors.red)),
             ),
           ],
         );
@@ -133,12 +141,27 @@ class _HistorialPageState extends State<HistorialPage> {
     Funciones.mostrarModalDeAyuda(
       context: context,
       titulo: 'Ayuda',
-      mensaje:
-          'Aquí puedes ver los tipos de objetos que fuiste escaneando.\n'
+      mensaje: 'Aquí puedes ver los tipos de objetos que fuiste escaneando.\n'
           'Puedes ver información adicional de cada item presionando el icono de "información."\n'
-          'Puedes ver la recomendación guardada asociada a ese item presionando el icono de lista.\n'
+          'Puedes ver la recomendación guardada asociada a ese item presionando el icono "lista".\n'
           'Puedes eliminar el item presionando el icono del basurero.',
     );
+  }
+
+  Future<String?> fetchCurrentUserEmail() async {
+    try {
+      email = await Funciones().getCurrentUserEmail();
+      if (email != null) {
+        debugPrint('Email del usuario: $email');
+      } else {
+        debugPrint('No se pudo obtener el email del usuario.');
+      }
+      return email;
+    } catch (e) {
+      await Funciones.saveDebugInfo(
+          'Error recuperando el email del usuario: $e');
+      return null;
+    }
   }
 
   @override
@@ -147,30 +170,30 @@ class _HistorialPageState extends State<HistorialPage> {
       children: [
         Scaffold(
           appBar: AppBar(
-        title: const Text(
-          'Objetos Reciclados',
-          style: TextStyle(
-            fontFamily: 'Artwork',
-            fontWeight: FontWeight.w400,
-            fontSize: 24,
+            title: const Text(
+              'Objetos Reciclados',
+              style: TextStyle(
+                fontFamily: 'Artwork',
+                fontWeight: FontWeight.w400,
+                fontSize: 24,
+              ),
+            ),
+            backgroundColor: Colors.green.shade200,
+            leading: IconButton(
+              icon: const FaIcon(FontAwesomeIcons.house, color: Colors.black),
+              onPressed: () {
+                Funciones.navigateToHome(context);
+              },
+            ),
+            actions: [
+              IconButton(
+                icon: const FaIcon(FontAwesomeIcons.infoCircle),
+                onPressed: () {
+                  _mostrarAyuda(context);
+                },
+              ),
+            ],
           ),
-        ),
-        backgroundColor: Colors.green.shade200,
-        leading: IconButton(
-          icon: const FaIcon(FontAwesomeIcons.house, color: Colors.black),
-          onPressed: () {
-            Funciones.navigateToHome(context);
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const FaIcon(FontAwesomeIcons.infoCircle),
-            onPressed: () {
-              _mostrarAyuda(context);
-            },
-          ),
-        ],
-      ),
           body: BlurredBackground(
             child: FutureBuilder<User?>(
               future: _getCurrentUser(),
@@ -178,13 +201,14 @@ class _HistorialPageState extends State<HistorialPage> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-            
+
                 if (!snapshot.hasData || snapshot.data == null) {
                   return const Center(
-                    child: Text('No se pudo cargar la información del usuario.'),
+                    child:
+                        Text('No se pudo cargar la información del usuario.'),
                   );
                 }
-            
+
                 final user = snapshot.data!;
                 return StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
@@ -194,44 +218,89 @@ class _HistorialPageState extends State<HistorialPage> {
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
-                    }
-            
-                    if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    } else if (!snapshot.hasData ||
+                        snapshot.data!.docs.isEmpty) {
                       return Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            'No hay objetos registrados en el historial.',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          Lottie.asset(
+                            'assets/animations/recycling3.json',
+                            width: 400,
+                            height: 400,
                           ),
                           const SizedBox(height: 20),
-                          ElevatedButton(
-                            onPressed: () {
-                              // Navegar a una pantalla de inicio o agregar reciclaje.
+                          Text(
+                            '¡Aún no has reciclado nada!',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Empieza hoy y ayuda a cuidar el planeta 🌍',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.montserrat(
+                              fontSize: 16,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              // Recupera el email antes de navegar
+                              String? email =
+                                  await Funciones().getCurrentUserEmail();
+
+                              if (email != null) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        ObjectDetectionScreen(userEmail: email),
+                                  ),
+                                );
+                              } else {
+                                showCustomSnackBar(
+                                    context,
+                                    'No se pudo obtener el email del usuario.',
+                                    SnackBarType.error);
+                              }
                             },
-                            child: const Text('¡Agrega tu primer objeto reciclado!'),
+                            icon: const FaIcon(FontAwesomeIcons.recycle),
+                            label: const Text('¡Empieza a reciclar ahora!'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green.shade400,
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12.0, horizontal: 20.0),
+                              textStyle: GoogleFonts.montserrat(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
                         ],
                       );
                     }
-            
+
                     final items = snapshot.data!.docs;
-            
+
                     return ListView.builder(
                       padding: const EdgeInsets.all(16.0),
                       itemCount: items.length,
                       itemBuilder: (context, index) {
                         final item = items[index];
                         final data = item.data() as Map<String, dynamic>;
-            
+
                         final detectedItem = data['material'] ?? 'Desconocido';
                         final description = data.containsKey('descripcion')
                             ? data['descripcion']
                             : 'Sin descripción';
                         final material = data['item'] ?? 'Sin material';
                         final date = data['fecha'] ?? 'Sin fecha';
-                        final iconPath = Funciones.getMaterialIconPath(material);
-            
+                        final iconPath =
+                            Funciones.getMaterialIconPath(material);
+
                         return Card(
                           elevation: 4,
                           margin: const EdgeInsets.symmetric(vertical: 8.0),
@@ -252,20 +321,26 @@ class _HistorialPageState extends State<HistorialPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const FaIcon(FontAwesomeIcons.infoCircle, color: Colors.blue),
+                                  icon: const FaIcon(
+                                      FontAwesomeIcons.infoCircle,
+                                      color: Colors.blue),
                                   onPressed: () {
-                                    _showDetailsModal(context, detectedItem, material, description, date);
+                                    _showDetailsModal(context, detectedItem,
+                                        material, description, date);
                                   },
                                 ),
                                 if (description != 'Sin descripción disponible')
                                   IconButton(
-                                    icon: const FaIcon(FontAwesomeIcons.fileAlt, color: Colors.orange),
+                                    icon: const FaIcon(FontAwesomeIcons.fileAlt,
+                                        color: Colors.orange),
                                     onPressed: () {
-                                      _showDescriptionModal(context, detectedItem, description);
+                                      _showDescriptionModal(
+                                          context, detectedItem, description);
                                     },
                                   ),
                                 IconButton(
-                                  icon: const FaIcon(FontAwesomeIcons.trash, color: Colors.red),
+                                  icon: const FaIcon(FontAwesomeIcons.trash,
+                                      color: Colors.red),
                                   onPressed: () {
                                     _confirmDeleteItem(context, item.reference);
                                   },

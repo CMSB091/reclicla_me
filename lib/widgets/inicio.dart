@@ -39,7 +39,7 @@ class _MyInicioState extends State<MyInicio> {
   String? emailUsuario;
   List<String> materials = [];
   Funciones funciones = Funciones();
-  String ruta  = 'assets/images/empy_trash.png';
+  String ruta = 'assets/images/empy_trash.png';
 
   @override
   void initState() {
@@ -138,6 +138,18 @@ class _MyInicioState extends State<MyInicio> {
     }
   }
 
+  String _getSaludo() {
+    final horaActual = DateTime.now().hour;
+
+    if (horaActual >= 5 && horaActual <= 12) {
+      return 'Buenos días';
+    } else if (horaActual >= 12 && horaActual <= 20) {
+      return 'Buenas tardes';
+    } else {
+      return 'Buenas noches';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,17 +158,18 @@ class _MyInicioState extends State<MyInicio> {
           statusBarBrightness: Brightness.light,
         ),
         backgroundColor: Colors.green.shade200,
-        titleTextStyle: const TextStyle(
-          color: Colors.black,
-          fontSize: 18,
-        ),
         title: isLoading
             ? null
-            : Text(
-                'Bienvenido $nombreUsuario !!',
-                style: const TextStyle(
-                  fontFamily: 'Artwork',
-                  fontSize: 20,
+            : FittedBox(
+                fit: BoxFit
+                    .scaleDown, // Asegura que el texto se ajuste al espacio
+                child: Text(
+                  '${_getSaludo()} $nombreUsuario !!',
+                  style: const TextStyle(
+                    fontFamily: 'Artwork',
+                    fontSize:
+                        25, // Tamaño base que se ajustará según el espacio
+                  ),
                 ),
               ),
         leading: IconButton(
