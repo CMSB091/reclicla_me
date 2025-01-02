@@ -103,6 +103,25 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
     );
   }
 
+  @override
+  void dispose() {
+    Tflite.close();
+    super.dispose();
+  }
+
+  void _resetScreen() {
+    debugPrint('Reseteando la pantalla...');
+    Future.delayed(const Duration(milliseconds: 100), () {
+      setState(() {
+        filePath = null;
+        label = '';
+        confidence = 0.0;
+        objectDetected = false;
+        _loading = true;
+      });
+    });
+  }
+
   Future<void> _guardarItemSeleccionado(
       BuildContext context, String detectedItem) async {
     final TextEditingController itemNameController = TextEditingController();
@@ -198,14 +217,8 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                                       ),
                                     );
 
-                                    // Limpia las variables después de guardar
-                                    setState(() {
-                                      filePath = null;
-                                      label = '';
-                                      confidence = 0.0;
-                                      objectDetected = false;
-                                      _loading = true;
-                                    });
+                                    // Limpia las variables y reinicia la pantalla
+                                    _resetScreen();
                                   },
                             child: const Text('Guardar'),
                           ),
@@ -222,13 +235,6 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    Tflite.close();
-    super.dispose();
-  }
-
-  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -278,43 +284,46 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                               const SizedBox(height: 50),
                             ],
                           )
-                        : Container(
-                            height: 250,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Colors.black26,
-                                  blurRadius: 10,
-                                  offset: Offset(0, 4),
+                        : filePath != null
+                            ? Container(
+                                height: 250,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(15),
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(15),
-                              child: Image.file(filePath!, fit: BoxFit.cover),
-                            ),
-                          ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(15),
+                                  child:
+                                      Image.file(filePath!, fit: BoxFit.cover),
+                                ),
+                              )
+                            : const SizedBox.shrink(),
                   ),
                   const SizedBox(height: 20),
-                  Center(
-                    child: Text(
-                      label,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall!
-                          .copyWith(fontSize: 20, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.center,
+                  if (label.isNotEmpty)
+                    Center(
+                      child: Text(
+                        label,
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                            fontSize: 20, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 12),
-                  Center(
-                    child: Text(
-                      "Precisión: ${confidence.toStringAsFixed(0)}%",
-                      style: Theme.of(context).textTheme.bodySmall,
-                      textAlign: TextAlign.center,
+                  if (confidence > 0)
+                    Center(
+                      child: Text(
+                        "Precisión: ${confidence.toStringAsFixed(0)}%",
+                        style: Theme.of(context).textTheme.bodySmall,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
