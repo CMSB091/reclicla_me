@@ -1,13 +1,12 @@
-import 'package:camera/camera.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:password_strength/password_strength.dart';
 import 'package:recila_me/clases/firestore_service.dart';
-import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
+import 'package:recila_me/widgets/verificarEmailPage.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -24,73 +23,77 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   FirestoreService firebase = FirestoreService();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isSubmitting = false;
   // Variable para controlar la visibilidad de la contraseña
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  Future<bool> isEmailAlreadyInUse(String email) async {
+    try {
+      final signInMethods =
+          await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+      return signInMethods
+          .isNotEmpty; // Si tiene métodos asociados, ya está en uso.
+    } catch (e) {
+      debugPrint('Error verificando correo: $e');
+      return false;
+    }
+  }
+
+  bool isValidEmail(String email) {
+    return EmailValidator.validate(email);
+  }
+
   void _register() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isSubmitting = true;
-      });
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
 
-      String email = _emailController.text;
-      String password = _passwordController.text;
+    if (!isValidEmail(email)) {
+      showCustomSnackBar(
+          context, 'Por favor ingresa un correo válido.', SnackBarType.error);
+      return;
+    }
 
-      try {
-        // Verificar si el correo ya existe en la colección 'usuario'
-        bool emailExists = await firebase.checkEmailExists(email);
-        if (emailExists) {
-          setState(() {
-            _isSubmitting = false;
-          });
-          showCustomSnackBar(context, 'El correo ya está registrado', SnackBarType.error);
-          return;
-        }
+    if (await isEmailAlreadyInUse(email)) {
+      showCustomSnackBar(
+          context, 'El correo ya está registrado.', SnackBarType.error);
+      return;
+    }
 
-        // Registrar al usuario en Firebase Authentication
-        UserCredential userCredential =
-            await _auth.createUserWithEmailAndPassword(
-          email: email,
-          password: password,
-        );
+    setState(() {
+      _isSubmitting = true;
+    });
 
-        // Si el registro es exitoso, crear el usuario en Firestore
-        if (userCredential.user != null) {
-          bool userCreated = await firebase.createUser(email);
-          if (userCreated) {
-            showCustomSnackBar(
-                context, 'Usuario registrado exitosamente', SnackBarType.confirmation);
-            // Redirigir a la página de DatosPersonales después de registrar
-            List<CameraDescription> cameras = await availableCameras();
-            if (context.mounted) {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => DatosPersonales(
-                    correo: email,
-                    desdeInicio: true,
-                    cameras: cameras, // Lista de cámaras disponible
-                  ),
-                ),
-              );
-            }
-          }
-        }
-      } catch (e) {
-        setState(() {
-          _isSubmitting = false;
-        });
+    try {
+      final UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        await user.sendEmailVerification();
+        showCustomSnackBar(context, 'Correo de verificación enviado a $email.',
+            SnackBarType.confirmation);
+
         if (context.mounted) {
-          showCustomSnackBar(context, 'Error al registrar usuario: $e', SnackBarType.error);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => VerificarEmailPage(user: user),
+            ),
+          );
         }
-      } finally {
-        setState(() {
-          _isSubmitting = false;
-        });
       }
+    } catch (e) {
+      showCustomSnackBar(
+          context, 'Error al registrar usuario: $e', SnackBarType.error);
+    } finally {
+      setState(() {
+        _isSubmitting = false;
+      });
     }
   }
 

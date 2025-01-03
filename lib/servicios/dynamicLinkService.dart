@@ -4,7 +4,8 @@ import 'package:recila_me/widgets/datosPersonales.dart';
 
 class DynamicLinkService {
   Future<void> initDynamicLinks(BuildContext context) async {
-    final PendingDynamicLinkData? data = await FirebaseDynamicLinks.instance.getInitialLink();
+    final PendingDynamicLinkData? data =
+        await FirebaseDynamicLinks.instance.getInitialLink();
     _handleDeepLink(data, context);
 
     FirebaseDynamicLinks.instance.onLink.listen((dynamicLinkData) {
@@ -14,24 +15,31 @@ class DynamicLinkService {
     });
   }
 
-  void _handleDeepLink(PendingDynamicLinkData? dynamicLinkData, BuildContext context) {
+  void _handleDeepLink(
+      PendingDynamicLinkData? dynamicLinkData, BuildContext context) {
     final Uri? deepLink = dynamicLinkData?.link;
 
-    if (deepLink != null) {
-      // Manejo del enlace profundo, para cuando el usuario valida su email
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DatosPersonales(
-            correo: deepLink.queryParameters['email'] ?? '',
-            desdeInicio: false,
-            cameras: const [],
+    if (deepLink != null && deepLink.path == '/verifyEmail') {
+      // Extraer parámetros del enlace
+      final email = deepLink.queryParameters['email'];
+
+      if (email != null) {
+        // Verificar si el email está autenticado
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DatosPersonales(
+              correo: email,
+              desdeInicio: false,
+              cameras: const [], // Puedes reemplazar esto con la lista de cámaras si es necesario
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 }
+
 
 /* Este código pertenece a un servicio en Flutter llamado DynamicLinkService, cuya función es gestionar los enlaces dinámicos utilizando la biblioteca de Firebase Dynamic Links.
 

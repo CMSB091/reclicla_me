@@ -296,102 +296,93 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
               },
               child: const Text('Cancelar'),
             ),
-            if (widget.desdeInicio)
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-                child: const Text('Eliminar'),
-              ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true);
+              },
+              child: const Text('Eliminar'),
+            ),
           ],
         );
       },
     );
 
     if (confirmarEliminar == true) {
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) {
-            return const AlertDialog(
-              content: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 16),
-                  Text(
-                    'Eliminando cuenta...',
-                    style: TextStyle(fontFamily: 'Artwork', fontSize: 18),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      }
+      // Mostrar spinner de carga
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return const AlertDialog(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(width: 16),
+                Text('Eliminando cuenta...', style: TextStyle(fontSize: 16)),
+              ],
+            ),
+          );
+        },
+      );
 
       try {
         User? user = FirebaseAuth.instance.currentUser;
         if (user != null) {
-          bool result =
-              await _firestoreService.deleteUser(user.email ?? 'No disponible');
-          if (result) {
-            AuthCredential credential = EmailAuthProvider.credential(
-              email: user.email!,
-              password: contrasenaController.text,
+          // Reautenticar al usuario
+          AuthCredential credential = EmailAuthProvider.credential(
+            email: user.email!,
+            password: contrasenaController.text.trim(),
+          );
+          await user.reauthenticateWithCredential(credential);
+          debugPrint('Reautenticación exitosa.');
+
+          // Eliminar datos del usuario en Firestore
+          bool firestoreResult =
+              await _firestoreService.deleteUser(user.email ?? '');
+          if (!firestoreResult) {
+            throw Exception('Error al eliminar datos en Firestore.');
+          }
+          debugPrint('Datos eliminados en Firestore.');
+
+          // Eliminar usuario de Firebase Authentication
+          await user.delete();
+          debugPrint('Usuario eliminado de Firebase Authentication.');
+
+          if (mounted) {
+            Navigator.of(context).pop(); // Cerrar el spinner de carga
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('Cuenta Eliminada'),
+                  content:
+                      const Text('Tu cuenta ha sido eliminada correctamente.'),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => const LoginApp(),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                );
+              },
             );
-            await user.reauthenticateWithCredential(credential);
-            await user.delete();
-            if (mounted) {
-              Navigator.of(context).pop();
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: const Text('Cuenta Eliminada'),
-                    content: const Text(
-                        'Tu cuenta ha sido eliminada correctamente.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                                builder: (context) => const LoginApp()),
-                            (route) => false,
-                          );
-                        },
-                        child: const Text('OK'),
-                      ),
-                    ],
-                  );
-                },
-              );
-            }
           }
         }
       } catch (e) {
+        debugPrint('Error eliminando cuenta: $e');
         if (mounted) {
-          Navigator.of(context).pop();
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('Error'),
-                content:
-                    Text('Ocurrió un error al intentar eliminar la cuenta: $e'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
+          Navigator.of(context).pop(); // Cerrar el spinner de carga
+          showCustomSnackBar(
+              context, 'Error eliminando cuenta: $e', SnackBarType.error);
         }
       }
     }
@@ -445,185 +436,186 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const FaIcon(FontAwesomeIcons.arrowLeft),
-          onPressed: _intentarSalir,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const FaIcon(FontAwesomeIcons.arrowLeft),
+            onPressed: _intentarSalir,
+          ),
+          title: const Text('Datos Personales',
+              style: TextStyle(fontFamily: 'Artwork', fontSize: 30)),
+          backgroundColor: Colors.green.shade200,
         ),
-        title: const Text('Datos Personales',
-            style: TextStyle(fontFamily: 'Artwork', fontSize: 30)),
-        backgroundColor: Colors.green.shade200,
-      ),
-      body: Stack(
-        children: [
-          BlurredBackground(
-            blurStrength: 0.0,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Stack(
-                        alignment: Alignment.bottomRight,
-                        children: [
-                          CircleAvatar(
-                            radius: 60,
-                            backgroundImage: (imageUrl != null &&
-                                    imageUrl!.isNotEmpty &&
-                                    imageUrl!.startsWith('http'))
-                                ? NetworkImage(imageUrl!)
-                                : const AssetImage('assets/images/perfil.png')
-                                    as ImageProvider,
-                            backgroundColor: Colors.grey.shade200,
-                          ),
+        body: Stack(
+          children: [
+            BlurredBackground(
+              blurStrength: 0.0,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            CircleAvatar(
+                              radius: 60,
+                              backgroundImage: (imageUrl != null &&
+                                      imageUrl!.isNotEmpty &&
+                                      imageUrl!.startsWith('http'))
+                                  ? NetworkImage(imageUrl!)
+                                  : const AssetImage('assets/images/perfil.png')
+                                      as ImageProvider,
+                              backgroundColor: Colors.grey.shade200,
+                            ),
 
-                          IconButton(
-                            icon: const FaIcon(FontAwesomeIcons.circlePlus,
-                                color: Colors.green),
-                            onPressed: _isLoading
-                                ? null
-                                : () {
-                                    funciones.pickAndUploadImage(
-                                      correo: widget.correo,
-                                      onImageUploaded:
-                                          (String uploadedImageUrl) {
-                                        setState(() {
-                                          imageUrl = uploadedImageUrl;
-                                        });
-                                      },
-                                      context: context,
-                                    );
-                                  },
-                          ),
-                          //),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      buildTextField(
-                        labelText: 'Nombre',
-                        controller: _nombreController,
-                        maxLength: 30,
-                        keyboardType: TextInputType.name,
-                      ),
-                      const SizedBox(height: 5),
-                      buildTextField(
-                        labelText: 'Apellido',
-                        controller: _apellidoController,
-                        maxLength: 30,
-                        keyboardType: TextInputType.name,
-                      ),
-                      const SizedBox(height: 5),
-                      buildTextField(
-                        labelText: 'Edad',
-                        controller: _edadController,
-                        maxLength: 2,
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 5),
-                      buildTextField(
-                        labelText: 'Direccion',
-                        controller: _direccionController,
-                        maxLength: 80,
-                        keyboardType: TextInputType.name,
-                      ),
-                      const SizedBox(height: 5),
-                      GestureDetector(
-                        onTap: _isLoading ? null : _mostrarSeleccionPais,
-                        child: AbsorbPointer(
-                          child: buildTextField(
-                            labelText: 'País',
-                            controller: _paisController,
-                            maxLength: 80,
-                            keyboardType: TextInputType.name,
+                            IconButton(
+                              icon: const FaIcon(FontAwesomeIcons.circlePlus,
+                                  color: Colors.green),
+                              onPressed: _isLoading
+                                  ? null
+                                  : () {
+                                      funciones.pickAndUploadImage(
+                                        correo: widget.correo,
+                                        onImageUploaded:
+                                            (String uploadedImageUrl) {
+                                          setState(() {
+                                            imageUrl = uploadedImageUrl;
+                                          });
+                                        },
+                                        context: context,
+                                      );
+                                    },
+                            ),
+                            //),
+                          ],
+                        ),
+                        const SizedBox(height: 5),
+                        buildTextField(
+                          labelText: 'Nombre',
+                          controller: _nombreController,
+                          maxLength: 30,
+                          keyboardType: TextInputType.name,
+                        ),
+                        const SizedBox(height: 5),
+                        buildTextField(
+                          labelText: 'Apellido',
+                          controller: _apellidoController,
+                          maxLength: 30,
+                          keyboardType: TextInputType.name,
+                        ),
+                        const SizedBox(height: 5),
+                        buildTextField(
+                          labelText: 'Edad',
+                          controller: _edadController,
+                          maxLength: 2,
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 5),
+                        buildTextField(
+                          labelText: 'Direccion',
+                          controller: _direccionController,
+                          maxLength: 80,
+                          keyboardType: TextInputType.name,
+                        ),
+                        const SizedBox(height: 5),
+                        GestureDetector(
+                          onTap: _isLoading ? null : _mostrarSeleccionPais,
+                          child: AbsorbPointer(
+                            child: buildTextField(
+                              labelText: 'País',
+                              controller: _paisController,
+                              maxLength: 80,
+                              keyboardType: TextInputType.name,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 5),
-                      GestureDetector(
-                        onTap: () {
-                          if (!_isLoading && _paisController.text.isNotEmpty) {
-                            _mostrarCiudades(_paisController
-                                .text); // Llamar a la función que carga las ciudades
-                          } else {
-                            showCustomSnackBar(
-                                context,
-                                'Selecciona un país primero.',
-                                SnackBarType.error);
-                          }
-                        },
-                        child: AbsorbPointer(
-                          child: buildTextField(
-                            labelText: 'Ciudad',
-                            controller: _ciudadController,
-                            maxLength: 80,
-                            keyboardType: TextInputType.name,
-                            validator: (value) =>
-                                value!.isEmpty ? 'Ingrese la ciudad' : null,
-                            isReadOnly: true,
+                        const SizedBox(height: 5),
+                        GestureDetector(
+                          onTap: () {
+                            if (!_isLoading &&
+                                _paisController.text.isNotEmpty) {
+                              _mostrarCiudades(_paisController
+                                  .text); // Llamar a la función que carga las ciudades
+                            } else {
+                              showCustomSnackBar(
+                                  context,
+                                  'Selecciona un país primero.',
+                                  SnackBarType.error);
+                            }
+                          },
+                          child: AbsorbPointer(
+                            child: buildTextField(
+                              labelText: 'Ciudad',
+                              controller: _ciudadController,
+                              maxLength: 80,
+                              keyboardType: TextInputType.name,
+                              validator: (value) =>
+                                  value!.isEmpty ? 'Ingrese la ciudad' : null,
+                              isReadOnly: true,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 5),
-                      buildTextField(
-                        labelText: 'Teléfono',
-                        controller: _telefonoController,
-                        maxLength: 20,
-                        keyboardType: TextInputType.number,
-                      ),
-                      const SizedBox(height: 25),
-                    ],
+                        const SizedBox(height: 5),
+                        buildTextField(
+                          labelText: 'Teléfono',
+                          controller: _telefonoController,
+                          maxLength: 20,
+                          keyboardType: TextInputType.number,
+                        ),
+                        const SizedBox(height: 25),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          if (_isLoading)
-            const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text('Cargando datos...'),
-                ],
+            if (_isLoading)
+              const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 20),
+                    Text('Cargando datos...'),
+                  ],
+                ),
               ),
-            ),
-          if (_isSaving)
-            const Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text('Guardando datos...'),
-                ],
-              ),
-            )
-        ],
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ElevatedButton.icon(
-              onPressed: _isLoading || _isSaving ? null : _guardarDatos,
-              icon: const FaIcon(FontAwesomeIcons.floppyDisk),
-              label: const Text('Guardar'),
-            ),
-            if (widget.desdeInicio)
-              ElevatedButton.icon(
-                onPressed: _isLoading ? null : _eliminarDatos,
-                icon: const FaIcon(FontAwesomeIcons.trash),
-                label: const Text('Eliminar'),
-              ),
+            if (_isSaving)
+              const Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 20),
+                    Text('Guardando datos...'),
+                  ],
+                ),
+              )
           ],
         ),
-      ),
-    );
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton.icon(
+                onPressed: _isLoading || _isSaving ? null : _guardarDatos,
+                icon: const FaIcon(FontAwesomeIcons.floppyDisk),
+                label: const Text('Guardar'),
+              ),
+              if (widget.desdeInicio &&
+                  _nombreController.text.trim().isNotEmpty)
+                ElevatedButton.icon(
+                  onPressed: _isLoading ? null : _eliminarDatos,
+                  icon: const FaIcon(FontAwesomeIcons.trash),
+                  label: const Text('Eliminar'),
+                ),
+            ],
+          ),
+        ));
   }
 
   @override
