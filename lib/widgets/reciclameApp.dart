@@ -32,6 +32,7 @@ class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key, this.cameras});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SplashScreenState createState() => _SplashScreenState();
 }
 
@@ -49,8 +50,20 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _fetchTipAndStartLoading() async {
     try {
-      // Consulta a Firestore para obtener los tips recientes (últimos 7 días, por ejemplo)
+      // Fecha límite para tips recientes
       final cutoffDate = DateTime.now().subtract(const Duration(days: 7));
+
+      // Eliminar tips más antiguos (vaciado semanal)
+      final oldTipsQuery = await FirebaseFirestore.instance
+          .collection('tips')
+          .where('timestamp', isLessThan: Timestamp.fromDate(cutoffDate))
+          .get();
+
+      for (var doc in oldTipsQuery.docs) {
+        await doc.reference.delete();
+      }
+
+      // Obtener tips recientes
       final tipsQuery = await FirebaseFirestore.instance
           .collection('tips')
           .where('timestamp',
@@ -60,12 +73,58 @@ class _SplashScreenState extends State<SplashScreen> {
       final recentTips =
           tipsQuery.docs.map((doc) => doc['message'] as String).toList();
 
-      // Solicita un nuevo tip y verifica si ya existe
-      String newTip = await Funciones.getChatGPTResponse(
-          "Proporciona un consejo corto y útil sobre reciclaje o un recordatorio para fomentar prácticas amigables con el medio ambiente. Responde únicamente con el consejo, sin introducción ni explicaciones adicionales. Actúa como un experto en el cuidado del medio ambiente y en el reciclaje de residuos domésticos.");
+      // Generar un nuevo tip con mayor variedad
+      final topics = [
+        "reciclaje de plástico",
+        "reciclaje de papel",
+        "compostaje doméstico",
+        "reutilización creativa",
+        "cuidado del agua",
+        "reciclaje electrónico",
+        "reciclaje de vidrio",
+        "reducción de residuos en la cocina",
+        "reciclaje de textiles",
+        "reciclaje de metales",
+        "ahorro energético en el hogar",
+        "cómo reducir el uso de plásticos de un solo uso",
+        "beneficios del compostaje en jardines",
+        "reciclaje de baterías y pilas",
+        "reciclaje de electrodomésticos viejos",
+        "cuidado de áreas verdes",
+        "reciclaje de cartón",
+        "minimización de desperdicios en eventos",
+        "formas de reutilizar botellas de vidrio",
+        "reciclaje de residuos orgánicos",
+        "cómo separar adecuadamente la basura",
+        "impacto del reciclaje en el cambio climático",
+        "reciclaje de envases de aluminio",
+        "cómo hacer tu propio compost",
+        "reutilización de frascos y tarros",
+        "formas creativas de dar nueva vida a ropa vieja",
+        "beneficios de reparar antes de desechar",
+        "importancia de reciclar juguetes viejos",
+        "cómo participar en programas de reciclaje locales",
+        "reciclaje en la oficina",
+        "formas de reducir el desperdicio de alimentos",
+        "reciclaje de CDs y DVDs",
+        "cómo reciclar correctamente el aceite de cocina usado",
+        "importancia del reciclaje en las escuelas",
+        "ideas para reutilizar cajas de cartón",
+        "reciclaje de materiales de construcción",
+        "cómo reducir la contaminación digital (e-waste)",
+        "cómo hacer muebles con materiales reciclados",
+        "formas de reciclar o donar libros viejos",
+        "reciclaje de escombros y materiales de demolición"
+      ];
 
+      final randomTopic = (topics..shuffle()).first;
+
+      String newTip = await Funciones.getChatGPTResponse(
+          "Proporciona un consejo corto y útil sobre $randomTopic. Responde únicamente con el consejo, sin introducción ni explicaciones adicionales.");
+
+      // Verificar si el tip ya existe
       if (recentTips.contains(newTip)) {
-        // Selecciona un tip al azar de la colección si ya existe el nuevo tip
+        // Seleccionar un tip al azar si el nuevo ya existe
         final allTipsQuery =
             await FirebaseFirestore.instance.collection('tips').get();
 
@@ -73,10 +132,11 @@ class _SplashScreenState extends State<SplashScreen> {
           final randomTip = (allTipsQuery.docs..shuffle()).first['message'];
           _tipMessage = randomTip;
         } else {
-          _tipMessage = "Antes de desechar un artículo, considera si se puede reciclar o reutilizar de alguna manera.";
+          _tipMessage =
+              "Antes de desechar un artículo, considera si se puede reciclar o reutilizar de alguna manera.";
         }
       } else {
-        // Guarda el nuevo tip en Firestore si no existe
+        // Guardar el nuevo tip si no existe
         await FirebaseFirestore.instance.collection('tips').add({
           'message': newTip,
           'timestamp': FieldValue.serverTimestamp(),
@@ -85,6 +145,7 @@ class _SplashScreenState extends State<SplashScreen> {
         _tipMessage = newTip;
       }
     } catch (e) {
+      // Manejo de errores con mensaje predeterminado
       _tipMessage =
           "Antes de desechar un artículo, considera si se puede reciclar o reutilizar de alguna manera.";
     } finally {
