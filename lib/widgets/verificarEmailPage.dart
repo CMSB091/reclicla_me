@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:camera/camera.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:recila_me/clases/firestore_service.dart';
+import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
@@ -90,6 +92,27 @@ class _VerificarEmailPageState extends State<VerificarEmailPage> {
     }
   }
 
+  Future<void> _resendVerificationEmail() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+
+      if (user != null && !user.emailVerified) {
+        // Reenvía el enlace de verificación
+        await user.sendEmailVerification();
+
+        // Muestra un mensaje de éxito
+        showCustomSnackBar(
+            context,
+            'Se ha enviado un nuevo enlace de verificación a tu correo.',
+            SnackBarType.confirmation);
+      }
+    } catch (e) {
+      // Manejo de errores
+      showCustomSnackBar(
+          context, 'Error al reenviar el correo: $e', SnackBarType.error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -107,6 +130,21 @@ class _VerificarEmailPageState extends State<VerificarEmailPage> {
             Navigator.pop(context);
           },
         ),
+        actions: [
+          IconButton(
+            icon: const FaIcon(
+                FontAwesomeIcons.circleQuestion), // Ícono de FontAwesome
+            onPressed: () {
+              Funciones.mostrarModalDeAyuda(
+                context: context,
+                titulo: 'Ayuda',
+                mensaje:
+                    'Por favor, verifica tu correo electrónico y pulsa en el enlace proporcionado para confirmar tu cuenta. '
+                    'Si no recibiste el correo, revisa tu carpeta de spam.',
+              );
+            },
+          ),
+        ],
         backgroundColor: Colors.green.shade200,
       ),
       body: BlurredBackground(
