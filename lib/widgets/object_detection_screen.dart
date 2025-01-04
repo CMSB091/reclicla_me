@@ -111,14 +111,12 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
 
   void _resetScreen() {
     debugPrint('Reseteando la pantalla...');
-    Future.delayed(const Duration(milliseconds: 100), () {
-      setState(() {
-        filePath = null;
-        label = '';
-        confidence = 0.0;
-        objectDetected = false;
-        _loading = true;
-      });
+    setState(() {
+      filePath = null;
+      label = '';
+      confidence = 0.0;
+      objectDetected = false;
+      _loading = true;
     });
   }
 
@@ -311,16 +309,15 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                       child: Text(
                         label,
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                            fontSize: 20, fontWeight: FontWeight.bold),
+                        fontSize: 20, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                     ),
                   const SizedBox(height: 12),
-                  if (confidence > 0)
                     Center(
                       child: Text(
                         "Precisión: ${confidence.toStringAsFixed(0)}%",
-                        style: Theme.of(context).textTheme.bodySmall,
+                        style: Theme.of(context).textTheme.bodyLarge,
                         textAlign: TextAlign.center,
                       ),
                     ),

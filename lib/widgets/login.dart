@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:recila_me/servicios/dynamicLinkService.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/lottieWidget.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
@@ -135,7 +134,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     // Inicializar Dynamic Links aquí
-    DynamicLinkService().initDynamicLinks(context);
+    //DynamicLinkService().initDynamicLinks(context);
     return Scaffold(
       appBar: AppBar(
         systemOverlayStyle: const SystemUiOverlayStyle(
