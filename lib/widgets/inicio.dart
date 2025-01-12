@@ -141,9 +141,9 @@ class _MyInicioState extends State<MyInicio> {
   String _getSaludo() {
     final horaActual = DateTime.now().hour;
 
-    if (horaActual >= 5 && horaActual <= 12) {
+    if (horaActual >= 5 && horaActual <= 11) {
       return 'Buenos días';
-    } else if (horaActual >= 12 && horaActual <= 20) {
+    } else if (horaActual >= 12 && horaActual <= 19) {
       return 'Buenas tardes';
     } else {
       return 'Buenas noches';

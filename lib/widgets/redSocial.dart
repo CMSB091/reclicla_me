@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         title: const Text(
-          'Artículos en Donación',
+          'Donaciones',
           style: TextStyle(fontFamily: 'Artwork', fontSize: 22),
         ),
         backgroundColor: Colors.green.shade200,
@@ -61,6 +61,17 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const AddItemScreen()),
+              );
+            },
+          ),
+          IconButton(
+            icon: const FaIcon(FontAwesomeIcons.infoCircle),
+            onPressed: () {
+              Funciones.mostrarModalDeAyuda(
+                context: context,
+                titulo: 'Ayuda',
+                mensaje:
+                    'Presiona las imágenes para obtener información detallada del artículo.\nPresiona el icono "plus" si deseas agregar un artículo para donación.',
               );
             },
           ),
@@ -233,14 +244,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Expanded(
                                         child: Text(
                                           isDonated
-                                              ? "Disponible"
-                                              : "No Disponible",
+                                              ? "No Disponible"
+                                              : "Disponible",
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
                                             color: isDonated
-                                                ? Colors.greenAccent
-                                                : Colors.red,
+                                                ? Colors.red
+                                                : Colors.greenAccent,
                                           ),
                                         ),
                                       )
