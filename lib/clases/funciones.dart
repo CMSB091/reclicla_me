@@ -435,7 +435,7 @@ class Funciones {
 
       // Definir el mensaje a enviar, incluyendo el enlace de la imagen
       String message = Uri.encodeComponent(
-          '¡Hola, estoy interesado en la publicación con ID número $id. Título: $title. Aquí puedes ver la imagen: $imageUrl');
+          '¡Hola, estoy interesado en la publicación con código número $id. Título: $title. Aquí puedes ver la imagen: $imageUrl');
 
       // URL usando el esquema `https://wa.me/`
       final Uri whatsappWebUri =

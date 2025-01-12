@@ -32,7 +32,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadUserEmail(String email) async {
-
     final nombre = await firestoreService.getUserName(email);
     setState(() {
       nombreUsuario = nombre;
@@ -112,15 +111,21 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
 
                       final items = snapshot.data!.docs;
+
+                      // Filtrado por `titulo` y `idpub`
                       final filteredItems = items.where((item) {
                         String titulo =
                             item['titulo']?.toString().toLowerCase() ?? '';
-                        return titulo.contains(_searchQuery);
+                        String idPub =
+                            item['idpub']?.toString().toLowerCase() ?? '';
+                        return titulo.contains(_searchQuery) ||
+                            idPub.contains(_searchQuery);
                       }).toList();
 
                       if (filteredItems.isEmpty) {
                         return const Center(
-                            child: Text('No se encontraron resultados.'));
+                          child: Text('No se encontraron resultados.'),
+                        );
                       }
 
                       return ListView.builder(
@@ -153,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         ),
                                       ),
                                       Text(
-                                        'ID: $idpub',
+                                        'Código: $idpub',
                                         style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
@@ -197,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                               );
                                             } else {
                                               showCustomSnackBar(
-                                                  scaffoldContext,
+                                                  context,
                                                   'Error al recuperar los datos del usuario',
                                                   SnackBarType.error);
                                             }
@@ -223,15 +228,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 Icons.error,
                                                 color: Colors.red,
                                               ),
-                                              imageBuilder: (context, imageProvider) => Image(
+                                              imageBuilder:
+                                                  (context, imageProvider) =>
+                                                      Image(
                                                 image: imageProvider,
                                                 width: 80,
                                                 height: 80,
                                                 fit: BoxFit.cover,
                                               ),
-                                              // Reduzcamos la calidad con un tamaño de miniatura
-                                              memCacheWidth: 150, // Puedes ajustar este valor
-                                              memCacheHeight: 150, // Puedes ajustar este valor
+                                              memCacheWidth: 150,
+                                              memCacheHeight: 150,
                                             ),
                                             if (_isLoading)
                                               const CircularProgressIndicator(),
@@ -321,29 +327,35 @@ class _HomeScreenState extends State<HomeScreen> {
                                                             try {
                                                               await firestoreService
                                                                   .deletePost(
-                                                                      scaffoldContext,
+                                                                      context,
                                                                       item.id,
                                                                       imageUrl:
-                                                                          item[ 'imageUrl']);
+                                                                          item[
+                                                                              'imageUrl']);
                                                               showCustomSnackBar(
-                                                                scaffoldContext,
+                                                                context,
                                                                 'Publicación eliminada correctamente',
-                                                                SnackBarType.confirmation,
+                                                                SnackBarType
+                                                                    .confirmation,
                                                               );
                                                             } catch (e) {
                                                               showCustomSnackBar(
-                                                                scaffoldContext,
+                                                                context,
                                                                 'Error al eliminar la publicación',
-                                                                SnackBarType.error,
+                                                                SnackBarType
+                                                                    .error,
                                                               );
-                                                              debugPrint('Error al eliminar la publicación: $e');
+                                                              debugPrint(
+                                                                  'Error al eliminar la publicación: $e');
                                                             } finally {
                                                               setState(() {
-                                                                _isLoading = false;
+                                                                _isLoading =
+                                                                    false;
                                                               });
                                                             }
                                                           },
-                                                          child: const Text('Eliminar'),
+                                                          child: const Text(
+                                                              'Eliminar'),
                                                         ),
                                                       ],
                                                     );
@@ -358,7 +370,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   value: isDonated,
                                                   onChanged: (value) {
                                                     _showConfirmationDialog(
-                                                        scaffoldContext,
+                                                        context,
                                                         itemId,
                                                         value!);
                                                   },
@@ -383,7 +395,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
-                ),
+                )
               ],
             ),
           );
