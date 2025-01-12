@@ -221,12 +221,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  widget.estado ? 'Disponible' : 'No Disponible',
+                  widget.estado ? 'No Disponible' : 'Disponible',
                   style: TextStyle(
                     fontSize: 16,
                     color: widget.estado
-                        ? const Color.fromARGB(255, 3, 139, 8)
-                        : Colors.red,
+                        ? Colors.red
+                        : const Color.fromARGB(255, 3, 139, 8),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
