@@ -433,7 +433,7 @@ class Funciones {
         phoneNumber = '${countryCodes[country]}${phoneNumber.substring(1)}';
       }
 
-      // Definir el mensaje a enviar, incluyendo el enlace de la imagen
+      // Se define el mensaje a enviar, incluyendo el enlace de la imagen
       String message = Uri.encodeComponent(
           '¡Hola, estoy interesado en la publicación con código número $id. Título: $title. Aquí puedes ver la imagen: $imageUrl');
 
@@ -441,7 +441,7 @@ class Funciones {
       final Uri whatsappWebUri =
           Uri.parse('https://wa.me/$phoneNumber?text=$message');
 
-      // Verificar si se puede abrir WhatsApp mediante este esquema alternativo
+      // Se verifica si se puede abrir WhatsApp mediante un esquema alternativo
       if (await canLaunchUrl(whatsappWebUri)) {
         await launchUrl(whatsappWebUri, mode: LaunchMode.externalApplication);
       } else {
