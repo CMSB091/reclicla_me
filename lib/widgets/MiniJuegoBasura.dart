@@ -173,24 +173,18 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
         Navigator.of(context, rootNavigator: true).pop();
       }
 
-      if (mounted) {
+      /*if (mounted) {
         showCustomSnackBar(
           context,
           '¡Puntaje guardado exitosamente!',
           SnackBarType.confirmation,
           durationInMilliseconds: 1500,
         );
-      }
+      }*/
     } catch (e) {
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
-
-        showCustomSnackBar(
-          context,
-          'Error al guardar el puntaje',
-          SnackBarType.error,
-          durationInMilliseconds: 1500,
-        );
+        debugPrint('Error al guardar el puntaje');
       }
     }
   }

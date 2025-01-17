@@ -867,7 +867,7 @@ class FirestoreService {
           });
           if (context.mounted) {
             showCustomSnackBar(
-                context, '¡Puntaje guardado correctamente!', SnackBarType.error,
+                context, '¡Puntaje guardado correctamente!', SnackBarType.confirmation,
                 durationInMilliseconds: 3000);
           }
         }
