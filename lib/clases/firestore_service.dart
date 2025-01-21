@@ -837,63 +837,108 @@ class FirestoreService {
 
   // Función para guardar o actualizar el puntaje en Firestore
   Future<void> saveOrUpdateScore(BuildContext context, int puntos) async {
-    if (user != null) {
-      try {
-        // Verificar si el usuario ya tiene un puntaje registrado
-        final QuerySnapshot existingScore = await _db
-            .collection('puntajes')
-            .where('email', isEqualTo: user!.email)
-            .get();
+    User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no logueado');
+      }
+      String userId =
+          user.email!; // Usamos el UID del usuario, no el correo electrónico
+    try {
+      // Verificar si el usuario ya tiene un puntaje registrado
+      final QuerySnapshot existingScore = await _db
+          .collection('puntajes')
+          .where('email', isEqualTo: userId)
+          .get();
 
-        if (existingScore.docs.isNotEmpty) {
-          // Si ya existe un registro para el usuario, actualizar el puntaje y la fecha
-          await _db
-              .collection('puntajes')
-              .doc(existingScore.docs.first.id)
-              .update({
-            'puntos': puntos,
-            'fecha': DateTime.now(),
-          });
-          if (context.mounted) {
-            showCustomSnackBar(context, '¡Puntaje actualizado correctamente!',
-                SnackBarType.confirmation);
-          }
-        } else {
-          // Si no existe un registro, crear uno nuevo
-          await _db.collection('puntajes').add({
-            'email': user!.email,
-            'puntos': puntos,
-            'fecha': DateTime.now(),
-          });
-          if (context.mounted) {
-            showCustomSnackBar(
-                context, '¡Puntaje guardado correctamente!', SnackBarType.confirmation,
-                durationInMilliseconds: 3000);
-          }
-        }
-      } catch (e) {
+      if (existingScore.docs.isNotEmpty) {
+        // Si ya existe un registro para el usuario, actualizar el puntaje y la fecha
+        await _db
+            .collection('puntajes')
+            .doc(existingScore.docs.first.id)
+            .update({
+          'puntos': puntos,
+          'fecha': DateTime.now(),
+        });
         if (context.mounted) {
-          showCustomSnackBar(
-              context, 'Error al guardar puntaje: $e', SnackBarType.error,
+          showCustomSnackBar(context, '¡Puntaje actualizado correctamente!',
+              SnackBarType.confirmation);
+        }
+      } else {
+        // Si no existe un registro, crear uno nuevo
+        await _db.collection('puntajes').add({
+          'email': user!.email,
+          'puntos': puntos,
+          'fecha': DateTime.now(),
+        });
+        if (context.mounted) {
+          showCustomSnackBar(context, '¡Puntaje guardado correctamente!',
+              SnackBarType.confirmation,
               durationInMilliseconds: 3000);
         }
       }
-    } else {
+    } catch (e) {
       if (context.mounted) {
-        showCustomSnackBar(context, 'Usuario no logueado', SnackBarType.error,
+        showCustomSnackBar(
+            context, 'Error al guardar puntaje: $e', SnackBarType.error,
             durationInMilliseconds: 3000);
       }
     }
+    }
+  Future<int> getCurrentUserScore(BuildContext context) async {
+    try {
+      // Obtener el ID del usuario logueado (user UID)
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception('Usuario no logueado');
+      }
+      String userId =
+          user.email!; // Usamos el UID del usuario, no el correo electrónico
+
+      // Consultar Firestore para obtener el puntaje del usuario usando el campo "userId"
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('puntajes')
+          .where('email', isEqualTo: userId) // Cambiar 'email' por 'userId'
+          .get();
+
+      // Verificar si se encontró algún documento
+      if (querySnapshot.docs.isNotEmpty) {
+        // Suponiendo que cada usuario tiene solo un documento en la colección "puntajes"
+        DocumentSnapshot userScoreSnapshot = querySnapshot.docs.first;
+        Map<String, dynamic> userData =
+            userScoreSnapshot.data() as Map<String, dynamic>;
+
+        // Verificar si el campo "puntos" está presente en los datos
+        if (userData.containsKey('puntos')) {
+          debugPrint(
+              'Puntaje encontrado: ${userData['puntos']}');
+          return userData['puntos'] as int;
+        } else {
+          debugPrint(
+              'El campo "puntos" no se encuentra en los datos.');
+        }
+      } else {
+        debugPrint(
+            'No se encontró ningún documento para el userId: $userId');
+      }
+
+      // Retornar 0 si no hay puntaje guardado o el documento no existe
+      return 0;
+    } catch (e) {
+      // Manejar errores y retornar 0 en caso de fallo
+      debugPrint(
+          'Error al obtener el puntaje del usuario: $e');
+      return 0;
+    }
   }
 
-  Future<int> getCurrentUserScore(BuildContext context) async {
+  /*Future<int> getCurrentUserScore(BuildContext context) async {
     try {
       // Obtener el email del usuario logueado
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null) {
         throw Exception('Usuario no logueado');
       }
-      String userEmail = user.email!;
+      String userEmail = user.uid;//user.email!;
 
       // Consultar Firestore para obtener el puntaje del usuario usando el campo "email"
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
@@ -930,7 +975,7 @@ class FirestoreService {
           'Error al obtener el puntaje del usuario: $e');
       return 0;
     }
-  }
+  }*/
 
   Future<Map<String, int>> getResumenReciclado(String email) async {
     final querySnapshot = await _db

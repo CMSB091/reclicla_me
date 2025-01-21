@@ -90,21 +90,30 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
     _telefonoController.addListener(() => setState(() {}));
   }
 
-  Future<void> _initializeData() async {
-    await funciones.cargarDatosUsuario(
-      user: FirebaseAuth.instance.currentUser,
-      nombreController: _nombreController,
-      apellidoController: _apellidoController,
-      edadController: _edadController,
-      direccionController: _direccionController,
-      ciudadController: _ciudadController,
-      paisController: _paisController,
-      telefonoController: _telefonoController,
-      setLoadingState: _setLoadingState,
-    );
-    await _cargarPaises();
-    await _loadUserProfileImage();
+  void _initializeData() async {
+    try {
+      await funciones.cargarDatosUsuario(
+        user: FirebaseAuth.instance.currentUser,
+        nombreController: _nombreController,
+        apellidoController: _apellidoController,
+        edadController: _edadController,
+        direccionController: _direccionController,
+        ciudadController: _ciudadController,
+        paisController: _paisController,
+        telefonoController: _telefonoController,
+        setLoadingState: _setLoadingState,
+      );
+      await _cargarPaises();
+      await _loadUserProfileImage();
+    } catch (e) {
+      debugPrint('Error al cargar datos del usuario: $e');
+    } finally {
+      if (mounted) {
+        _setLoadingState(false);  // Esto asegurará que el spinner desaparezca
+      }
+    }
   }
+
 
   void _setLoadingState(bool value) {
     setState(() {

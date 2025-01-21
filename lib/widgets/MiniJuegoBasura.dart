@@ -146,46 +146,59 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
   }
 
   void _saveScore() async {
-    funciones.showLoadingSpinner(context);
-
     try {
+      // Mostrar spinner de carga
+      funciones.showLoadingSpinner(context);
+      // Obtener puntaje actual
       int currentScore = await firestoreService.getCurrentUserScore(context);
-
+      // Cerrar spinner después de obtener puntaje
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
       }
-
+      // Verificar si el puntaje actual es mayor o igual al nuevo puntaje
       if (currentScore >= puntos) {
         bool shouldSave = false;
+
+        // Mostrar confirmación
         if (mounted) {
           shouldSave = await funciones.showConfirmationDialog(context);
         }
+
         if (!shouldSave) {
-          return;
+          return; // Salir si el usuario decide no guardar
         }
       }
+
+      // Mostrar spinner nuevamente
       if (mounted) {
         funciones.showLoadingSpinner(context);
-
-        await firestoreService.saveOrUpdateScore(context, puntos);
       }
+
+      // Guardar o actualizar puntaje
+      await firestoreService.saveOrUpdateScore(context, puntos);
+
+      // Cerrar spinner y mostrar confirmación
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
-      }
-
-      /*if (mounted) {
         showCustomSnackBar(
           context,
           '¡Puntaje guardado exitosamente!',
           SnackBarType.confirmation,
           durationInMilliseconds: 1500,
         );
-      }*/
+      }
     } catch (e) {
+      // Manejo de errores
       if (mounted) {
         Navigator.of(context, rootNavigator: true).pop();
-        debugPrint('Error al guardar el puntaje');
+        showCustomSnackBar(
+          context,
+          'Error al guardar el puntaje: $e',
+          SnackBarType.error,
+          durationInMilliseconds: 3000,
+        );
       }
+      debugPrint('Error al guardar el puntaje: $e');
     }
   }
 
