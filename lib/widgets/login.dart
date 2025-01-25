@@ -133,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Inicializar Dynamic Links aquí
+    // Inicializar Dynamic Links
     //DynamicLinkService().initDynamicLinks(context);
     return Scaffold(
       appBar: AppBar(

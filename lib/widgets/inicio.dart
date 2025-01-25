@@ -45,7 +45,7 @@ class _MyInicioState extends State<MyInicio> {
   void initState() {
     super.initState();
     if (user != null) {
-      emailUsuario = user!.email; // Guardamos el email una vez
+      emailUsuario = user!.email; // Guarda el email una vez
       _loadUserName();
       loadMaterials();
     }
@@ -255,7 +255,7 @@ class _MyInicioState extends State<MyInicio> {
                     text: 'Comentarios',
                     page: emailUsuario != null
                         ? Comentarios(emailUsuario!)
-                        : const Placeholder(), // O alguna pantalla de error o loading
+                        : const Placeholder(), // Pantalla de error o loading
                   ),
                   _buildDrawerItem(
                     context,

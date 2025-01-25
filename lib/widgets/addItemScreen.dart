@@ -93,93 +93,6 @@ class _AddItemScreenState extends State<AddItemScreen> {
     }
   }
 
- 
-  /*Future<void> _handleUpload() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      if (!_formKey.currentState!.validate()) {
-        showCustomSnackBar(
-            context,
-            'Por favor, completa los campos correctamente.',
-            SnackBarType.error);
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      if (_imageFile == null) {
-        showCustomSnackBar(context, 'Por favor, selecciona una imagen primero.',
-            SnackBarType.error);
-        setState(() {
-          _isLoading = false;
-        });
-        return;
-      }
-
-      _formKey.currentState!.save();
-
-      // Confirmación si el campo de contacto tiene un valor
-      if (_contactController.text.isNotEmpty) {
-        bool? shouldProceed = await _showContactConfirmationDialog();
-        if (shouldProceed != true) {
-          setState(() {
-            _isLoading = false;
-          });
-          return;
-        }
-      }
-
-      // Obtener el email del usuario
-      if (_userEmail != null) {
-        int maxIdPub = 0;
-        QuerySnapshot snapshot = await FirebaseFirestore.instance
-            .collection('items')
-            .orderBy('idpub', descending: true)
-            .limit(1)
-            .get();
-
-        if (snapshot.docs.isNotEmpty) {
-          maxIdPub = snapshot.docs.first['idpub'];
-        }
-
-        int newIdPub = maxIdPub + 1;
-
-        await firestoreService.uploadImageAndSaveToFirestore(
-          imageFile: _imageFile!,
-          description: _descriptionController.text,
-          contact: _contactController.text,
-          scaffoldKey: _scaffoldKey,
-          email: _userEmail!,
-          titulo: _tituloController.text,
-          estado: false,
-          idpub: newIdPub,
-        );
-
-        showCustomSnackBar(
-            context, 'Publicado correctamente', SnackBarType.confirmation);
-        _resetForm();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>
-                  const HomeScreen()), // Asegúrate de usar el nombre correcto de la clase
-        );
-      } else {
-        showCustomSnackBar(context, 'No se pudo cargar el email del usuario.',
-            SnackBarType.error);
-      }
-    } catch (e) {
-      await Funciones.saveDebugInfo('Error en la funcion _handleUpload $e');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }*/
   Future<void> _handleUpload() async {
     setState(() {
       _isLoading = true;
@@ -300,7 +213,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
         context,
         MaterialPageRoute(
             builder: (context) =>
-                const HomeScreen()), // Asegúrate de usar el nombre correcto de la clase
+                const HomeScreen()), // usar el nombre correcto de la clase
       );
     } catch (e) {
       showCustomSnackBar(

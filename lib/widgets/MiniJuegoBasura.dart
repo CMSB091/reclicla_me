@@ -88,36 +88,36 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
   void _startGame() {
     setState(() {
       _showCountdown = true;
-      _countdownText = '3'; // Inicializamos el texto
-      _textScale = 1.0; // Restablecemos el escalado
+      _countdownText = '3'; // Inicializa el texto
+      _textScale = 1.0; // Restablece el escalado
     });
 
     Future.delayed(const Duration(seconds: 1), () {
       setState(() {
         _countdownText = '2';
-        _textScale = 1.5; // Aumentamos el tamaño
+        _textScale = 1.5; // Aumenta el tamaño
       });
     })
         .then((_) => Future.delayed(const Duration(milliseconds: 300), () {
               setState(() {
-                _textScale = 1.0; // Volvemos al tamaño normal
+                _textScale = 1.0; // vuelve al tamaño normal
               });
             }))
         .then((_) => Future.delayed(const Duration(seconds: 1), () {
               setState(() {
                 _countdownText = '1';
-                _textScale = 1.5; // Aumentamos el tamaño
+                _textScale = 1.5; // Aumenta el tamaño
               });
             }))
         .then((_) => Future.delayed(const Duration(milliseconds: 300), () {
               setState(() {
-                _textScale = 1.0; // Volvemos al tamaño normal
+                _textScale = 1.0; // Volver al tamaño normal
               });
             }))
         .then((_) => Future.delayed(const Duration(seconds: 1), () {
               setState(() {
                 _countdownText = '¡A reciclar!';
-                _textScale = 1.5; // Aumentamos el tamaño
+                _textScale = 1.5; // Aumentar el tamaño
               });
             }))
         .then((_) => Future.delayed(const Duration(milliseconds: 300), () {
@@ -207,7 +207,7 @@ class _MiniJuegoBasuraState extends State<MiniJuegoBasura> {
     final isLandscape =
         MediaQuery.of(context).orientation == Orientation.landscape;
 
-    // Ajustamos el tamaño según la orientación y el ancho de la pantalla
+    // Ajusta el tamaño según la orientación y el ancho de la pantalla
     final trashBinWidth = min(screenWidth / (isLandscape ? 4.0 : 3.5),
         120.0); // Máximo 120px de ancho
     final trashBinHeight = min(

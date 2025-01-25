@@ -42,7 +42,7 @@ class _ComentariosState extends State<Comentarios> {
   }
 
   void _setupTextListeners() {
-    // Agregamos listeners a los controladores para actualizar la UI dinámicamente
+    // Agregar listeners a los controladores para actualizar la UI dinámicamente
     _nombreController.addListener(_validateInputs);
     _apellidoController.addListener(_validateInputs);
     _comentariosController.addListener(_validateInputs);

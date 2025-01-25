@@ -31,7 +31,7 @@ class DynamicLinkService {
             builder: (context) => DatosPersonales(
               correo: email,
               desdeInicio: false,
-              cameras: const [], // Puedes reemplazar esto con la lista de cámaras si es necesario
+              cameras: const [], // Reemplazar esto con la lista de cámaras si es necesario
             ),
           ),
         );

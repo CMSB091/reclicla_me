@@ -116,6 +116,8 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       context: context,
       titulo: 'Ayuda',
       mensaje: 'Escribe una consulta al chatBot especializado en reciclaje.\n'
+          'Utiliza alguna de estas palabras seleccionadas "reciclaje","residuos"\n'
+          '"reciclar","reutilizar","residuos","manualidades,"compostaje", y relacionados\n'
           'Si tienes dudas específicas, consulta las secciones correspondientes.',
       textoBoton: 'Entendido',
     );

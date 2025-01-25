@@ -99,7 +99,9 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
           'También puedes seleccionar imagenes de objetos desde la galería\n'
           'Puedes obtener recomendaciones del objeto escaneado, como así también\n'
           'guardarlos en la base de datos para luego obtener un resumen tu huella\n'
-          'de carbono.',
+          'de carbono.\n'
+          'Para obtener los mejores resultados, debes tomas las fotos preferentemente\n'
+          'con un fondo blanco.',
     );
   }
 

@@ -109,7 +109,7 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
       debugPrint('Error al cargar datos del usuario: $e');
     } finally {
       if (mounted) {
-        _setLoadingState(false);  // Esto asegurará que el spinner desaparezca
+        _setLoadingState(false);  // Para que el spinner desaparezca
       }
     }
   }
@@ -420,8 +420,6 @@ class _DatosPersonalesPageState extends State<DatosPersonalesPage> {
           context, 'Por favor, ingresa una edad válida', SnackBarType.error);
       return;
     }
-
-    // Validación pasada, guardar datos
     funciones.guardarDatos(
       correo: widget.correo,
       nombreController: _nombreController,

@@ -90,7 +90,7 @@ class _ReusableCountSplashScreenState extends State<ReusableCountSplashScreen>
 
       // Ajusta la duración en función del valor final de `cotador` para aumentar la velocidad
       _countController.duration = Duration(
-          milliseconds: cotador * 20); // Ajusta este valor según prefieras
+          milliseconds: cotador * 20);
 
       // Actualiza `_countAnimation` con el valor de `cotador`
       setState(() {

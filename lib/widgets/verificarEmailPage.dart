@@ -92,6 +92,7 @@ class _VerificarEmailPageState extends State<VerificarEmailPage> {
     }
   }
 
+  // ignore: unused_element
   Future<void> _resendVerificationEmail() async {
     try {
       final user = FirebaseAuth.instance.currentUser;

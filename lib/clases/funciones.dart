@@ -70,7 +70,6 @@ class Funciones {
     'Isopor': 'assets/images/isopor_waste.png',
     'Papel': 'assets/images/paper_recycling.png',
     'Residuos': 'assets/images/recycle_general.png',
-    // Agrega más materiales y sus valores aquí
   };
   // Función que prepara el prompt parala API de la IA
   String generateImagePromptFromResponse(String chatGPTResponse) {
@@ -117,7 +116,7 @@ class Funciones {
       // Cierra la sesión del usuario
       await FirebaseAuth.instance.signOut();
     } catch (e) {
-      await Funciones.saveDebugInfo('Error al cerrar sesión: $e');
+      debugPrint('Error al cerrar sesión: $e');
     } finally {
       // Cierra el diálogo
       if (context.mounted) {
@@ -157,7 +156,7 @@ class Funciones {
           jsonDecode(utf8.decode(response.bodyBytes));
       return data['choices'][0]['message']['content'];
     } else {
-      await Funciones.saveDebugInfo(
+      debugPrint(
           'Error ${response.statusCode}: ${utf8.decode(response.bodyBytes)}');
       throw Exception('Failed to load ChatGPT response');
     }
@@ -204,7 +203,7 @@ class Funciones {
       final imageUrlGenerated = data['data'][0]['url'];
       return imageUrlGenerated;
     } else {
-      await Funciones.saveDebugInfo(
+      debugPrint(
           'Error al generar la imagen: ${response.statusCode}');
       return '';
     }
@@ -238,7 +237,7 @@ class Funciones {
         telefonoController.text = userData['telefono'] ?? '';
       }
     } catch (e) {
-      await Funciones.saveDebugInfo(
+      debugPrint(
           'Se ha producido un error al cargar los datos del usuario $e');
     } finally {
       setLoadingState(false);
@@ -254,7 +253,7 @@ class Funciones {
     required TextEditingController ciudadController,
     required TextEditingController paisController,
     required TextEditingController telefonoController,
-    required String? imageUrl, // Agregamos imageUrl como parámetro requerido
+    required String? imageUrl, // imageUrl como parámetro requerido
     required Function setSavingState,
     required BuildContext context,
     required List<CameraDescription> cameras,
@@ -271,10 +270,10 @@ class Funciones {
         String pais = paisController.text;
         String telefono = telefonoController.text;
 
-        // Asegurarse de que el imageUrl no sea nulo
+        // Verifica que el imageUrl no sea nulo
         String finalImageUrl = imageUrl ?? 'assets/images/perfil.png';
 
-        // Actualizar los datos del usuario incluyendo imageUrl
+        // Actualiza los datos del usuario incluyendo imageUrl
         bool result = await _firestoreService.updateUser(
           nombre,
           apellido,
@@ -284,7 +283,7 @@ class Funciones {
           pais,
           telefono,
           correo,
-          finalImageUrl, // Pasamos la URL de la imagen aquí
+          finalImageUrl, // URL de la imagen aquí
         );
 
         if (result) {
@@ -428,7 +427,7 @@ class Funciones {
         return; // Si no hay código para el país, salir de la función
       }
 
-      // Si el número no empieza con el código de país, agregarlo
+      // Si el número no empieza con el código de país, agregar
       if (!phoneNumber.startsWith(countryCodes[country]!)) {
         phoneNumber = '${countryCodes[country]}${phoneNumber.substring(1)}';
       }
@@ -465,7 +464,7 @@ class Funciones {
         await picker.pickImage(source: ImageSource.gallery);
 
     if (pickedImage != null) {
-      await Funciones.saveDebugInfo('Imagen seleccionada: ${pickedImage.path}');
+      debugPrint('Imagen seleccionada: ${pickedImage.path}');
       return File(pickedImage.path); // Devolver el archivo seleccionado
     } else {
       // Mostrar SnackBar si no se selecciona imagen
@@ -578,7 +577,7 @@ class Funciones {
   Future<void> writeDebugFile(
       String fileName, Map<String, dynamic> content) async {
     try {
-      // Obtén el directorio de Descargas (para Android) o Documentos (para iOS)
+      // Obtener el directorio de Descargas (para Android) o Documentos (para iOS)
       final directory = await getExternalStorageDirectory(); // Para Android
 
       // Para iOS o en caso de no tener permisos en Descargas, usar Documentos
@@ -590,7 +589,7 @@ class Funciones {
       final file = File(filePath);
       await file.writeAsString(json.encode(content), flush: true);
     } catch (e) {
-      await Funciones.saveDebugInfo(
+      debugPrint(
           "Error al escribir el archivo de debug: $e");
     }
   }
@@ -598,7 +597,7 @@ class Funciones {
   static Future<void> saveDebugInfo(String message,
       {Map<String, dynamic>? additionalData}) async {
     try {
-      // Obtén el directorio de Descargas (para Android) o Documentos (para iOS)
+      // Obtiene el directorio de Descargas (para Android) o Documentos (para iOS)
       final directory = await getExternalStorageDirectory();
       final safeDirectory =
           directory ?? await getApplicationDocumentsDirectory();
@@ -627,7 +626,7 @@ class Funciones {
       // Escribe el archivo con la nueva entrada
       await file.writeAsString(json.encode(debugLog), flush: true);
     } catch (e) {
-      await Funciones.saveDebugInfo(
+      debugPrint(
           "Error al guardar la información de depuración: $e");
     }
   }
@@ -748,15 +747,15 @@ class Funciones {
       QuerySnapshot snapshot = await FirebaseFirestore.instance
           .collection('historial')
           .where('email', isEqualTo: email) // Filtra por el email pasado
-          // .orderBy('material') // Elimina temporalmente `orderBy` para ver si afecta los resultados
+          // .orderBy('material') // Elimine temporalmente `orderBy` para ver si afecta los resultados
           .get();
 
       // Verifica si hay documentos en el snapshot
-      await Funciones.saveDebugInfo(
+      debugPrint(
           'Cantidad de documentos recuperados: ${snapshot.docs.length}');
 
       if (snapshot.docs.isEmpty) {
-        await Funciones.saveDebugInfo(
+        debugPrint(
             'No se encontraron documentos para el email proporcionado.');
       } else {
         // Extrae los valores únicos de la columna 'material'
@@ -766,7 +765,7 @@ class Funciones {
         materials = uniqueMaterials.toList();
       }
     } catch (e) {
-      await Funciones.saveDebugInfo('Error obteniendo materiales: $e');
+      debugPrint('Error obteniendo materiales: $e');
     }
 
     return materials;
@@ -786,7 +785,7 @@ class Funciones {
       // La cantidad de documentos en el snapshot representa la cantidad de registros
       count = snapshot.docs.length;
     } catch (e) {
-      await Funciones.saveDebugInfo(
+      debugPrint(
           'Error contando registros para el material $material: $e');
     }
 
@@ -799,7 +798,7 @@ class Funciones {
       String? userEmail = FirebaseAuth.instance.currentUser?.email;
       return userEmail;
     } catch (e) {
-      await Funciones.saveDebugInfo(
+      debugPrint(
           'Error obteniendo el email del usuario: $e');
       return null;
     }
@@ -1065,6 +1064,7 @@ class Funciones {
   static Future<String> obtenerDescripcionHuella() async {
     const prompt = '''
       Explica brevemente qué es la huella de carbono de manera clara y comprensible para el usuario final.
+      Actua como un experto en temas de cuidado ambiental y cambio climático
     ''';
 
     try {
@@ -1082,20 +1082,20 @@ class Funciones {
     final prompt = _crearPromptParaImpacto(resumen);
 
     try {
-      // Enviamos el prompt a ChatGPT y obtenemos la respuesta
+      // Envia el prompt a ChatGPT y obtiene la respuesta
       final respuestaIA = await getChatGPTResponse(prompt);
 
-      // Parseamos los resultados para obtener los porcentajes
+      // Parsear los resultados para obtener los porcentajes
       final impactos = _parsearImpactoRespuesta(respuestaIA);
 
-      // Generamos el informe
+      // Generar el informe
       final informe = impactos.entries.map((entry) {
         final material = entry.key;
         final porcentaje = entry.value;
         return '$material: ${porcentaje.toStringAsFixed(2)}% de carbono ahorrado.';
       }).join('\n');
 
-      // Calculamos el impacto total (promedio ponderado)
+      // Calcular el impacto total (promedio ponderado)
       final totalImpacto = _calcularImpactoTotal(resumen, impactos);
 
       return '''
@@ -1125,14 +1125,14 @@ class Funciones {
     ''';
   }
 
-  /// Parseamos la respuesta de la API para extraer los porcentajes.
+  /// Parsea la respuesta de la API para extraer los porcentajes.
   static Map<String, double> _parsearImpactoRespuesta(String respuesta) {
     try {
       final Map<String, dynamic> jsonResponse = json.decode(respuesta);
       return jsonResponse
           .map((key, value) => MapEntry(key, (value as num).toDouble()));
     } catch (e) {
-      // Intenta interpretar el texto como JSON manualmente
+      // Intentar interpretar el texto como JSON manualmente
       final List<String> lineas = respuesta.split('\n');
       final Map<String, double> resultado = {};
       for (final linea in lineas) {
@@ -1214,83 +1214,6 @@ class Funciones {
       },
     );
   }
-
-  /// Genera un PDF y lo descarga en la carpeta Downloads
-  /*static Future<void> descargarPdf({
-    required String titulo,
-    required String contenido,
-    required BuildContext context,
-  }) async {
-    final pdf = pw.Document();
-
-    // Crear el contenido del PDF
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        build: (context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                titulo,
-                style: pw.TextStyle(
-                  fontSize: 24,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.SizedBox(height: 20),
-              pw.Text(
-                contenido,
-                style: const pw.TextStyle(fontSize: 16),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-
-    try {
-      // Obtener la ruta de la carpeta Downloads
-      final directory = Directory('/storage/emulated/0/Download');
-      if (!directory.existsSync()) {
-        directory.createSync(recursive: true);
-      }
-      final filePath = '${directory.path}/$titulo.pdf';
-
-      // Guardar el archivo PDF
-      final file = File(filePath);
-      await file.writeAsBytes(await pdf.save());
-
-      // Notificar al sistema de la descarga
-      showCustomSnackBar(context, 'PDF guardado en: $filePath', SnackBarType.confirmation);
-    } catch (e) {
-      // Manejo de errores
-      showCustomSnackBar(
-          context, 'Error al guardar el PDF: $e', SnackBarType.error);
-    }
-  }
-
-  /// Notifica al sistema que el archivo ha sido descargado
-  static Future<void> mostrarDescargaEnSistema(String filePath) async {
-    try {
-      final dio = Dio();
-      final url = 'file://$filePath';
-      final savePath = filePath;
-
-      // Simula una descarga para que el sistema gestione la notificación
-      await dio.download(
-        url,
-        savePath,
-        onReceiveProgress: (received, total) {
-          // Aquí puedes agregar una barra de progreso si es necesario
-        },
-      );
-
-      debugPrint('Descarga completada: $savePath');
-    } catch (e) {
-      debugPrint('Error al notificar descarga al sistema: $e');
-    }
-  }*/
 
   static Future<void> descargarPdf({
     required String titulo,
