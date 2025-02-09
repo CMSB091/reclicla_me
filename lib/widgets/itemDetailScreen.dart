@@ -64,8 +64,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Confirmar eliminación'),
-          content:
-              const Text('¿Estás seguro de que deseas eliminar este comentario?'),
+          content: const Text(
+              '¿Estás seguro de que deseas eliminar este comentario?'),
           actions: [
             TextButton(
               onPressed: () {
@@ -99,9 +99,24 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
             Navigator.pop(context);
           },
         ),
-        title: Text(
-          widget.title,
-          style: const TextStyle(fontFamily: 'Artwork', fontSize: 22),
+        title: Row(
+          children: [
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit
+                    .scaleDown, // Ajusta dinámicamente el tamaño del texto
+                alignment:
+                    Alignment.centerLeft, // Alinea el texto a la izquierda
+                child: Text(
+                  widget.title,
+                  style: const TextStyle(
+                    fontFamily: 'Artwork',
+                    fontSize: 22, // Tamaño base ajustable
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         backgroundColor: Colors.green.shade200,
       ),
@@ -296,8 +311,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                             String? imageUrl = snapshot.data;
 
                             return Container(
-                              margin:
-                                  const EdgeInsets.symmetric(vertical: 8.0),
+                              margin: const EdgeInsets.symmetric(vertical: 8.0),
                               padding: const EdgeInsets.all(12.0),
                               decoration: BoxDecoration(
                                 color: const Color.fromARGB(255, 238, 238, 238),
@@ -305,12 +319,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                               ),
                               child: ListTile(
                                 leading: CircleAvatar(
-                                  backgroundImage: imageUrl != null &&
-                                          imageUrl.isNotEmpty
-                                      ? NetworkImage(imageUrl)
-                                      : const AssetImage(
-                                              'assets/images/perfil.png')
-                                          as ImageProvider,
+                                  backgroundImage:
+                                      imageUrl != null && imageUrl.isNotEmpty
+                                          ? NetworkImage(imageUrl)
+                                          : const AssetImage(
+                                                  'assets/images/perfil.png')
+                                              as ImageProvider,
                                   radius: 20,
                                 ),
                                 title: Text(comentario['comentario']),

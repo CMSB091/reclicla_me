@@ -86,12 +86,11 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       // Si detectedItem tiene valor, guarda en la colección "historial"
       if (detectedItem.isNotEmpty && detectedItem != 'Sin item asociado') {
         await FirestoreService.saveScannedItem(
-          context: context,
-          detectedItem: detectedItem,
-          chatResponse: chatResponse.trim(),
-          userEmail: user.email!,
-          itemName: detectedItem
-        );
+            context: context,
+            detectedItem: detectedItem,
+            chatResponse: chatResponse.trim(),
+            userEmail: user.email!,
+            itemName: detectedItem);
         debugPrint('Elemento guardado en la tabla "historial".');
       }
 
@@ -117,7 +116,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       titulo: 'Ayuda',
       mensaje: 'Escribe una consulta al chatBot especializado en reciclaje.\n'
           'Utiliza alguna de estas palabras seleccionadas "reciclaje","residuos"\n'
-          '"reciclar","reutilizar","residuos","manualidades,"compostaje", y relacionados\n'
+          '"reciclar","reutilizar","residuos","compostaje", y relacionados.\n'
           'Si tienes dudas específicas, consulta las secciones correspondientes.',
       textoBoton: 'Entendido',
     );
@@ -153,16 +152,6 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   }
 
   Future<void> _fetchChatGPTResponse(String prompt) async {
-    if (!_isRecyclingRelated(prompt)) {
-      setState(() {
-        chatResponse =
-            'Lo siento, solo puedo responder a consultas relacionadas con el reciclaje de materiales comunes en el hogar y proporcionar ideas para reutilizarlos de manera creativa.';
-        chatHistory.add({'message': chatResponse, 'isUser': false});
-        isTyping = false;
-      });
-      return;
-    }
-
     setState(() {
       isLoading = true;
       chatResponse = '';
@@ -171,20 +160,40 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
       _startTypingAnimation();
     });
 
+    // Limitamos el historial para evitar que el prompt sea demasiado largo
+    const int maxHistoryMessages = 10; // Número máximo de mensajes a incluir
+    List<Map<String, dynamic>> limitedChatHistory =
+        chatHistory.length > maxHistoryMessages
+            ? chatHistory.sublist(chatHistory.length - maxHistoryMessages)
+            : chatHistory;
+
     // Construye el historial de conversación en un solo string
-    String conversationContext = chatHistory
+    String conversationContext = limitedChatHistory
         .map((message) =>
-            (message['isUser'] ? "Tú: " : "Chatbot: ") + message['message'])
+            (message['isUser'] ? "Usuario: " : "Asistente: ") +
+            message['message'])
         .join("\n");
 
-    // Construye el prompt con el contexto de la conversación
-    String finalPrompt = isFirstMessage
-        ? 'Eres un experto en reciclaje de residuos comunes del hogar, incluyendo plásticos, metales, cartones, papeles, pilas y compostaje. Proporciona consejos prácticos y creativos sobre cómo reciclar o reutilizar estos materiales de manera sostenible en el hogar. Por favor, da la respuesta en no más de 200 palabras, responde sin introducción ni explicaciones adicionales. Actúa como si fueses una persona real y teniendo en cuenta lo siguiente:\n\n$conversationContext\nTú: $prompt'
-        : '$conversationContext\nTú: $prompt';
+    // Construye el nuevo prompt con contexto de la conversación
+    String finalPrompt = '''
+  Actúa como un experto en reciclaje y sostenibilidad. Eres un asistente conversacional que ayuda a los usuarios a reciclar y reutilizar materiales domésticos como plásticos, cartón, papel, vidrio, metales, pilas y compostaje.
+
+  Conversación hasta ahora:
+  $conversationContext
+
+  Nueva consulta del usuario:
+  Usuario: "$prompt"
+
+  - Si la consulta está relacionada con reciclaje o reutilización, proporciona una respuesta clara y útil en menos de 200 palabras. 
+  - Si la consulta NO está relacionada con reciclaje, responde estrictamente con el mensaje:
+    "Lo siento, solo puedo responder a consultas relacionadas con el reciclaje de materiales comunes en el hogar y proporcionar ideas para reutilizarlos de manera creativa."
+  - Continúa la conversación manteniendo el contexto.
+
+  Responde como si estuvieras conversando naturalmente con el usuario.
+  ''';
 
     try {
-      String response = await Funciones.fetchChatGPTResponse(
-          finalPrompt, _isRecyclingRelated(prompt));
+      String response = await Funciones.fetchChatGPTResponse(finalPrompt, true);
 
       setState(() {
         isTyping = false;
@@ -233,9 +242,8 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
         backgroundColor: Colors.green.shade200,
         title: Column(
           children: [
-            const Text('ChatBot', style: TextStyle(
-              fontFamily: 'ArtWork',
-              color:  Colors.black)),
+            const Text('ChatBot',
+                style: TextStyle(fontFamily: 'ArtWork', color: Colors.black)),
             Text(
               'Usuario: $userEmail',
               style: const TextStyle(color: Colors.black, fontSize: 12),

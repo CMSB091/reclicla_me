@@ -240,13 +240,24 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text(
-          'Detección de Objetos',
-          style: TextStyle(
-            fontFamily: 'Artwork',
-            fontWeight: FontWeight.w400,
-            fontSize: 24,
-          ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit
+                    .scaleDown, // Ajusta el tamaño del texto automáticamente
+                child: const Text(
+                  'Detección de Objetos',
+                  style: TextStyle(
+                    fontFamily: 'Artwork',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 24, // Tamaño base que se ajustará dinámicamente
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
         backgroundColor: Colors.green.shade200,
         leading: IconButton(
@@ -311,18 +322,18 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                       child: Text(
                         label,
                         style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        fontSize: 20, fontWeight: FontWeight.bold),
+                            fontSize: 20, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
                     ),
                   const SizedBox(height: 12),
-                    Center(
-                      child: Text(
-                        "Precisión: ${confidence.toStringAsFixed(0)}%",
-                        style: Theme.of(context).textTheme.bodyLarge,
-                        textAlign: TextAlign.center,
-                      ),
+                  Center(
+                    child: Text(
+                      "Precisión: ${confidence.toStringAsFixed(0)}%",
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      textAlign: TextAlign.center,
                     ),
+                  ),
                 ],
               ),
             ),
@@ -343,7 +354,7 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                             foregroundColor: Theme.of(context).primaryColor,
                           ),
                           icon: const FaIcon(FontAwesomeIcons.images),
-                          label: const Text('Seleccionar desde Galería'),
+                          label: const Text('Subir desde Galería'),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -386,9 +397,27 @@ class _ObjectDetectionScreenState extends State<ObjectDetectionScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
                               foregroundColor: Theme.of(context).primaryColor,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical:
+                                      8), // Ajuste de padding para responsividad
                             ),
                             icon: const FaIcon(FontAwesomeIcons.recycle),
-                            label: const Text('Consultar sobre reciclaje'),
+                            label: const Flexible(
+                              child: FittedBox(
+                                fit: BoxFit
+                                    .scaleDown, // Permite reducir el tamaño del texto si es necesario
+                                child: Text(
+                                  'Consultar reciclaje',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize:
+                                        16, // Tamaño base que se ajustará dinámicamente
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),

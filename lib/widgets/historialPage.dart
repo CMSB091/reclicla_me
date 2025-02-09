@@ -32,7 +32,7 @@ class _HistorialPageState extends State<HistorialPage> {
       builder: (context) {
         return AlertDialog(
           title: Text(
-            'Objeto de ${item.toUpperCase()}',
+            'Objeto: ${item.toUpperCase()}',
             style: GoogleFonts.montserrat(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -170,14 +170,6 @@ class _HistorialPageState extends State<HistorialPage> {
       children: [
         Scaffold(
           appBar: AppBar(
-            title: const Text(
-              'Objetos Reciclados',
-              style: TextStyle(
-                fontFamily: 'Artwork',
-                fontWeight: FontWeight.w400,
-                fontSize: 24,
-              ),
-            ),
             backgroundColor: Colors.green.shade200,
             leading: IconButton(
               icon: const FaIcon(FontAwesomeIcons.house, color: Colors.black),
@@ -185,6 +177,27 @@ class _HistorialPageState extends State<HistorialPage> {
                 Funciones.navigateToHome(context);
               },
             ),
+            title: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit
+                        .scaleDown, // Ajusta el tamaño del texto dinámicamente
+                    child: Text(
+                      'Objetos Reciclados',
+                      style: TextStyle(
+                        fontFamily: 'Artwork',
+                        fontWeight: FontWeight.w400,
+                        fontSize:
+                            24, // Tamaño base que se ajustará automáticamente
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            centerTitle: true, // Asegura que el título se mantenga centrado
             actions: [
               IconButton(
                 icon: const FaIcon(FontAwesomeIcons.infoCircle),
@@ -310,12 +323,27 @@ class _HistorialPageState extends State<HistorialPage> {
                               width: 50,
                               height: 50,
                             ),
-                            title: Text(
-                              detectedItem.toUpperCase(),
-                              style: GoogleFonts.montserrat(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
+                            title: Row(
+                              children: [
+                                Flexible(
+                                  child: FittedBox(
+                                    fit: BoxFit
+                                        .scaleDown, // Ajusta dinámicamente el tamaño
+                                    child: Text(
+                                      detectedItem.toUpperCase(),
+                                      style: GoogleFonts.montserrat(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize:
+                                            16, // Tamaño base, se ajustará dinámicamente
+                                      ),
+                                      overflow: TextOverflow
+                                          .ellipsis, // Evita desbordamientos
+                                      softWrap:
+                                          true, // Permite que el texto se divida en varias líneas si es necesario
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,

@@ -161,14 +161,12 @@ class _MyInicioState extends State<MyInicio> {
         title: isLoading
             ? null
             : FittedBox(
-                fit: BoxFit
-                    .scaleDown, // Asegura que el texto se ajuste al espacio
+                fit: BoxFit.scaleDown,
                 child: Text(
                   '${_getSaludo()} $nombreUsuario !!',
                   style: const TextStyle(
                     fontFamily: 'Artwork',
-                    fontSize:
-                        25, // Tamaño base que se ajustará según el espacio
+                    fontSize: 25,
                   ),
                 ),
               ),
@@ -191,20 +189,46 @@ class _MyInicioState extends State<MyInicio> {
       ),
       endDrawer: _buildDrawer(context),
       body: BlurredBackground(
-        child: Center(
-          child: isLoading
-              ? buildLottieAnimation(
-                  path: 'assets/animations/lotti-recycle.json',
-                  width: 500,
-                  height: 500,
-                )
-              : Wrap(
-                  spacing: 20.0,
-                  runSpacing: 20.0,
-                  children: List.generate(4, (index) {
-                    return _buildMenuCard(context, index);
-                  }),
-                ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            double screenWidth = constraints.maxWidth;
+            double screenHeight = constraints.maxHeight;
+
+            // Determinar tamaño dinámico de los cards
+            double cardSize = screenWidth * 0.4; // 40% del ancho de la pantalla
+            cardSize = cardSize > 200 ? 200 : cardSize; // Limitar tamaño máximo
+
+            return Center(
+              child: isLoading
+                  ? buildLottieAnimation(
+                      path: 'assets/animations/lotti-recycle.json',
+                      width: 500,
+                      height: 500,
+                    )
+                  : SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: screenWidth > 600
+                                ? 3
+                                : 2, // 3 columnas en tablets, 2 en móviles
+                            crossAxisSpacing: 15,
+                            mainAxisSpacing: 15,
+                            childAspectRatio: 1, // Mantener cuadrado
+                          ),
+                          itemCount: 4,
+                          itemBuilder: (context, index) {
+                            return _buildMenuCard(context, index, cardSize);
+                          },
+                        ),
+                      ),
+                    ),
+            );
+          },
         ),
       ),
     );
@@ -311,12 +335,12 @@ class _MyInicioState extends State<MyInicio> {
     );
   }
 
-  Widget _buildMenuCard(BuildContext context, int index) {
+  Widget _buildMenuCard(BuildContext context, int index, double cardSize) {
     final page = _getPageForIndex(index);
 
     return SizedBox(
-      width: 180.0,
-      height: 180.0,
+      width: cardSize,
+      height: cardSize,
       child: Card(
         color: Colors.green.shade100,
         elevation: 5.0,
@@ -334,8 +358,7 @@ class _MyInicioState extends State<MyInicio> {
               );
             }
           },
-          child: Center(
-              child: Column(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Flexible(
@@ -347,8 +370,8 @@ class _MyInicioState extends State<MyInicio> {
                           : index == 2
                               ? 'assets/animations/historialAnimation2.json'
                               : 'assets/animations/scan_objects.json',
-                  width: 125,
-                  height: 125,
+                  width: cardSize * 0.6, // Ajustar al tamaño del card
+                  height: cardSize * 0.6,
                 ),
               ),
               const SizedBox(height: 10),
@@ -360,6 +383,7 @@ class _MyInicioState extends State<MyInicio> {
                         : index == 2
                             ? 'Historial de Objetos'
                             : 'Escaneo de Objetos',
+                textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontFamily: 'Artwork',
                   fontSize: 16,
@@ -368,7 +392,7 @@ class _MyInicioState extends State<MyInicio> {
                 ),
               ),
             ],
-          )),
+          ),
         ),
       ),
     );
@@ -404,21 +428,5 @@ class _MyInicioState extends State<MyInicio> {
       default:
         return MyInicio(cameras: widget.cameras);
     }
-  }
-}
-
-class Page3 extends StatelessWidget {
-  const Page3({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Página 3'),
-      ),
-      body: const Center(
-        child: Text('Contenido de la Página 3'),
-      ),
-    );
   }
 }
