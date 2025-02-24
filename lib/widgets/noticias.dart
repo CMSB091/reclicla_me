@@ -9,6 +9,7 @@ import 'package:recila_me/widgets/chatBuble.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:recila_me/widgets/showCustomSnackBar.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class NoticiasChatGPT extends StatefulWidget {
   final String initialPrompt;
@@ -38,6 +39,9 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
   Timer? _typingTimer;
   bool isFirstMessage = true;
   late String initialPrompt;
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  String _voiceInput = '';
 
   Future<void> _setUserEmail() async {
     try {
@@ -219,11 +223,46 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
     _scrollToBottom();
   }
 
+  void _initSpeech() async {
+    _speech = stt.SpeechToText();
+    bool available = await _speech.initialize(
+      onStatus: (status) => debugPrint('onStatus: $status'),
+      onError: (errorNotification) => debugPrint('onError: $errorNotification'),
+    );
+    if (!available) {
+      // Opcional: Notifica al usuario que la funcionalidad de voz no está disponible
+      debugPrint('La funcionalidad de voz no está disponible.');
+    }
+  }
+
+  void _startListening() async {
+    await _speech.listen(
+      localeId: 'es_ES', // Establece el idioma a español
+      onResult: (result) {
+        setState(() {
+          _voiceInput = result.recognizedWords;
+          // Actualiza el TextField con el texto reconocido
+          _controller.text = _voiceInput;
+        });
+      },
+    );
+    setState(() {
+      _isListening = true;
+    });
+  }
+
+  void _stopListening() async {
+    await _speech.stop();
+    setState(() {
+      _isListening = false;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _setUserEmail();
-
+    _initSpeech();
     // Inicializa _controller con el texto inicial de initialPrompt
     _controller = TextEditingController(
         text: widget.initialPrompt.isNotEmpty ? widget.initialPrompt : "");
@@ -353,6 +392,23 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                       hint: 'Escribe un mensaje...',
                     ),
                   ),
+                  // Botón para activar el comando de voz
+                  IconButton(
+                    icon: FaIcon(
+                      _isListening
+                          ? FontAwesomeIcons.stop
+                          : FontAwesomeIcons.microphone,
+                      color: Colors.green,
+                    ),
+                    onPressed: () {
+                      if (_isListening) {
+                        _stopListening();
+                      } else {
+                        _startListening();
+                      }
+                    },
+                  ),
+
                   IconButton(
                     icon: const Icon(FontAwesomeIcons.paperPlane,
                         color: Colors.green),
