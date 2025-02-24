@@ -398,7 +398,7 @@ class _MyChatWidgetState extends State<NoticiasChatGPT> {
                       _isListening
                           ? FontAwesomeIcons.stop
                           : FontAwesomeIcons.microphone,
-                      color: Colors.green,
+                      color: _isListening ? Colors.red : Colors.green,
                     ),
                     onPressed: () {
                       if (_isListening) {
