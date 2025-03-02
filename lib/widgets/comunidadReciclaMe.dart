@@ -242,11 +242,11 @@ class _ComunidadRecicladoraScreenState
       stream: FirebaseFirestore.instance.collection('usuario').snapshots(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          print("Cargando datos de usuarios...");
+          debugPrint("Cargando datos de usuarios...");
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasError) {
-          print("Error al cargar usuarios: ${snapshot.error}");
+          debugPrint("Error al cargar usuarios: ${snapshot.error}");
           return Center(
             child: Text(
               "Error al cargar datos: ${snapshot.error}",
@@ -255,7 +255,7 @@ class _ComunidadRecicladoraScreenState
           );
         }
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-          print("No hay usuarios registrados.");
+          debugPrint("No hay usuarios registrados.");
           return const Center(
             child: Text(
               "No se han encontrado usuarios registrados.",
@@ -269,11 +269,11 @@ class _ComunidadRecicladoraScreenState
           future: _obtenerImpactoAmbientalPorUsuario(usuarios),
           builder: (context, impactoSnapshot) {
             if (impactoSnapshot.connectionState == ConnectionState.waiting) {
-              print("Calculando impacto ambiental...");
+              debugPrint("Calculando impacto ambiental...");
               return const Center(child: CircularProgressIndicator());
             }
             if (impactoSnapshot.hasError) {
-              print(
+              debugPrint(
                   "Error al calcular impacto ambiental: ${impactoSnapshot.error}");
               return Center(
                 child: Text(
@@ -283,7 +283,7 @@ class _ComunidadRecicladoraScreenState
               );
             }
             if (!impactoSnapshot.hasData || impactoSnapshot.data!.isEmpty) {
-              print("No hay datos de impacto ambiental.");
+              debugPrint("No hay datos de impacto ambiental.");
               return const Center(
                 child: Text(
                   "No hay datos de impacto ambiental disponibles.",
@@ -453,7 +453,7 @@ class _ComunidadRecicladoraScreenState
     try {
       for (final usuario in usuarios) {
         final email = usuario['correo'];
-        print("Calculando impacto ambiental para el usuario: $email");
+        debugPrint("Calculando impacto ambiental para el usuario: $email");
 
         final historialSnapshot = await FirebaseFirestore.instance
             .collection('historial')
@@ -461,7 +461,7 @@ class _ComunidadRecicladoraScreenState
             .get();
 
         if (historialSnapshot.docs.isEmpty) {
-          print("No hay datos de reciclaje para el usuario: $email");
+          debugPrint("No hay datos de reciclaje para el usuario: $email");
           impactoPorUsuario[email] = 0.0;
           continue;
         }
@@ -475,10 +475,10 @@ class _ComunidadRecicladoraScreenState
 
         final reduccionCO2 = _calcularReduccionTotal(itemsReciclados);
         impactoPorUsuario[email] = reduccionCO2;
-        print("Impacto ambiental calculado para $email: $reduccionCO2 kg CO₂");
+        debugPrint("Impacto ambiental calculado para $email: $reduccionCO2 kg CO₂");
       }
     } catch (e) {
-      print("Error al calcular impacto ambiental: $e");
+      debugPrint("Error al calcular impacto ambiental: $e");
       throw e; // Relanzamos el error para que FutureBuilder lo maneje
     }
 
