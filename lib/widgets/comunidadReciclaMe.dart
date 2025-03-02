@@ -35,9 +35,10 @@ class _ComunidadRecicladoraScreenState
             Navigator.pop(context);
           },
         ),
-        title: const Text(
+        title: 
+        const Text(
           'Comunidad ReciclaMe',
-          style: TextStyle(fontFamily: 'Artwork', fontSize: 24),
+          style: TextStyle(fontFamily: 'Artwork', fontSize: 20),
         ),
         backgroundColor: Colors.green.shade200,
         actions: [
@@ -318,7 +319,7 @@ class _ComunidadRecicladoraScreenState
                     ),
                     subtitle: Text('Ciudad: $ciudad'),
                     trailing: Text(
-                      '${porcentajeReduccion.toStringAsFixed(2)}% reducción(estimado)',
+                      '${porcentajeReduccion.toStringAsFixed(2)}% reducción',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -479,7 +480,7 @@ class _ComunidadRecicladoraScreenState
       }
     } catch (e) {
       debugPrint("Error al calcular impacto ambiental: $e");
-      throw e; // Relanzamos el error para que FutureBuilder lo maneje
+      rethrow; // Relanzamos el error para que FutureBuilder lo maneje
     }
 
     return impactoPorUsuario;

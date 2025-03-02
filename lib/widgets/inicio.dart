@@ -193,6 +193,7 @@ class _MyInicioState extends State<MyInicio> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             double screenWidth = constraints.maxWidth;
+            // ignore: unused_local_variable
             double screenHeight = constraints.maxHeight;
 
             // Determinar tamaño dinámico de los cards
@@ -292,7 +293,7 @@ class _MyInicioState extends State<MyInicio> {
                   ),
                   _buildDrawerItem(
                     context,
-                    icon: FontAwesomeIcons.bookmark,
+                    icon: FontAwesomeIcons.recycle ,
                     text: 'Comunidad\nReciclaMe',
                     page: emailUsuario != null
                         ? ComunidadRecicladoraScreen(userEmail: emailUsuario!)
