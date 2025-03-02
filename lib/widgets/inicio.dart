@@ -7,6 +7,7 @@ import 'package:recila_me/clases/funciones.dart';
 import 'package:recila_me/widgets/MiniJuegoBasura.dart';
 import 'package:recila_me/widgets/ResumenRecicladoScreen.dart';
 import 'package:recila_me/widgets/comentarios.dart';
+import 'package:recila_me/widgets/comunidadReciclaMe.dart';
 import 'package:recila_me/widgets/datosPersonales.dart';
 import 'package:recila_me/widgets/fondoDifuminado.dart';
 import 'package:recila_me/widgets/historialPage.dart';
@@ -287,6 +288,14 @@ class _MyInicioState extends State<MyInicio> {
                     text: 'Mis\nFavoritos',
                     page: emailUsuario != null
                         ? MisFavoritos(userEmail: emailUsuario!)
+                        : const Placeholder(), // Pantalla de error o indicador de carga
+                  ),
+                  _buildDrawerItem(
+                    context,
+                    icon: FontAwesomeIcons.bookmark,
+                    text: 'Comunidad\nReciclaMe',
+                    page: emailUsuario != null
+                        ? ComunidadRecicladoraScreen(userEmail: emailUsuario!)
                         : const Placeholder(), // Pantalla de error o indicador de carga
                   ),
                 ],
