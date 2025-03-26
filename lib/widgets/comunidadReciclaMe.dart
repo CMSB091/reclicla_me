@@ -71,7 +71,7 @@ class _ComunidadRecicladoraScreenState
                       child: DropdownButtonFormField<String>(
                         isDense: true,
                         menuMaxHeight: 250,
-                        icon: Icon(FontAwesomeIcons.caretDown),
+                        icon: const Icon(FontAwesomeIcons.caretDown),
                         value: _selectedFilter,
                         decoration: InputDecoration(
                           labelText: 'Filtrar por',

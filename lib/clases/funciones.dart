@@ -86,6 +86,22 @@ class Funciones {
     }
   }
 
+  Future<bool> verificarPermisosAlmacenamiento() async {
+    if (Platform.isAndroid) {
+      if (await Permission.manageExternalStorage.isGranted ||
+          await Permission.storage.isGranted) {
+        return true;
+      }
+
+      if (await Permission.manageExternalStorage.request().isGranted ||
+          await Permission.storage.request().isGranted) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   // Función para cerrar sesón
   static Future<void> simulateLogout(BuildContext context) async {
     // Muestra el diálogo de cierre de sesión
@@ -203,8 +219,7 @@ class Funciones {
       final imageUrlGenerated = data['data'][0]['url'];
       return imageUrlGenerated;
     } else {
-      debugPrint(
-          'Error al generar la imagen: ${response.statusCode}');
+      debugPrint('Error al generar la imagen: ${response.statusCode}');
       return '';
     }
   }
@@ -237,8 +252,7 @@ class Funciones {
         telefonoController.text = userData['telefono'] ?? '';
       }
     } catch (e) {
-      debugPrint(
-          'Se ha producido un error al cargar los datos del usuario $e');
+      debugPrint('Se ha producido un error al cargar los datos del usuario $e');
     } finally {
       setLoadingState(false);
     }
@@ -589,8 +603,7 @@ class Funciones {
       final file = File(filePath);
       await file.writeAsString(json.encode(content), flush: true);
     } catch (e) {
-      debugPrint(
-          "Error al escribir el archivo de debug: $e");
+      debugPrint("Error al escribir el archivo de debug: $e");
     }
   }
 
@@ -626,8 +639,7 @@ class Funciones {
       // Escribe el archivo con la nueva entrada
       await file.writeAsString(json.encode(debugLog), flush: true);
     } catch (e) {
-      debugPrint(
-          "Error al guardar la información de depuración: $e");
+      debugPrint("Error al guardar la información de depuración: $e");
     }
   }
 
@@ -751,12 +763,10 @@ class Funciones {
           .get();
 
       // Verifica si hay documentos en el snapshot
-      debugPrint(
-          'Cantidad de documentos recuperados: ${snapshot.docs.length}');
+      debugPrint('Cantidad de documentos recuperados: ${snapshot.docs.length}');
 
       if (snapshot.docs.isEmpty) {
-        debugPrint(
-            'No se encontraron documentos para el email proporcionado.');
+        debugPrint('No se encontraron documentos para el email proporcionado.');
       } else {
         // Extrae los valores únicos de la columna 'material'
         Set<String> uniqueMaterials =
@@ -785,8 +795,7 @@ class Funciones {
       // La cantidad de documentos en el snapshot representa la cantidad de registros
       count = snapshot.docs.length;
     } catch (e) {
-      debugPrint(
-          'Error contando registros para el material $material: $e');
+      debugPrint('Error contando registros para el material $material: $e');
     }
 
     return count;
@@ -798,22 +807,17 @@ class Funciones {
       String? userEmail = FirebaseAuth.instance.currentUser?.email;
       return userEmail;
     } catch (e) {
-      debugPrint(
-          'Error obteniendo el email del usuario: $e');
+      debugPrint('Error obteniendo el email del usuario: $e');
       return null;
     }
   }
 
   static Future<void> exportToExcel(
-      Map<String, int> residuos, Function(String) showSuccessMessage) async {
+    Map<String, int> residuos,
+    Function(String) showSuccessMessage,
+  ) async {
     try {
-      // Solicitar permisos de almacenamiento
-      var status = await Permission.storage.request();
-      if (!status.isGranted) {
-        throw Exception('Permiso de almacenamiento denegado');
-      }
-
-      // Crear el archivo Excel
+      // Crear archivo Excel
       var excel = Excel.createExcel();
       Sheet sheetObject = excel['Resumen'];
 
@@ -823,38 +827,23 @@ class Funciones {
       });
       sheetObject.appendRow(['Total', residuos.values.reduce((a, b) => a + b)]);
 
-      // Obtener los datos binarios del archivo Excel
       Uint8List? excelBytes = excel.save() as Uint8List?;
       if (excelBytes == null) {
         throw Exception('No se pudo generar el archivo Excel.');
       }
 
-      if (Platform.isAndroid) {
-        // Usar la carpeta Downloads en Android con un nombre único
-        final directory = Directory('/storage/emulated/0/Download');
-        if (!directory.existsSync()) {
-          directory.createSync(recursive: true);
-        }
+      // Obtener carpeta segura para descargas
+      //final directory = await DownloadsPathProvider.downloadsDirectory;
+      final directory = Directory('/storage/emulated/0/Download');
 
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        final filePath = '${directory.path}/resumen_reciclado_$timestamp.xlsx';
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final filePath = '${directory.path}/resumen_reciclado_$timestamp.xlsx';
 
-        final file = File(filePath);
-        await file.writeAsBytes(excelBytes);
+      final file = File(filePath);
+      await file.writeAsBytes(excelBytes);
 
-        showSuccessMessage(
-            'Archivo guardado correctamente en Descargas: $filePath');
-      } else {
-        // Para otras plataformas (ejemplo: iOS o escritorio)
-        final directory = await getApplicationDocumentsDirectory();
-        final filePath = '${directory.path}/resumen_reciclado.xlsx';
-
-        final file = File(filePath);
-        await file.writeAsBytes(excelBytes);
-
-        showSuccessMessage(
-            'Archivo guardado correctamente en Documentos: $filePath');
-      }
+      showSuccessMessage(
+          '');
     } catch (e, stacktrace) {
       debugPrint('Error al guardar el archivo: $e\n$stacktrace');
       throw Exception('Error al guardar el archivo.');
@@ -953,20 +942,17 @@ class Funciones {
     String conceptoHuella,
     String detallesInforme,
     Map<String, int> resumen,
-    Uint8List chartImageBytes, // Nueva imagen del gráfico
+    Uint8List chartImageBytes,
     Function(String) showSuccessMessage,
   ) async {
     try {
-      // Solicitar permisos de almacenamiento
-      var status = await Permission.storage.request();
-      if (!status.isGranted) {
+      // Verificar permisos con la función reutilizable
+      bool permisoOk = await Funciones().verificarPermisosAlmacenamiento();
+      if (!permisoOk) {
         throw Exception('Permiso de almacenamiento denegado');
       }
-
-      // Crear el documento PDF
+      // Crear PDF
       final pdf = pw.Document();
-
-      // Agregar contenido al PDF
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
@@ -977,43 +963,31 @@ class Funciones {
                 pw.Text(
                   'Informe de Huella de Carbono',
                   style: pw.TextStyle(
-                    fontSize: 24,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                      fontSize: 24, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 16),
                 pw.Text(
                   '¿Qué es la Huella de Carbono?',
                   style: pw.TextStyle(
-                    fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                      fontSize: 18, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 8),
-                pw.Text(
-                  conceptoHuella,
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
+                pw.Text(conceptoHuella,
+                    style: const pw.TextStyle(fontSize: 14)),
                 pw.SizedBox(height: 20),
                 pw.Text(
                   'Detalles del Informe',
                   style: pw.TextStyle(
-                    fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                      fontSize: 18, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 8),
-                pw.Text(
-                  detallesInforme,
-                  style: const pw.TextStyle(fontSize: 14),
-                ),
+                pw.Text(detallesInforme,
+                    style: const pw.TextStyle(fontSize: 14)),
                 pw.SizedBox(height: 20),
                 pw.Text(
                   'Gráfico de Resumen',
                   style: pw.TextStyle(
-                    fontSize: 18,
-                    fontWeight: pw.FontWeight.bold,
-                  ),
+                      fontSize: 18, fontWeight: pw.FontWeight.bold),
                 ),
                 pw.SizedBox(height: 8),
                 pw.Image(
@@ -1027,32 +1001,27 @@ class Funciones {
         ),
       );
 
+      // Ruta segura en Descargas (Android)
       if (Platform.isAndroid) {
-        // Usar la carpeta Downloads en Android con un nombre único
         final directory = Directory('/storage/emulated/0/Download');
-        if (!directory.existsSync()) {
-          directory.createSync(recursive: true);
-        }
 
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final filePath =
             '${directory.path}/informe_huella_carbono_$timestamp.pdf';
-
         final file = File(filePath);
         await file.writeAsBytes(await pdf.save());
 
         showSuccessMessage(
-            'Archivo guardado correctamente en Descargas: $filePath');
+            '');
       } else {
-        // Para otras plataformas (ejemplo: iOS o escritorio)
+        // Otras plataformas (iOS, desktop)
         final directory = await getApplicationDocumentsDirectory();
         final filePath = '${directory.path}/informe_huella_carbono.pdf';
-
         final file = File(filePath);
         await file.writeAsBytes(await pdf.save());
 
         showSuccessMessage(
-            'Archivo guardado correctamente en Documentos: $filePath');
+            'PDF guardado correctamente en la carpeta de Descargas');
       }
     } catch (e, stacktrace) {
       debugPrint('Error al guardar el archivo: $e\n$stacktrace');
@@ -1221,16 +1190,14 @@ class Funciones {
     required BuildContext context,
   }) async {
     try {
-      // Solicitar permisos
-      var status = await Permission.storage.request();
-      if (!status.isGranted) {
+      // Verificar permisos con la función reutilizable
+      bool permisoOk = await Funciones().verificarPermisosAlmacenamiento();
+      if (!permisoOk) {
         throw Exception('Permiso de almacenamiento denegado');
       }
 
       // Crear el documento PDF
       final pdf = pw.Document();
-
-      // Agregar contenido al PDF
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
@@ -1256,22 +1223,28 @@ class Funciones {
         ),
       );
 
-      // Definir ruta del archivo PDF
-      final directory = Directory('/storage/emulated/0/Download');
-      if (!directory.existsSync()) {
-        directory.createSync(recursive: true);
+      String filePath;
+
+      if (Platform.isAndroid) {
+        final directory = Directory('/storage/emulated/0/Download');
+        if (!directory.existsSync()) {
+          directory.createSync(recursive: true);
+        }
+
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        filePath = '${directory.path}/$titulo-$timestamp.pdf';
+      } else {
+        final directory = await getApplicationDocumentsDirectory();
+        filePath = '${directory.path}/$titulo.pdf';
       }
 
-      // Generar un nombre único para evitar conflictos
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final filePath = '${directory.path}/$titulo-$timestamp.pdf';
-
-      // Guardar el PDF sin intentar eliminar previamente
       final file = File(filePath);
       await file.writeAsBytes(await pdf.save());
     } catch (e) {
-      // Manejo de errores
       debugPrint('Error al guardar el PDF: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al guardar el PDF: $e')),
+      );
     }
   }
 
@@ -1319,16 +1292,5 @@ class Funciones {
       debugPrint('Error al comprimir la imagen de red: $e');
     }
     return null;
-  }
-
-  Future<bool> verificarPermisosAlmacenamiento() async {
-    // Verifica el permiso de almacenamiento.
-    if (await Permission.storage.isGranted) {
-      return true; // Permiso ya concedido.
-    }
-
-    // Solicita el permiso si no está concedido.
-    final status = await Permission.storage.request();
-    return status.isGranted; // Devuelve true si el permiso es concedido.
   }
 }

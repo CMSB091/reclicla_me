@@ -223,7 +223,7 @@ class _HuellaCarbonoScreenState extends State<HuellaCarbonoScreen> {
                               (filePath) {
                                 Funciones.showSnackBar(
                                   context,
-                                  'PDF generado en: $filePath',
+                                  'PDF generado en la carpeta de Descargas.',
                                 );
                               },
                             );

@@ -269,7 +269,7 @@ class _ResumenRecicladoScreenState extends State<ResumenRecicladoScreen> {
                                 (filePath) {
                                   Funciones.showSnackBar(
                                     context,
-                                    'El archivo se guardó correctamente en $filePath',
+                                    'El archivo se guardó correctamente en la carpeta de Descargas.',
                                   );
                                 },
                               );

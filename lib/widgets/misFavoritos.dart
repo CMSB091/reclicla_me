@@ -161,7 +161,7 @@ class _MisFavoritosState extends State<MisFavoritos> {
                                         .pop();
                                     showCustomSnackBar(
                                         context,
-                                        'PDF descargado con éxito.',
+                                        'PDF descargado con éxito en la carpeta de Descargas.',
                                         SnackBarType.confirmation);
                                   }
                                 } catch (e) {
